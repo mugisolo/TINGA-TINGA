@@ -1,0 +1,6 @@
+{
+  "name": "Tinga Tinga Safari",
+  "description": "Boutique East African safari operator headquartered in Arusha, Tanzania. Tailor-made mid-range and luxury safaris across Tanzania, Kenya, Rwanda, and Uganda with gorilla trekking, migration circuits, and transparent partner ground operations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
