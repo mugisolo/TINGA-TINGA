@@ -5,7 +5,14 @@ export type AnalyticsEvent =
   | 'waba_conversation_started'
   | 'quote_requested'
   | 'deposit_modal_opened'
-  | 'itinerary_viewed';
+  | 'itinerary_viewed'
+  | 'wallet_topup_started'
+  | 'wallet_topup_completed'
+  | 'wallet_payment_held'
+  | 'wallet_payment_captured'
+  | 'wallet_refund_issued'
+  | 'referral_credit_issued'
+  | 'wallet_suspended';
 
 export async function trackEvent(eventName: AnalyticsEvent, payload: Record<string, any> = {}) {
   // 1. Client-side GA4 / dataLayer push

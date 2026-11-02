@@ -218,14 +218,14 @@ export const ContactPage: React.FC = () => {
               </div>
               <h3 className="text-base font-bold text-white">Registered Operator in Tanzania</h3>
               <p className="text-xs text-stone-400 leading-relaxed">
-                TingaTinga Safari & Holiday is officially registered under the Tanzania Tourism Business Licensing (TTBL) regulations, headquartered in Arusha.
+                Ganda Safaris & Holiday is officially registered under the Tanzania Tourism Business Licensing (TTBL) regulations, headquartered in Arusha.
               </p>
 
               <div className="space-y-2 text-xs text-stone-300 pt-2 border-t border-stone-800">
                 <div><strong>Business Registration:</strong> BRELA Cert #TZ-ARU-2018-842</div>
                 <div><strong>Postal Address:</strong> P.O. Box 2751, Arusha, Tanzania</div>
-                <div><strong>Lead Email:</strong> info@tingatingasafari.com</div>
-                <div><strong>Founder Direct:</strong> akim@tingatingasafari.com</div>
+                <div><strong>Lead Email:</strong> info@gandasafaris.com</div>
+                <div><strong>Founder Direct:</strong> akim@gandasafaris.com</div>
               </div>
             </div>
 

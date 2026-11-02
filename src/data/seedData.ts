@@ -8,7 +8,7 @@ export const SEED_PERMITS: PermitFact[] = [
     costUSD: 800,
     validityDetails: 'Single trek with habituated gorilla group (strictly 1 hour with gorillas). Minimum age 15 years.',
     advanceBookingMonths: 6,
-    notes: 'Issued directly by Uganda Wildlife Authority (UWA). Non-refundable once purchased, but rescheduleable under UWA terms. Tinga Tinga Safari secures genuine official UWA receipts before your final balance is due.',
+    notes: 'Issued directly by Uganda Wildlife Authority (UWA). Non-refundable once purchased, but rescheduleable under UWA terms. Ganda Safaris secures genuine official UWA receipts before your final balance is due.',
     governmentBody: 'Uganda Wildlife Authority (UWA)',
     lastVerified: '2026-03-01',
   },
@@ -52,7 +52,7 @@ export const SEED_PERMITS: PermitFact[] = [
     costUSD: 82.60,
     validityDetails: 'Per person per 24-hour cycle inside Serengeti National Park (includes 18% VAT).',
     advanceBookingMonths: 2,
-    notes: 'All TANAPA concession and conservation fees are 100% pre-paid by Tinga Tinga Safari via official electronic TANAPA smartcards.',
+    notes: 'All TANAPA concession and conservation fees are 100% pre-paid by Ganda Safaris via official electronic TANAPA smartcards.',
     governmentBody: 'Tanzania National Parks Authority (TANAPA)',
     lastVerified: '2026-03-01',
   },
@@ -82,7 +82,7 @@ export const SEED_PARTNERS: GroundPartner[] = [
     emergencyProtocols: 'AMREF Flying Doctors evacuation coverage included on all remote tracking circuits. 24/7 operations desk in Kampala and Kisoro.',
     contactPerson: 'David Tumwesigye (Head of Operations - Western Uganda)',
     vettingDate: 'Vetted annually by Akim. Last audited January 2026.',
-    accountabilityGuarantee: 'Tinga Tinga Safari contracts directly with David and inspects every vehicle before client transfers. One contact point, zero hidden brokerages.',
+    accountabilityGuarantee: 'Ganda Safaris contracts directly with David and inspects every vehicle before client transfers. One contact point, zero hidden brokerages.',
     verified: true,
   },
   {
@@ -170,7 +170,7 @@ export const SEED_REVIEWS: Review[] = [
     tripTitle: '10-Day Northern Circuit Wildlife & Zanzibar Spice Coast',
     safariType: 'Big Five Safari',
     country: 'Tanzania',
-    comment: 'Traveling with two teenagers (14 & 16), safety and pacing were paramount. Tinga Tinga Safari customized every day. The Land Cruiser was immaculate, equipped with USB chargers and a fridge stocked with cold sodas. Ngorongoro caldera was like a real-life wildlife documentary. Then relaxing in Matemwe, Zanzibar was pure bliss.',
+    comment: 'Traveling with two teenagers (14 & 16), safety and pacing were paramount. Ganda Safaris customized every day. The Land Cruiser was immaculate, equipped with USB chargers and a fridge stocked with cold sodas. Ngorongoro caldera was like a real-life wildlife documentary. Then relaxing in Matemwe, Zanzibar was pure bliss.',
     verifiedGuest: true,
     source: 'TripAdvisor',
     avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
@@ -184,7 +184,7 @@ export const SEED_REVIEWS: Review[] = [
     tripTitle: '8-Day Double Gorilla Trek & Golden Monkeys',
     safariType: 'Gorilla Trekking',
     country: 'Rwanda',
-    comment: 'Gorilla trekking in Volcanoes NP and Bwindi. We received our official UWA and RDB permit receipts months before departure, exactly as Akim promised. Our Italian-speaking guide in Arusha and Rwanda made our honeymoon unforgettable. Tinga Tinga Safari is the gold standard of African travel craftsmanship.',
+    comment: 'Gorilla trekking in Volcanoes NP and Bwindi. We received our official UWA and RDB permit receipts months before departure, exactly as Akim promised. Our Italian-speaking guide in Arusha and Rwanda made our honeymoon unforgettable. Ganda Safaris is the gold standard of African travel craftsmanship.',
     verifiedGuest: true,
     source: 'Direct Guest',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
@@ -424,7 +424,7 @@ export const SEED_ITINERARIES: Itinerary[] = [
         answer: 'Treks range from 1.5 to 5 hours depending on where your assigned gorilla family fed that morning. Trails can be steep and muddy, but we provide walking sticks and arrange dedicated local porters ($20 fee) who carry your daypack and assist you over tricky terrain.',
       },
       {
-        question: 'Can Tinga Tinga Safari guarantee our gorilla permits before we pay in full?',
+        question: 'Can Ganda Safaris guarantee our gorilla permits before we pay in full?',
         answer: 'Yes, absolutely. We purchase your official UWA gorilla permit immediately upon receiving your 30% trip deposit. We provide you with the official government booking receipt showing your name, passport number, and assigned tracking sector before you make your final trip payment.',
       },
     ],
@@ -1113,7 +1113,7 @@ export const SEED_TEAM = [
     photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80',
     languages: ['English', 'French', 'Swahili'],
     certifications: 'Tanzania Tour Guides Association (TTGA) Master Naturalist, KPSGA Certified',
-    bio: 'Born and raised in Arusha beneath Mount Meru, Akim has guided and designed East African safaris for over 16 years. Frustrated by corporate safari brokerages that conceal their ground subcontractors and mark up permit fees, Akim founded Tinga Tinga Safari on radical transparency, named vetted local ground partners, and single-point human accountability.',
+    bio: 'Born and raised in Arusha beneath Mount Meru, Akim has guided and designed East African safaris for over 16 years. Frustrated by corporate safari brokerages that conceal their ground subcontractors and mark up permit fees, Akim founded Ganda Safaris on radical transparency, named vetted local ground partners, and single-point human accountability.',
   },
   {
     name: 'Emmanuel Mollel',
@@ -1175,7 +1175,7 @@ With the arrival of the short rains, the herds turn south, traveling through the
     date: 'January 2026',
     excerpt: 'Cost differences, permit logistics ($800 vs $1,500), hiking difficulty, and flight connections compared without commercial bias.',
     image: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800&auto=format&fit=crop&q=80',
-    content: `At Tinga Tinga Safari, we arrange gorilla treks in both Uganda and Rwanda. Because we operate in both countries, we have no incentive to steer you toward one over the other. Here is the unvarnished reality:
+    content: `At Ganda Safaris, we arrange gorilla treks in both Uganda and Rwanda. Because we operate in both countries, we have no incentive to steer you toward one over the other. Here is the unvarnished reality:
 
 ### 1. The Permit Cost
 - **Uganda (Bwindi & Mgahinga):** $800 USD per permit.
@@ -1198,7 +1198,7 @@ On permit cost alone, a couple saves $1,400 USD by choosing Uganda—money that 
     date: 'December 2025',
     excerpt: 'Why we reject secret subcontracting, how vehicle border handovers function, and why the East African Tourist Visa is your secret weapon.',
     image: 'https://images.unsplash.com/photo-1534177616072-ef7dc120449d?w=800&auto=format&fit=crop&q=80',
-    content: `Many multinational travel agencies sell multi-country East African tours while hiding the fact that they hand you off to random third-party operators at every border. At Tinga Tinga Safari, we believe in radical transparency:
+    content: `Many multinational travel agencies sell multi-country East African tours while hiding the fact that they hand you off to random third-party operators at every border. At Ganda Safaris, we believe in radical transparency:
 
 ### Our Named Ground Partner Network
 In Tanzania, you travel with Akim and our in-house fleet. When crossing into Uganda or Kenya, you are met by named, vetted, AUTO/KATO-accredited partner directors whom Akim has worked with for over a decade. We share their names, phone numbers, and vehicle license numbers weeks before your departure.
@@ -1251,7 +1251,7 @@ export const TEAM_MEMBERS = [
     location: 'Arusha, Tanzania',
     languages: ['English', 'Kiswahili', 'French', 'Italian'],
     specialties: ['Serengeti Migration Tracks', 'Cross-Border Logistics', 'Gorilla Trekking'],
-    bio: 'Born in Arusha with 16 years leading deep wilderness expeditions across Tanzania, Uganda, and Kenya. Personally designs every Tinga Tinga itinerary and remains on WhatsApp 24/7 for all travelers.',
+    bio: 'Born in Arusha with 16 years leading deep wilderness expeditions across Tanzania, Uganda, and Kenya. Personally designs every Ganda Safaris itinerary and remains on WhatsApp 24/7 for all travelers.',
     photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80',
   },
   {

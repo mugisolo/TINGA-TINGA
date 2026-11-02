@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Compass, MessageCircle, Menu, X, Globe, DollarSign, ShieldCheck, ChevronDown } from 'lucide-react';
+import { Compass, MessageCircle, Menu, X, Globe, DollarSign, ShieldCheck, ChevronDown, HardDrive, Wallet as WalletIcon } from 'lucide-react';
 import { Currency, LanguageCode } from '../types';
 import { CURRENCY_RATES } from '../lib/currency';
 import { LANGUAGES, getTranslation } from '../lib/i18n';
+import { GoogleAuthButton } from './GoogleAuthButton';
 
 interface NavbarProps {
   currentCurrency: Currency;
@@ -20,12 +21,26 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDestDropdownOpen, setIsDestDropdownOpen] = useState(false);
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const location = useLocation();
+
+  // Refresh wallet balance on navigation
+  useEffect(() => {
+    fetch('/api/wallet?userId=current_user')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d && d.availableBalance !== undefined) {
+          setWalletBalance(d.availableBalance);
+        }
+      })
+      .catch(() => {});
+  }, [location.pathname]);
 
   const t = (key: string) => getTranslation(currentLanguage, key);
 
   const navLinks = [
     { label: t('nav_home'), path: '/' },
+    { label: 'Safari Wallet', path: '/wallet' },
     { label: t('nav_how_we_work'), path: '/how-we-work' },
     { label: t('nav_partners'), path: '/partners' },
     { label: t('nav_permits'), path: '/permits' },
@@ -95,9 +110,32 @@ export const Navbar: React.FC<NavbarProps> = ({
             ))}
           </div>
 
+          <Link to="/wallet" className="flex items-center space-x-1.5 text-stone-300 hover:text-amber-400 transition-colors">
+            <WalletIcon className="w-3.5 h-3.5 text-amber-500" />
+            <span>Safari Wallet</span>
+            {walletBalance !== null && (
+              <span className="ml-1 px-1.5 py-0.2 bg-amber-500/20 text-amber-300 rounded text-[10px] font-mono font-bold">
+                ${walletBalance.toLocaleString()}
+              </span>
+            )}
+          </Link>
+
+          <span className="text-stone-700">|</span>
+
+          <Link to="/drive" className="flex items-center space-x-1 text-stone-300 hover:text-amber-400 transition-colors">
+            <HardDrive className="w-3.5 h-3.5 text-amber-500" />
+            <span>Google Drive</span>
+          </Link>
+
+          <span className="text-stone-700">|</span>
+
           <Link to="/admin" className="text-stone-400 hover:text-amber-400 transition-colors">
             Staff Portal
           </Link>
+
+          <span className="text-stone-700">|</span>
+
+          <GoogleAuthButton compact />
         </div>
       </div>
 
@@ -110,8 +148,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
           <div>
             <div className="text-xl font-bold tracking-wider text-stone-100 font-display flex items-center space-x-1">
-              <span>TINGA TINGA</span>
-              <span className="text-amber-500 font-normal">SAFARI</span>
+              <span>GANDA</span>
+              <span className="text-amber-500 font-normal">SAFARIS</span>
             </div>
             <div className="text-[10px] uppercase tracking-widest text-stone-400 font-medium">
               Boutique East Africa Architects
@@ -170,7 +208,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="hidden sm:flex items-center space-x-3">
           {/* WhatsApp Direct */}
           <a
-            href="https://wa.me/255784123456?text=Hello%20Akim,%20I%20am%20interested%20in%20planning%20an%20East%20African%20safari%20with%20Tinga%20Tinga%20Safari."
+            href="https://wa.me/255784123456?text=Hello%20Akim,%20I%20am%20interested%20in%20planning%20an%20East%20African%20safari%20with%20Ganda%20Safaris."
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center space-x-1.5 px-3.5 py-2 rounded-lg bg-emerald-700/80 hover:bg-emerald-600 text-white text-xs font-semibold tracking-wide transition-all duration-200 border border-emerald-500/40 shadow-sm"
@@ -267,12 +305,23 @@ export const Navbar: React.FC<NavbarProps> = ({
               </Link>
             ))}
             <Link
+              to="/drive"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm text-stone-200 hover:text-amber-400 bg-stone-900/60"
+            >
+              <HardDrive className="w-4 h-4 text-amber-500" />
+              <span>Google Drive Safari Vault</span>
+            </Link>
+            <Link
               to="/admin"
               onClick={() => setIsMobileMenuOpen(false)}
               className="block px-3 py-2 rounded-md text-sm text-stone-400 hover:text-amber-400"
             >
               Admin Dashboard
             </Link>
+            <div className="px-2 pt-2">
+              <GoogleAuthButton />
+            </div>
           </div>
 
           <div className="pt-2 flex flex-col space-y-2">

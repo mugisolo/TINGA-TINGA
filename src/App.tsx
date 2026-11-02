@@ -21,73 +21,89 @@ import { ItineraryDetailPage } from './pages/ItineraryDetailPage';
 import { TripPlannerPage } from './pages/TripPlannerPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 
+import { AuthProvider } from './context/AuthContext';
+import { GoogleDrivePage } from './pages/GoogleDrivePage';
+import { WalletPage } from './pages/WalletPage';
+import { WalletTopupPage } from './pages/WalletTopupPage';
+import { WalletTermsPage } from './pages/WalletTermsPage';
+
 export default function App() {
   const [currentCurrency, setCurrentCurrency] = useState<Currency>('USD');
   const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>('en');
 
   return (
-    <Router>
-      <ScrollToTop />
-      <div className="flex flex-col min-h-screen bg-stone-950 text-stone-100 selection:bg-amber-600 selection:text-stone-950">
-        {/* Sticky Header Navbar */}
-        <Navbar
-          currentCurrency={currentCurrency}
-          onCurrencyChange={setCurrentCurrency}
-          currentLanguage={currentLanguage}
-          onLanguageChange={setCurrentLanguage}
-        />
+    <AuthProvider>
+      <Router>
+        <ScrollToTop />
+        <div className="flex flex-col min-h-screen bg-stone-950 text-stone-100 selection:bg-amber-600 selection:text-stone-950">
+          {/* Sticky Header Navbar */}
+          <Navbar
+            currentCurrency={currentCurrency}
+            onCurrencyChange={setCurrentCurrency}
+            currentLanguage={currentLanguage}
+            onLanguageChange={setCurrentLanguage}
+          />
 
-        {/* Dynamic Route Pages */}
-        <main className="flex-grow">
-          <Routes>
-            <Route
-              path="/"
-              element={<HomePage currency={currentCurrency} language={currentLanguage} />}
-            />
-            <Route path="/how-we-work" element={<HowWeWorkPage />} />
-            <Route path="/partners" element={<PartnersPage />} />
-            <Route path="/permits" element={<PermitsPage currency={currentCurrency} />} />
-            <Route path="/team" element={<TeamPage />} />
-            <Route path="/reviews" element={<ReviewsPage />} />
-            <Route path="/journal" element={<JournalPage />} />
-            <Route path="/responsible-travel" element={<ResponsibleTravelPage />} />
-            <Route path="/contact" element={<ContactPage />} />
+          {/* Dynamic Route Pages */}
+          <main className="flex-grow">
+            <Routes>
+              <Route
+                path="/"
+                element={<HomePage currency={currentCurrency} language={currentLanguage} />}
+              />
+              <Route path="/how-we-work" element={<HowWeWorkPage />} />
+              <Route path="/partners" element={<PartnersPage />} />
+              <Route path="/permits" element={<PermitsPage currency={currentCurrency} />} />
+              <Route path="/team" element={<TeamPage />} />
+              <Route path="/reviews" element={<ReviewsPage />} />
+              <Route path="/journal" element={<JournalPage />} />
+              <Route path="/responsible-travel" element={<ResponsibleTravelPage />} />
+              <Route path="/contact" element={<ContactPage />} />
 
-            {/* Localized / Country Route */}
-            <Route
-              path="/safaris/:country"
-              element={<DestinationDetailPage currency={currentCurrency} />}
-            />
+              {/* Google Drive Safari Vault */}
+              <Route path="/drive" element={<GoogleDrivePage />} />
 
-            {/* Itinerary Details */}
-            <Route
-              path="/itineraries/:slug"
-              element={<ItineraryDetailPage currency={currentCurrency} />}
-            />
+              {/* Safari Wallet & Travel Credits */}
+              <Route path="/wallet" element={<WalletPage />} />
+              <Route path="/wallet/topup" element={<WalletTopupPage />} />
+              <Route path="/wallet/terms" element={<WalletTermsPage />} />
 
-            {/* Interactive Trip Planner */}
-            <Route
-              path="/trip-planner"
-              element={<TripPlannerPage currency={currentCurrency} />}
-            />
+              {/* Localized / Country Route */}
+              <Route
+                path="/safaris/:country"
+                element={<DestinationDetailPage currency={currentCurrency} />}
+              />
 
-            {/* Admin Operations Portal */}
-            <Route path="/admin" element={<AdminDashboardPage />} />
+              {/* Itinerary Details */}
+              <Route
+                path="/itineraries/:slug"
+                element={<ItineraryDetailPage currency={currentCurrency} />}
+              />
 
-            {/* Catch-all fallback */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
+              {/* Interactive Trip Planner */}
+              <Route
+                path="/trip-planner"
+                element={<TripPlannerPage currency={currentCurrency} />}
+              />
 
-        {/* Global Footer */}
-        <Footer />
+              {/* Admin Operations Portal */}
+              <Route path="/admin" element={<AdminDashboardPage />} />
 
-        {/* Floating Tinga Assistant Concierge */}
-        <TingaAssistantWidget
-          currentLanguage={currentLanguage}
-          currentCurrency={currentCurrency}
-        />
-      </div>
-    </Router>
+              {/* Catch-all fallback */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
+
+          {/* Global Footer */}
+          <Footer />
+
+          {/* Floating Tinga Assistant Concierge */}
+          <TingaAssistantWidget
+            currentLanguage={currentLanguage}
+            currentCurrency={currentCurrency}
+          />
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }

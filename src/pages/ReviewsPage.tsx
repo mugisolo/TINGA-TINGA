@@ -35,7 +35,7 @@ export const ReviewsPage: React.FC = () => {
             Field Reviews & Guest Chronicles
           </h1>
           <p className="text-sm sm:text-base text-stone-300 leading-relaxed">
-            Read candid feedback from photographers, honeymooners, and multi-generational families who have traversed East Africa with Tinga Tinga Safari.
+            Read candid feedback from photographers, honeymooners, and multi-generational families who have traversed East Africa with Ganda Safaris.
           </p>
         </div>
 

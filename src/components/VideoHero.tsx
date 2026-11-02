@@ -122,7 +122,7 @@ export const VideoHero: React.FC<VideoHeroProps> = ({
             <div className="flex items-center justify-between p-4 border-b border-stone-800">
               <div className="text-sm font-semibold text-stone-200 flex items-center space-x-2">
                 <Compass className="w-4 h-4 text-amber-500" />
-                <span>Tinga Tinga Safari: On Location in Serengeti & Bwindi</span>
+                <span>Ganda Safaris: On Location in Serengeti & Bwindi</span>
               </div>
               <button
                 onClick={() => setIsVideoModalOpen(false)}
@@ -136,7 +136,7 @@ export const VideoHero: React.FC<VideoHeroProps> = ({
               <iframe
                 className="w-full h-full"
                 src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=0"
-                title="Tinga Tinga Safari Field Highlights"
+                title="Ganda Safaris Field Highlights"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               ></iframe>

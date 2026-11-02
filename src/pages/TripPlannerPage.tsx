@@ -15,14 +15,21 @@ import {
   ArrowLeft, 
   CheckCircle, 
   MessageCircle, 
-  DollarSign 
+  DollarSign,
+  HardDrive
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { exportSafariDocumentToDrive } from '../services/googleDrive';
 
 interface TripPlannerPageProps {
   currency: Currency;
 }
 
 export const TripPlannerPage: React.FC<TripPlannerPageProps> = ({ currency }) => {
+  const { user, accessToken, signInWithGoogle } = useAuth();
+  const [isSavingToDrive, setIsSavingToDrive] = useState(false);
+  const [driveSaveSuccess, setDriveSaveSuccess] = useState<string | null>(null);
+
   const [searchParams] = useSearchParams();
   const preselectedItinerarySlug = searchParams.get('itinerary');
   const preselectedTier = searchParams.get('tier') as BudgetTier | null;
@@ -249,6 +256,16 @@ My name is ${name || 'Guest'}. Can we discuss custom dates?`;
                   Akim will personally assemble your detailed day-by-day outline, route map, and lodge availability within 12 hours.
                 </p>
 
+                {driveSaveSuccess && (
+                  <div className="bg-emerald-950/70 border border-emerald-800 text-emerald-200 px-4 py-2.5 rounded-xl text-xs max-w-md mx-auto flex items-center justify-center space-x-2">
+                    <CheckCircle className="w-4 h-4 text-emerald-400" />
+                    <span>{driveSaveSuccess}</span>
+                    <Link to="/drive" className="underline font-bold text-amber-400 ml-1">
+                      View in Drive Vault
+                    </Link>
+                  </div>
+                )}
+
                 <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
                   <a
                     href={getWhatsAppLeadLink()}
@@ -259,6 +276,57 @@ My name is ${name || 'Guest'}. Can we discuss custom dates?`;
                     <MessageCircle className="w-4 h-4" />
                     <span>Chat with Akim immediately on WhatsApp</span>
                   </a>
+
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!accessToken) {
+                        try {
+                          await signInWithGoogle();
+                        } catch (e) {
+                          return;
+                        }
+                      }
+                      setIsSavingToDrive(true);
+                      try {
+                        const docTitle = `Ganda_Safaris_${name.replace(/\s+/g, '_') || 'Guest'}_${daysCount}D`;
+                        const docBody = `GANDA SAFARIS - CUSTOM EXPEDITION SPECIFICATION
+Client: ${name || 'Prospective Traveler'} (${email})
+Phone: ${phone || 'N/A'}
+Contact Preference: ${preferredContact}
+Headquarters: Arusha, Tanzania (P.O. Box 2751)
+
+EXPEDITION DETAILS:
+Selected Countries: ${selectedCountries.join(', ')}
+Total Days: ${daysCount} Days
+Number of Guests: ${travelersCount}
+Tier / Style: ${budgetTier}
+Travel Window: ${season}
+Mountain Gorilla Tracking: ${gorillaTracking ? 'Yes (UWA/RDB Statutory Permits Required)' : 'No'}
+Selected Interests: ${interests.join(', ')}
+Special Notes: ${specialRequests || 'Standard Safari Architecture'}
+
+ESTIMATED BUDGET:
+Estimated Total: ${formatPrice(estimatedTotalUSD, currency)} (${currency})
+Deposit Required (30%): ${formatPrice(depositRequiredUSD, currency)} (${currency})
+
+Status: Lead generated via Ganda Safaris Platform.`;
+
+                        await exportSafariDocumentToDrive(accessToken || '', docTitle, docBody);
+                        setDriveSaveSuccess('Plan successfully archived to your Google Drive!');
+                      } catch (err: any) {
+                        alert(err.message || 'Failed to export to Google Drive');
+                      } finally {
+                        setIsSavingToDrive(false);
+                      }
+                    }}
+                    disabled={isSavingToDrive}
+                    className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-xs flex items-center justify-center space-x-2 shadow-lg transition-colors"
+                  >
+                    <HardDrive className="w-4 h-4" />
+                    <span>{isSavingToDrive ? 'Saving to Drive...' : 'Save to Google Drive'}</span>
+                  </button>
+
                   <Link
                     to="/"
                     className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 font-semibold text-xs text-center"
@@ -673,7 +741,7 @@ My name is ${name || 'Guest'}. Can we discuss custom dates?`;
                     <div className="p-4 rounded-xl bg-stone-950 border border-stone-800 text-xs text-stone-400 space-y-1">
                       <div className="flex items-center space-x-1.5 text-amber-400 font-semibold">
                         <ShieldCheck className="w-4 h-4" />
-                        <span>The Tinga Tinga Promise</span>
+                        <span>The Ganda Safaris Promise</span>
                       </div>
                       <p>
                         No spam. No middleman broker markups. Direct contact with our Arusha headquarters and official permit reservation guarantees.

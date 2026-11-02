@@ -35,15 +35,15 @@ export const TingaAssistantWidget: React.FC<TingaAssistantWidgetProps> = ({
   // Initial welcome greeting tailored to language
   useEffect(() => {
     if (messages.length === 0) {
-      let greeting = 'Jambo! I am Tinga Assistant, Akim’s AI safari concierge at Tinga Tinga Safari (Arusha, Tanzania). How may I assist your East African journey today?';
+      let greeting = 'Jambo! I am Ganda Assistant, Akim’s AI safari concierge at Ganda Safaris (Arusha, Tanzania). How may I assist your East African journey today?';
       if (currentLanguage === 'fr') {
-        greeting = 'Jambo! Je suis Tinga Assistant, l’assistant IA d’Akim chez Tinga Tinga Safari à Arusha. Comment puis-je vous aider à concevoir votre safari sur-mesure ?';
+        greeting = 'Jambo! Je suis Ganda Assistant, l’assistant IA d’Akim chez Ganda Safaris à Arusha. Comment puis-je vous aider à concevoir votre safari sur-mesure ?';
       } else if (currentLanguage === 'de') {
-        greeting = 'Jambo! Ich bin Tinga Assistant, Akims KI-Safari-Concierge bei Tinga Tinga Safari in Arusha. Wie kann ich Ihnen bei Ihrer Ostafrika-Reiseplanung behilflich sein?';
+        greeting = 'Jambo! Ich bin Ganda Assistant, Akims KI-Safari-Concierge bei Ganda Safaris in Arusha. Wie kann ich Ihnen bei Ihrer Ostafrika-Reiseplanung behilflich sein?';
       } else if (currentLanguage === 'es') {
-        greeting = '¡Jambo! Soy Tinga Assistant, el concierge de IA de Akim en Tinga Tinga Safari (Arusha). ¿Cómo puedo ayudarte a diseñar tu safari hoy?';
+        greeting = '¡Jambo! Soy Ganda Assistant, el concierge de IA de Akim en Ganda Safaris (Arusha). ¿Cómo puedo ayudarte a diseñar tu safari hoy?';
       } else if (currentLanguage === 'it') {
-        greeting = 'Jambo! Sono Tinga Assistant, il concierge IA di Akim presso Tinga Tinga Safari ad Arusha. Come posso aiutarti a pianificare il tuo viaggio?';
+        greeting = 'Jambo! Sono Ganda Assistant, il concierge IA di Akim presso Ganda Safaris ad Arusha. Come posso aiutarti a pianificare il tuo viaggio?';
       }
 
       setMessages([
@@ -130,7 +130,7 @@ export const TingaAssistantWidget: React.FC<TingaAssistantWidgetProps> = ({
   const getWhatsAppContextLink = () => {
     const lastUserQuery = messages.filter((m) => m.role === 'user').pop()?.content || 'East African Safari Inquiry';
     const text = encodeURIComponent(
-      `Hello Akim! I was chatting with Tinga Assistant on your website about: "${lastUserQuery.substring(0, 120)}...". I would love to continue with you directly.`
+      `Hello Akim! I was chatting with Ganda Assistant on your website about: "${lastUserQuery.substring(0, 120)}...". I would love to continue with you directly.`
     );
     return `https://wa.me/255784123456?text=${text}`;
   };
@@ -150,7 +150,7 @@ export const TingaAssistantWidget: React.FC<TingaAssistantWidgetProps> = ({
             <Sparkles className="w-4 h-4 animate-spin-slow" />
           </div>
           <div className="text-left pr-1 hidden sm:block">
-            <div className="text-xs font-black tracking-wide leading-none text-stone-950">Tinga Assistant</div>
+            <div className="text-xs font-black tracking-wide leading-none text-stone-950">Ganda Assistant</div>
             <div className="text-[10px] text-stone-900 font-medium leading-none mt-1">Ask Akim's AI Concierge</div>
           </div>
           <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-stone-900"></span>
@@ -168,7 +168,7 @@ export const TingaAssistantWidget: React.FC<TingaAssistantWidgetProps> = ({
               </div>
               <div>
                 <div className="flex items-center space-x-1.5">
-                  <h4 className="text-sm font-bold text-white leading-none">Tinga Assistant</h4>
+                  <h4 className="text-sm font-bold text-white leading-none">Ganda Assistant</h4>
                   <span className="px-1.5 py-0.5 rounded text-[9px] bg-amber-500/20 text-amber-400 font-semibold border border-amber-500/30">
                     AI Concierge
                   </span>

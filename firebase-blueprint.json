@@ -1,0 +1,45 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Authenticated traveler or staff member profile",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 256 },
+        "displayName": { "type": "string", "maxLength": 128 },
+        "photoURL": { "type": "string", "maxLength": 512 },
+        "role": { "type": "string", "enum": ["traveler", "agent", "admin"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["uid", "email", "createdAt"]
+    },
+    "SafariDocument": {
+      "title": "SafariDocument",
+      "description": "Metadata for safari files synced with Google Drive",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "driveFileId": { "type": "string", "maxLength": 256 },
+        "name": { "type": "string", "maxLength": 256 },
+        "mimeType": { "type": "string", "maxLength": 128 },
+        "size": { "type": "number" },
+        "webViewLink": { "type": "string", "maxLength": 512 },
+        "category": { "type": "string", "enum": ["permit", "itinerary", "voucher", "passport", "invoice", "other"] },
+        "userId": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "driveFileId", "name", "userId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles keyed by Firebase Auth UID"
+    },
+    "/safari_documents/{documentId}": {
+      "schema": "SafariDocument",
+      "description": "Saved safari files and Google Drive links"
+    }
+  }
+}

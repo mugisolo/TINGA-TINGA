@@ -20,7 +20,7 @@ export const HowWeWorkPage: React.FC = () => {
           </p>
         </div>
 
-        {/* The 4 Principles of Tinga Tinga Safari */}
+        {/* The 4 Principles of Ganda Safaris */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-stone-900/80 p-6 rounded-2xl border border-stone-800 space-y-3">
             <div className="text-amber-500 font-bold text-lg font-display">1. No Hidden Subcontracting</div>

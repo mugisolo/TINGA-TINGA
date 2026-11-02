@@ -28,7 +28,7 @@ export const TeamPage: React.FC = () => {
               <div className="rounded-2xl overflow-hidden aspect-[4/5] border-2 border-amber-500/40 shadow-xl relative">
                 <img
                   src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80"
-                  alt="Akim Mmari - Founder Tinga Tinga Safari"
+                  alt="Akim Mmari - Founder Ganda Safaris"
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute bottom-3 left-3 right-3 p-2.5 rounded-lg bg-stone-950/90 backdrop-blur-sm border border-stone-800 text-[11px] text-stone-300">
@@ -47,7 +47,7 @@ export const TeamPage: React.FC = () => {
                 "We Build Safaris We Would Take Our Own Families On."
               </h2>
               <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
-                "After fifteen years guiding international expeditions through the Serengeti, Ngorongoro, and the Ugandan rain forests, I founded Tinga Tinga Safari to strip away the impersonal brokerages and generic itineraries that dominate modern travel."
+                "After fifteen years guiding international expeditions through the Serengeti, Ngorongoro, and the Ugandan rain forests, I founded Ganda Safaris to strip away the impersonal brokerages and generic itineraries that dominate modern travel."
               </p>
               <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
                 "When you write to us, you are speaking directly to someone who knows the dust of the Ndutu plains and the smell of the Bwindi canopy. I stay on WhatsApp 24/7 for every single guest until they are safely through the departure gates."

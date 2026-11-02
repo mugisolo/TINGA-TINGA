@@ -166,7 +166,7 @@ export const PermitsPage: React.FC<PermitsPageProps> = ({ currency }) => {
           </div>
         </div>
 
-        {/* The Tinga Tinga Receipt Guarantee */}
+        {/* The Ganda Safaris Receipt Guarantee */}
         <div className="p-8 rounded-3xl bg-emerald-950/40 border border-emerald-900/60 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-2 max-w-xl">
             <div className="flex items-center space-x-2 text-emerald-400 font-bold text-xs uppercase tracking-wider">

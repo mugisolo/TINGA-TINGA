@@ -139,7 +139,7 @@ export interface Review {
   avatar?: string;
 }
 
-export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'quote_sent' | 'deposit_paid' | 'closed_won' | 'closed_lost' | 'abandoned';
+export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'quote_sent' | 'deposit_paid' | 'confirmed' | 'cancelled' | 'refunded' | 'closed_won' | 'closed_lost' | 'abandoned';
 
 export interface Lead {
   id: string;
@@ -214,12 +214,13 @@ export interface WABATemplate {
   status: 'APPROVED' | 'PENDING' | 'REJECTED';
 }
 
-export type Currency = 'USD' | 'EUR' | 'GBP';
+export type Currency = 'USD' | 'EUR' | 'GBP' | 'TZS' | 'UGX' | 'KES';
 
 export interface CurrencyRate {
   code: Currency;
   symbol: string;
   rateAgainstUSD: number; // USD = 1
+  name?: string;
 }
 
 export type LanguageCode = 'en' | 'fr' | 'de' | 'es' | 'it';
@@ -233,4 +234,113 @@ export interface TeamMember {
   specialties: string[];
   bio: string;
   photo: string;
+}
+
+// ================= USER WALLET SYSTEM TYPES =================
+export type WalletStatus = 'active' | 'suspended' | 'closed';
+
+export type WalletTransactionType = 
+  | 'topup'
+  | 'payment'
+  | 'refund'
+  | 'referral_credit'
+  | 'promo_credit'
+  | 'admin_adjustment'
+  | 'reversal';
+
+export type WalletTransactionDirection = 'credit' | 'debit';
+
+export type WalletTransactionStatus = 'pending' | 'completed' | 'failed';
+
+export type PaymentProvider = 'dpo' | 'stripe' | 'paypal' | 'mpesa' | 'manual' | 'wallet';
+
+export interface Wallet {
+  id: string;
+  userId: string;
+  userName?: string;
+  userEmail?: string;
+  userPhone?: string;
+  currency: 'USD';
+  balance: number; // Total funds in wallet (USD)
+  holdBalance: number; // Funds locked in escrow for pending bookings
+  availableBalance?: number; // balance - holdBalance
+  status: WalletStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WalletTransaction {
+  id: string;
+  walletId: string;
+  type: WalletTransactionType;
+  direction: WalletTransactionDirection;
+  amount: number;
+  currency: 'USD';
+  status: WalletTransactionStatus;
+  reference: string;
+  idempotencyKey: string;
+  paymentProvider?: PaymentProvider;
+  providerRef?: string;
+  bookingId?: string;
+  narration: string;
+  meta: {
+    action?: 'hold' | 'capture' | 'release' | 'topup' | 'refund' | 'credit';
+    reasonCode?: string;
+    bookingTitle?: string;
+    travelersCount?: number;
+    depositPercentage?: number;
+    originalProvider?: string;
+    operatorNote?: string;
+    phoneNumber?: string;
+    [key: string]: any;
+  };
+  createdAt: string;
+}
+
+export interface PaymentIntent {
+  id: string;
+  walletId: string;
+  userId: string;
+  provider: 'dpo' | 'stripe' | 'paypal' | 'mpesa';
+  providerRef?: string;
+  amount: number;
+  currency: 'USD';
+  status: 'pending' | 'processing' | 'succeeded' | 'failed' | 'cancelled';
+  webhookVerified: boolean;
+  rawWebhook?: Record<string, any>;
+  idempotencyKey: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminAudit {
+  id: string;
+  adminId: string;
+  action: string;
+  target: string;
+  reasonCode?: string;
+  narration?: string;
+  diff: Record<string, any>;
+  createdAt: string;
+}
+
+export interface UserReferral {
+  id: string;
+  userId: string;
+  referralCode: string;
+  referredUserId?: string;
+  referredUserName?: string;
+  bookingId?: string;
+  status: 'pending' | 'credited' | 'expired';
+  rewardAmount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FXRate {
+  currency: Currency;
+  rateToUSD: number;
+  symbol: string;
+  name: string;
+  updatedAt: string;
 }

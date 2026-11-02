@@ -94,7 +94,7 @@ export const PartnersPage: React.FC = () => {
           <Heart className="w-8 h-8 text-amber-500 mx-auto" />
           <h3 className="text-xl font-bold text-white font-display">The Ethical Ground Difference</h3>
           <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
-            When you book through Tinga Tinga Safari, 100% of the transport and field logistics funds flow directly to certified local African businesses in Tanzania, Uganda, and Kenya. We never siphon profits through European shell entities.
+            When you book through Ganda Safaris, 100% of the transport and field logistics funds flow directly to certified local African businesses in Tanzania, Uganda, and Kenya. We never siphon profits through European shell entities.
           </p>
           <div className="pt-2">
             <Link

@@ -111,7 +111,7 @@ export const HomePage: React.FC<HomePageProps> = ({ currency, language }) => {
                 Most international agencies subcontract to local African operators under opaque "white-label" NDA agreements. They mark up costs by 40% while hiding who is actually driving you.
               </p>
               <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
-                At Tinga Tinga Safari, we run our own direct operations in Tanzania, and partner with named, audited, AUTO and KATO-licensed operations in Uganda and Kenya. You get total transparency, fair porter wages, and direct accountability.
+                At Ganda Safaris, we run our own direct operations in Tanzania, and partner with named, audited, AUTO and KATO-licensed operations in Uganda and Kenya. You get total transparency, fair porter wages, and direct accountability.
               </p>
 
               <div className="pt-2">

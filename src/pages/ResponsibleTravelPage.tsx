@@ -16,7 +16,7 @@ export const ResponsibleTravelPage: React.FC = () => {
             Responsible Travel & Community Charter
           </h1>
           <p className="text-sm sm:text-base text-stone-300 leading-relaxed">
-            True luxury in Africa is defined by dignity, conservation stewardship, and fair community partnership. Here is how Tinga Tinga Safari puts ethics into practice every day.
+            True luxury in Africa is defined by dignity, conservation stewardship, and fair community partnership. Here is how Ganda Safaris puts ethics into practice every day.
           </p>
         </div>
 
@@ -32,7 +32,7 @@ export const ResponsibleTravelPage: React.FC = () => {
               In low-cost budget safari agencies, guides and porters often receive zero baseline wage, forced to rely exclusively on discretionary guest tips to survive.
             </p>
             <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
-              At Tinga Tinga Safari, every naturalist guide and driver receives a premier guaranteed daily salary, comprehensive AMREF health evacuation insurance, and full accommodations in driver quarters. Tips are welcomed as a token of excellence, never as a substitute for fair compensation.
+              At Ganda Safaris, every naturalist guide and driver receives a premier guaranteed daily salary, comprehensive AMREF health evacuation insurance, and full accommodations in driver quarters. Tips are welcomed as a token of excellence, never as a substitute for fair compensation.
             </p>
           </div>
 
@@ -43,7 +43,7 @@ export const ResponsibleTravelPage: React.FC = () => {
               <span>2. Guaranteed AMREF Flying Doctors Evacuation</span>
             </div>
             <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
-              Every guest traveling on a Tinga Tinga Safari circuit is automatically enrolled in AMREF Flying Doctors emergency medical evacuation cover. In the unlikely event of sudden illness or trauma in remote bush locations (such as the northern Serengeti or Bwindi rainforest), a dedicated air ambulance with emergency medical personnel is dispatched immediately to airlift you to premier trauma centers in Nairobi or Dar es Salaam.
+              Every guest traveling on a Ganda Safaris circuit is automatically enrolled in AMREF Flying Doctors emergency medical evacuation cover. In the unlikely event of sudden illness or trauma in remote bush locations (such as the northern Serengeti or Bwindi rainforest), a dedicated air ambulance with emergency medical personnel is dispatched immediately to airlift you to premier trauma centers in Nairobi or Dar es Salaam.
             </p>
           </div>
 

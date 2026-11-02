@@ -46,7 +46,7 @@ export const HowWeWorkStrip: React.FC<HowWeWorkStripProps> = ({ currentLanguage 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-12">
           <div className="text-xs uppercase tracking-widest text-amber-500 font-bold mb-2">
-            The Tinga Tinga Operating Standard
+            The Ganda Safaris Operating Standard
           </div>
           <h2 className="text-3xl font-bold tracking-tight text-white font-display">
             How We Work: Radical Transparency in East African Safaris

@@ -1,5 +1,5 @@
 /**
- * Test Suite for Tinga Tinga Safari Core Engines
+ * Test Suite for Ganda Safaris Core Engines
  * Verifies:
  * 1. Currency conversion & formatting logic (USD, EUR, GBP)
  * 2. Permit price accuracy against statutory UWA/RDB figures ($800, $1500)
@@ -18,7 +18,7 @@ function assert(condition: boolean, message: string) {
 }
 
 export function runTests() {
-  console.log('=== RUNNING TINGA TINGA SAFARI TEST SUITE ===\n');
+  console.log('=== RUNNING GANDA SAFARIS TEST SUITE ===\n');
 
   // Test 1: Currency Formatting
   console.log('1. Currency Conversion & Formatting Tests:');

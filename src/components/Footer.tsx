@@ -68,11 +68,11 @@ export const Footer: React.FC = () => {
                 <Compass className="w-5 h-5" />
               </div>
               <span className="text-lg font-bold tracking-wider font-display text-white">
-                TINGA TINGA <span className="text-amber-500 font-normal">SAFARI</span>
+                GANDA <span className="text-amber-500 font-normal">SAFARIS</span>
               </span>
             </div>
             <p className="text-xs text-stone-400 leading-relaxed max-w-sm">
-              TingaTinga Safari & Holiday is an independent boutique safari operator headquartered in Arusha, Tanzania. We architect tailor-made wildlife safaris, gorilla tracking expeditions, and seamless cross-border circuits across Tanzania, Kenya, Uganda, and Rwanda.
+              Ganda Safaris & Holiday is an independent boutique safari operator headquartered in Arusha, Tanzania. We architect tailor-made wildlife safaris, gorilla tracking expeditions, and seamless cross-border circuits across Tanzania, Kenya, Uganda, and Rwanda.
             </p>
 
             <div className="space-y-2 text-xs text-stone-400 pt-2">
@@ -86,7 +86,7 @@ export const Footer: React.FC = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <Mail className="w-4 h-4 text-amber-500 shrink-0" />
-                <span>info@tingatingasafari.com | akim@tingatingasafari.com</span>
+                <span>info@gandasafaris.com | akim@gandasafaris.com</span>
               </div>
             </div>
 
@@ -205,7 +205,7 @@ export const Footer: React.FC = () => {
         {/* Bottom bar */}
         <div className="mt-12 pt-8 border-t border-stone-900 flex flex-col sm:flex-row items-center justify-between text-xs text-stone-500">
           <div>
-            © {new Date().getFullYear()} TingaTinga Safari and Holiday. All rights reserved. Registered in Arusha, Tanzania.
+            © {new Date().getFullYear()} Ganda Safaris and Holiday. All rights reserved. Registered in Arusha, Tanzania.
           </div>
           <div className="flex items-center space-x-4 mt-4 sm:mt-0">
             <Link to="/how-we-work" className="hover:text-stone-300">Terms & Booking Charter</Link>

@@ -1,12 +1,12 @@
-# Tinga Tinga Safari (TingaTinga Safari and Holiday)
+# Ganda Safaris (Ganda Safaris and Holiday)
 > **Boutique East African Safari Operator & Primate Expeditions**  
 > **Headquarters:** P.O. Box 2751, Goliondoi Road / Clock Tower Roundabout, Arusha, Tanzania  
-> **Founder:** Akim Mmari | **WhatsApp 24/7:** +255 784 123 456 | **Email:** info@tingatingasafari.com
+> **Founder:** Akim Mmari | **WhatsApp 24/7:** +255 784 123 456 | **Email:** info@gandasafaris.com
 
 ---
 
 ## 🌍 Executive Overview & Operating Charter
-Tinga Tinga Safari is a boutique safari operator designing bespoke mid-range, luxury, and ultra-luxe expeditions across **Tanzania, Kenya, Rwanda, and Uganda**. Our core focus centers on the Great Migration, Bwindi/Volcanoes mountain gorilla trekking, chimpanzee habituation, and seamless cross-border multi-day circuits.
+Ganda Safaris is a boutique safari operator designing bespoke mid-range, luxury, and ultra-luxe expeditions across **Tanzania, Kenya, Rwanda, and Uganda**. Our core focus centers on the Great Migration, Bwindi/Volcanoes mountain gorilla trekking, chimpanzee habituation, and seamless cross-border multi-day circuits.
 
 ### The 4 Pillars of Transparency:
 1. **No Hidden Subcontracting:** We own our fleet in Tanzania. In Uganda and Kenya, we partner openly with audited, named ground operators whose license numbers (AUTO-UG-2019-142, KATO-KE-2020-089) are published directly to travelers.
