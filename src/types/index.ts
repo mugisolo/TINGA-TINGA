@@ -1,346 +1,351 @@
-export type Country = 'Tanzania' | 'Uganda' | 'Rwanda' | 'Kenya' | 'Cross-Border';
-export type DestinationCountry = Country;
+export type Currency = 'USD' | 'EUR' | 'GBP' | 'UGX';
 
-export type SafariStyle = 
-  | 'Gorilla Trekking'
-  | 'Great Migration'
-  | 'Big Five Safari'
-  | 'Photography Expedition'
-  | 'Birding & Naturalist'
-  | 'Fly-In Luxury Circuit'
-  | 'Cross-Border Overland';
+export type Specialty =
+  | 'gorillas'
+  | 'chimps'
+  | 'birding'
+  | 'big-game'
+  | 'culture'
+  | 'hiking'
+  | 'photography';
 
-export type BudgetTier = 'Mid-Range' | 'Luxury' | 'Signature / Ultra-Luxe';
+export type ComfortTier = 'mid-range' | 'luxury' | 'signature';
+
+export interface Guide {
+  id: string;
+  slug: string;
+  name: string;
+  photo: string;
+  homeRegion: string;
+  tagline: string;
+  bio: string;
+  fieldStory: string;
+  languages: string[];
+  specialties: Specialty[];
+  regionsCovered: string[];
+  yearsExperience: number;
+  certifications: string[];
+  rating: number; // 4.7 - 5.0
+  reviewCount: number;
+}
 
 export interface DayPlan {
   day: number;
-  dayNumber?: number;
   title: string;
   location: string;
-  description: string;
-  accommodation: string;
-  mealPlan: string; // e.g. 'Full Board (B, L, D)'
-  meals?: string;
-  driveDistance?: string;
-  wildlifeHighlights?: string[];
+  summary: string;
   activities: string[];
-  transferTime?: string;
+  accommodationTier: string;
+  meals: string;
+  driveTime: string;
+  wildlifeHighlights: string[];
 }
 
-export interface PriceBandDetail {
-  perPersonDouble: number;
-  perPersonDay: number;
+export interface PriceBand {
+  tier: ComfortTier;
+  label: string;
+  perPersonUSD: number;
+  perPersonPerDayUSD: number;
+  lodgeExamples: string[];
   description: string;
-  lodgesPreview?: string[];
 }
 
-export interface PriceBands {
-  midRange: PriceBandDetail;
-  luxury: PriceBandDetail;
-  signature: PriceBandDetail;
-}
-
-export interface Itinerary {
+export interface Experience {
   id: string;
   slug: string;
   title: string;
   subtitle: string;
-  country: Country;
-  countries: Country[];
+  region: string;
+  regions: string[];
   durationDays: number;
-  days?: DayPlan[];
-  featured: boolean;
+  summary: string;
   heroImage: string;
   galleryImages: string[];
-  overview: string;
-  highlights: string[];
-  startingPricePerDayUSD: number;
-  priceBands: PriceBands;
+  interests: Specialty[];
   dayByDay: DayPlan[];
-  inclusions: string[];
+  comfortTiers: ComfortTier[];
+  priceBands: PriceBand[];
+  inclusions: string[]; // Always includes: "Private 4x4 Land Cruiser with pop-up roof", "Professional Enganda guide-driver", "All park entrance fees", "Gorilla/chimp permits as specified", "Full-board meals", "Airport meet & greet in Entebbe"
   exclusions: string[];
-  lodges: {
-    name: string;
-    type: string;
-    location: string;
-    image?: string;
-  }[];
-  vehicleInfo: string;
-  guideLanguages: string[];
-  bestTimeToTravel: string;
-  gorillaPermitRequired: boolean;
-  permitDetails?: string;
+  recommendedGuides: string[]; // guide slugs
+  permitsRequired: string[]; // PermitFact ids
+  bestMonths: string;
   faqs: {
     question: string;
     answer: string;
   }[];
 }
 
-export interface GroundPartner {
-  id: string;
-  name: string;
-  partnerName?: string;
-  country: 'Uganda' | 'Kenya' | 'Tanzania';
-  licenseNumber: string;
-  accreditation: string; // e.g. 'AUTO Member #294, UWA Licensed Operator'
-  accreditationBody?: string;
-  badgeUrl?: string;
-  operatingSince?: number;
-  serviceAreas?: string[];
-  fleetSpecs: string;
-  emergencyProtocols?: string;
-  insuranceSpecs?: string;
-  guideCredentials?: string;
-  headquarters?: string;
-  contactPerson?: string;
-  vettingDate?: string;
-  accountabilityGuarantee?: string;
-  verified?: boolean;
-  notes?: string;
-}
-
 export interface PermitFact {
   id: string;
-  parkOrPermit?: string;
-  parkName?: string;
-  permitType?: string;
-  authority?: string;
-  country: Country;
+  name: string;
+  authority: 'UWA';
+  park: string;
   costUSD: number;
-  validityDetails?: string;
-  advanceBookingMonths?: number;
-  minimumAge?: number;
-  dailyPermitLimit?: number;
-  cancellationPolicy?: string;
+  lowSeasonCostUSD?: number;
+  lowSeasonMonths?: string;
+  priceFrom2027USD?: number;
+  validity: string;
+  dailyQuota: string;
+  minAge: number;
+  notes: string;
+}
+
+export interface Lead {
+  id: string;
+  name: string;
+  email: string;
+  whatsapp: string;
+  partySize: number;
+  targetDates: string;
+  budgetTier: ComfortTier;
+  interests: string[];
+  regions?: string[];
+  durationDays?: number;
+  preferredGuideSlug?: string;
+  experienceSlug?: string;
   notes?: string;
-  governmentBody?: string;
-  lastVerified?: string;
+  status: 'new' | 'quote_sent' | 'confirmed';
+  createdAt: string;
 }
 
 export interface Review {
   id: string;
-  author?: string;
-  guestName?: string;
-  location?: string;
-  rating: number; // 1-5
-  date?: string;
-  title?: string;
-  tripTitle?: string;
-  content?: string;
-  comment?: string;
-  safariType?: SafariStyle;
-  country: Country | string;
-  itineraryName?: string;
-  budgetTier?: string;
-  tripMonthYear?: string;
-  verifiedGuest?: boolean;
-  verified?: boolean;
-  source?: 'Direct Guest' | 'TripAdvisor' | 'SafariBookings' | string;
-  avatar?: string;
+  guestName: string;
+  country: string;
+  destination?: string;
+  experienceSlug: string;
+  guideSlug: string;
+  guideName?: string;
+  rating: number;
+  title: string;
+  text: string;
+  date: string;
+  partyType: string;
+  status?: 'published' | 'archived';
+  authorId?: string;
 }
 
-export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'quote_sent' | 'deposit_paid' | 'confirmed' | 'cancelled' | 'refunded' | 'closed_won' | 'closed_lost' | 'abandoned';
+export interface GeneratedItineraryDay {
+  day: number;
+  title: string;
+  destination: string;
+  morningActivity: string;
+  afternoonActivity: string;
+  accommodation: string;
+  meals: string;
+  driveTime: string;
+  wildlifeHighlight: string;
+}
 
-export interface Lead {
+export interface GeneratedSafariItinerary {
   id: string;
+  referenceCode: string;
+  title: string;
+  subtitle: string;
+  region: string;
+  budgetTier: ComfortTier;
+  activityFocus: string;
+  durationDays: number;
+  partySize: number;
+  estimatedPerPersonUSD: number;
+  totalPackageUSD: number;
+  depositAmountUSD: number;
+  matchedGuideSlug: string;
+  matchedGuideName: string;
+  matchedGuideReason: string;
+  permitBreakdown: {
+    permitName: string;
+    costUSD: number;
+  }[];
+  recommendedPartnerStays: string[];
+  days: GeneratedItineraryDay[];
+  conservationNote: string;
+  depositPaid?: boolean;
   createdAt: string;
-  updatedAt: string;
-  status: LeadStatus;
-  stepReached?: number;
-  name?: string;
-  email?: string;
-  phone?: string;
-  whatsappOptIn?: boolean;
-  preferredLanguage?: string;
-  countries?: Country[] | string[];
-  travelDates?: string;
-  targetDates?: string;
-  durationDays?: number;
-  travelersCount?: number;
-  travelerType?: 'couple' | 'family' | 'private_group' | 'solo';
-  budgetBand?: BudgetTier | string;
-  interests?: string[];
-  notes?: string;
-  source: 'trip_planner' | 'whatsapp' | 'agent_concierge' | 'contact_page' | 'web_chat' | 'assistant_tool' | string;
-  assignedTo?: string;
-  wabaConversationId?: string;
-  depositAmountUSD?: number;
+}
+
+export interface DestinationRegion {
+  slug: string;
+  name: string;
+  tagline: string;
+  summary: string;
+  bestSeasons: string;
+  keyWildlife: string[];
+  highlights: string[];
+  heroImage: string;
+  parkElevation?: string;
+  driveFromEntebbe: string;
+}
+
+export interface JournalArticle {
+  slug: string;
+  title: string;
+  subtitle: string;
+  excerpt: string;
+  category:
+    | 'Travel Updates'
+    | 'Safari Tips'
+    | 'Cultural Stories'
+    | 'Permits & Planning'
+    | 'Birding Field Notes'
+    | 'Packing & Preparation'
+    | 'Conservation & Tariffs';
+  authorGuideSlug: string;
+  publishedDate: string;
+  readTimeMinutes: number;
+  heroImage: string;
+  keyTakeaways: string[];
+  sections: {
+    heading: string;
+    body: string;
+  }[];
 }
 
 export interface ChatMessage {
-  id?: string;
-  role: 'user' | 'assistant' | 'system' | 'tool';
+  id: string;
+  role: 'user' | 'assistant';
   content: string;
   timestamp: string;
-  toolCalls?: any[];
+  toolCalls?: {
+    name: string;
+    arguments: Record<string, any>;
+    result: any;
+  }[];
 }
 
 export interface ChatSession {
   id: string;
-  createdAt?: string;
-  updatedAt?: string;
-  channel?: string;
-  language?: string;
-  startedAt?: string;
-  lastActive?: string;
-  userLanguage?: string;
-  messages: ChatMessage[];
-  leadId?: string;
-  handoffRequested?: boolean;
-  handoffReason?: string;
-  status?: 'active' | 'paused_for_human' | 'closed';
-}
-
-export interface WABAMessage {
-  id: string;
-  waId: string;
-  fromName?: string;
-  direction: 'inbound' | 'outbound';
-  type: 'text' | 'template' | 'interactive' | 'location';
-  body: string;
-  timestamp: string;
-  templateName?: string;
-  status?: 'sent' | 'delivered' | 'read' | 'failed';
-}
-
-export interface WABATemplate {
-  name: string;
-  category: 'UTILITY' | 'MARKETING';
-  language: string;
-  header?: string;
-  body: string;
-  footer?: string;
-  buttons?: { type: 'QUICK_REPLY' | 'URL'; text: string; value?: string }[];
-  status: 'APPROVED' | 'PENDING' | 'REJECTED';
-}
-
-export type Currency = 'USD' | 'EUR' | 'GBP' | 'TZS' | 'UGX' | 'KES';
-
-export interface CurrencyRate {
-  code: Currency;
-  symbol: string;
-  rateAgainstUSD: number; // USD = 1
-  name?: string;
-}
-
-export type LanguageCode = 'en' | 'fr' | 'de' | 'es' | 'it';
-
-export interface TeamMember {
-  id: string;
-  name: string;
-  role: string;
-  location: string;
-  languages: string[];
-  specialties: string[];
-  bio: string;
-  photo: string;
-}
-
-// ================= USER WALLET SYSTEM TYPES =================
-export type WalletStatus = 'active' | 'suspended' | 'closed';
-
-export type WalletTransactionType = 
-  | 'topup'
-  | 'payment'
-  | 'refund'
-  | 'referral_credit'
-  | 'promo_credit'
-  | 'admin_adjustment'
-  | 'reversal';
-
-export type WalletTransactionDirection = 'credit' | 'debit';
-
-export type WalletTransactionStatus = 'pending' | 'completed' | 'failed';
-
-export type PaymentProvider = 'dpo' | 'stripe' | 'paypal' | 'mpesa' | 'manual' | 'wallet';
-
-export interface Wallet {
-  id: string;
-  userId: string;
-  userName?: string;
-  userEmail?: string;
-  userPhone?: string;
-  currency: 'USD';
-  balance: number; // Total funds in wallet (USD)
-  holdBalance: number; // Funds locked in escrow for pending bookings
-  availableBalance?: number; // balance - holdBalance
-  status: WalletStatus;
   createdAt: string;
   updatedAt: string;
+  messages: ChatMessage[];
 }
+
+export interface SocialLink {
+  platform: 'x' | 'instagram' | 'linkedin';
+  label: string;
+  handle: string;
+  url: string;
+  description: string;
+}
+
+export interface ConfirmedPackageEvent {
+  id: string;
+  title: string;
+  subtitle: string;
+  eventTag: string;
+  category: 'Cultural & Music Event' | 'Guaranteed Primate Departure' | 'Seasonal Migration & Savanna' | 'Ornithology Special';
+  dateWindow: string;
+  durationLabel: string;
+  location: string;
+  spotsRemaining: number;
+  pricePerPersonUSD: number;
+  leadGuideSlug: string;
+  experienceSlug?: string;
+  heroImage: string;
+  highlights: string[];
+  statusLabel: string;
+}
+
+export type UgandaRegion = string;
+
+export type PartnerCategory = 'hotel' | 'motel' | 'campsite' | 'lodge';
+
+export interface AccommodationPartner {
+  id: string;
+  slug: string;
+  name: string;
+  category: PartnerCategory;
+  categoryLabel: 'Hotel' | 'Motel' | 'Camp Site' | 'Safari Lodge';
+  region: UgandaRegion;
+  locationDetails: string;
+  pricePerNightUSD: number;
+  comfortTier: ComfortTier;
+  rating: number;
+  reviewCount: number;
+  heroImage: string;
+  summary: string;
+  amenities: string[];
+  sustainabilityNote: string;
+  recommendedGuideSlugs: string[];
+  featured: boolean;
+  verifiedPartnerBadge: string;
+}
+
+export type WalletTransactionType =
+  | 'deposit'
+  | 'withdrawal'
+  | 'permit_escrow'
+  | 'permit_release'
+  | 'partner_booking'
+  | 'safari_deposit'
+  | 'expedition_reward';
+
+export type WalletPaymentRail =
+  | 'Visa / Mastercard'
+  | 'MTN Mobile Money Uganda'
+  | 'Airtel Money Uganda'
+  | 'International Bank Wire'
+  | 'Enganda Expedition Credit';
 
 export interface WalletTransaction {
   id: string;
-  walletId: string;
   type: WalletTransactionType;
-  direction: WalletTransactionDirection;
-  amount: number;
-  currency: 'USD';
-  status: WalletTransactionStatus;
-  reference: string;
-  idempotencyKey: string;
-  paymentProvider?: PaymentProvider;
-  providerRef?: string;
-  bookingId?: string;
-  narration: string;
-  meta: {
-    action?: 'hold' | 'capture' | 'release' | 'topup' | 'refund' | 'credit';
-    reasonCode?: string;
-    bookingTitle?: string;
-    travelersCount?: number;
-    depositPercentage?: number;
-    originalProvider?: string;
-    operatorNote?: string;
-    phoneNumber?: string;
-    [key: string]: any;
+  title: string;
+  subtitle: string;
+  amountUSD: number;
+  direction: 'credit' | 'debit' | 'escrow_lock' | 'escrow_unlock';
+  status: 'completed' | 'escrow_held' | 'refunded';
+  paymentRail: WalletPaymentRail;
+  referenceCode: string;
+  createdAt: string;
+  metadata?: {
+    permitId?: string;
+    partnerSlug?: string;
+    experienceSlug?: string;
+    itineraryId?: string;
+    nights?: number;
+    guests?: number;
+    trekDate?: string;
   };
-  createdAt: string;
 }
 
-export interface PaymentIntent {
+export interface PermitEscrowHold {
   id: string;
-  walletId: string;
-  userId: string;
-  provider: 'dpo' | 'stripe' | 'paypal' | 'mpesa';
-  providerRef?: string;
-  amount: number;
-  currency: 'USD';
-  status: 'pending' | 'processing' | 'succeeded' | 'failed' | 'cancelled';
-  webhookVerified: boolean;
-  rawWebhook?: Record<string, any>;
-  idempotencyKey: string;
+  permitId: string;
+  permitName: string;
+  park: string;
+  guests: number;
+  PreferredTrekDate: string;
+  amountHeldUSD: number;
+  uwaReceiptCode: string;
+  status: 'active_escrow' | 'released';
   createdAt: string;
-  updatedAt: string;
 }
 
-export interface AdminAudit {
+export interface PartnerBookingRecord {
   id: string;
-  adminId: string;
-  action: string;
-  target: string;
-  reasonCode?: string;
-  narration?: string;
-  diff: Record<string, any>;
+  partnerSlug: string;
+  partnerName: string;
+  partnerCategory: PartnerCategory;
+  region: UgandaRegion;
+  checkInDate: string;
+  nights: number;
+  guests: number;
+  totalPaidUSD: number;
+  voucherCode: string;
   createdAt: string;
 }
 
-export interface UserReferral {
+export interface NewsletterSubscription {
   id: string;
-  userId: string;
-  referralCode: string;
-  referredUserId?: string;
-  referredUserName?: string;
-  bookingId?: string;
-  status: 'pending' | 'credited' | 'expired';
-  rewardAmount: number;
-  createdAt: string;
-  updatedAt: string;
+  email: string;
+  firstName?: string;
+  topics: string[];
+  preferredSeason?: string;
+  subscribedAt: string;
+  rewardClaimed: boolean;
 }
 
-export interface FXRate {
-  currency: Currency;
-  rateToUSD: number;
-  symbol: string;
-  name: string;
-  updatedAt: string;
-}
+
+

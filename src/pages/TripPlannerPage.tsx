@@ -1,857 +1,739 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Currency, DestinationCountry, BudgetTier, Lead } from '../types';
-import { ITINERARIES } from '../data/seedData';
-import { formatPrice } from '../lib/currency';
-import { trackEvent } from '../lib/analytics';
-import { 
-  Compass, 
-  MapPin, 
-  Calendar, 
-  Users, 
-  Sparkles, 
-  ShieldCheck, 
-  ArrowRight, 
-  ArrowLeft, 
-  CheckCircle, 
-  MessageCircle, 
-  DollarSign,
-  HardDrive
+import {
+  CheckCircle2,
+  ArrowRight,
+  ArrowLeft,
+  Compass,
+  Users,
+  Calendar,
+  MapPin,
+  ShieldCheck,
+  MessageCircle,
+  Star,
 } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { exportSafariDocumentToDrive } from '../services/googleDrive';
+import {
+  GUIDES,
+  DESTINATIONS,
+  EXPERIENCES,
+  SPECIALTY_LABELS,
+  AVAILABILITY_PROMISE,
+  PERMIT_RECEIPT_GUARANTEE,
+  getWhatsAppUrl,
+} from '../data/seedData';
+import { Specialty, ComfortTier } from '../types';
+import { formatPrice } from '../lib/currency';
+import { useInquiry } from '../context/InquiryContext';
+import { SmartImage } from '../components/SmartImage';
+import { SEO } from '../components/SEO';
+import { SafariItineraryGenerator } from '../components/SafariItineraryGenerator';
 
-interface TripPlannerPageProps {
-  currency: Currency;
-}
+const ALL_SPECIALTIES = Object.keys(SPECIALTY_LABELS) as Specialty[];
 
-export const TripPlannerPage: React.FC<TripPlannerPageProps> = ({ currency }) => {
-  const { user, accessToken, signInWithGoogle } = useAuth();
-  const [isSavingToDrive, setIsSavingToDrive] = useState(false);
-  const [driveSaveSuccess, setDriveSaveSuccess] = useState<string | null>(null);
-
+export const TripPlannerPage: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const preselectedItinerarySlug = searchParams.get('itinerary');
-  const preselectedTier = searchParams.get('tier') as BudgetTier | null;
+  const { currency, submitLead } = useInquiry();
 
-  // Multi-step State (1: Countries, 2: Style & Tier, 3: Group & Season, 4: Interests, 5: Review & Lead)
-  const [currentStep, setCurrentStep] = useState<number>(1);
-  const [selectedCountries, setSelectedCountries] = useState<DestinationCountry[]>(['Tanzania']);
-  const [budgetTier, setBudgetTier] = useState<BudgetTier>(preselectedTier || 'Luxury');
-  const [daysCount, setDaysCount] = useState<number>(8);
-  const [travelersCount, setTravelersCount] = useState<number>(2);
-  const [season, setSeason] = useState<string>('Great Migration River Crossings (Jul - Oct)');
-  const [interests, setInterests] = useState<string[]>([
-    'Big Cat Tracking',
-    'Private 4x4 Pop-Top Land Cruiser',
+  const preselectedGuide = searchParams.get('guide') || '';
+  const preselectedExperience = searchParams.get('experience') || '';
+
+  const [step, setStep] = useState<number>(1);
+  const [interests, setInterests] = useState<Specialty[]>(['gorillas', 'chimps']);
+  const [selectedRegions, setSelectedRegions] = useState<string[]>([
+    'Bwindi & Mgahinga',
+    'Kibale Forest',
   ]);
-  const [gorillaTracking, setGorillaTracking] = useState<boolean>(false);
-  const [specialRequests, setSpecialRequests] = useState<string>('');
-
-  // Lead contact fields
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [preferredContact, setPreferredContact] = useState<'whatsapp' | 'email'>('whatsapp');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [durationDays, setDurationDays] = useState<number>(7);
+  const [partySize, setPartySize] = useState<number>(2);
+  const [targetDates, setTargetDates] = useState<string>('');
+  const [budgetTier, setBudgetTier] = useState<ComfortTier>('luxury');
+  const [preferredGuideSlug, setPreferredGuideSlug] = useState<string>(preselectedGuide);
+  const [experienceSlug, setExperienceSlug] = useState<string>(preselectedExperience);
+  const [name, setName] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [whatsapp, setWhatsapp] = useState<string>('');
+  const [notes, setNotes] = useState<string>('');
   const [submittedLeadId, setSubmittedLeadId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    trackEvent('planner_start');
-    if (preselectedItinerarySlug) {
-      const match = ITINERARIES.find((it) => it.slug === preselectedItinerarySlug);
-      if (match) {
-        setSelectedCountries(match.countries);
-        setDaysCount(match.durationDays);
-        if (match.gorillaPermitRequired) setGorillaTracking(true);
+    if (preselectedGuide) {
+      setPreferredGuideSlug(preselectedGuide);
+    }
+    if (preselectedExperience) {
+      setExperienceSlug(preselectedExperience);
+      const found = EXPERIENCES.find((e) => e.slug === preselectedExperience);
+      if (found) {
+        setDurationDays(found.durationDays);
+        setSelectedRegions(found.regions);
+        setInterests(found.interests);
       }
     }
-  }, [preselectedItinerarySlug]);
+  }, [preselectedGuide, preselectedExperience]);
 
-  const toggleCountry = (country: DestinationCountry) => {
-    if (selectedCountries.includes(country)) {
-      if (selectedCountries.length > 1) {
-        setSelectedCountries(selectedCountries.filter((c) => c !== country));
-      }
-    } else {
-      setSelectedCountries([...selectedCountries, country]);
-    }
+  const toggleInterest = (spec: Specialty) => {
+    setInterests((prev) =>
+      prev.includes(spec) ? prev.filter((item) => item !== spec) : [...prev, spec]
+    );
   };
 
-  const toggleInterest = (item: string) => {
-    if (interests.includes(item)) {
-      setInterests(interests.filter((i) => i !== item));
-    } else {
-      setInterests([...interests, item]);
-    }
+  const toggleRegion = (regName: string) => {
+    setSelectedRegions((prev) =>
+      prev.includes(regName)
+        ? prev.filter((item) => item !== regName)
+        : [...prev, regName]
+    );
   };
 
-  // Dynamic price estimator calculation
-  const getEstimatedPricePerPersonUSD = () => {
-    let dailyBase = 580; // Mid-range
-    if (budgetTier === 'Luxury') dailyBase = 890;
-    if (budgetTier === 'Signature / Ultra-Luxe') dailyBase = 1450;
+  // Indicative price band calculation
+  const dailyRateUSD =
+    budgetTier === 'mid-range' ? 390 : budgetTier === 'signature' ? 890 : 590;
+  const permitEstimateUSD =
+    (interests.includes('gorillas') || selectedRegions.includes('Bwindi & Mgahinga')
+      ? 800
+      : 0) +
+    (interests.includes('chimps') || selectedRegions.includes('Kibale Forest')
+      ? 250
+      : 0);
+  const lowEstimateUSD = durationDays * dailyRateUSD + permitEstimateUSD;
+  const highEstimateUSD = Math.round(lowEstimateUSD * 1.18);
 
-    // Cross-border or internal logistics multiplier
-    if (selectedCountries.length > 1) dailyBase += 80;
+  const selectedGuideObj = GUIDES.find((g) => g.slug === preferredGuideSlug);
 
-    let total = dailyBase * daysCount;
-
-    // Gorilla permit add-on
-    if (gorillaTracking || selectedCountries.includes('Uganda')) {
-      total += 800; // Uganda permit
-    } else if (selectedCountries.includes('Rwanda')) {
-      total += 1500; // Rwanda permit
-    }
-
-    return Math.round(total);
-  };
-
-  const estimatedTotalUSD = getEstimatedPricePerPersonUSD() * travelersCount;
-  const depositRequiredUSD = Math.round(estimatedTotalUSD * 0.30);
-
-  const handleSubmitLead = async (e: React.FormEvent) => {
+  const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email) return;
-
-    setIsSubmitting(true);
-    trackEvent('planner_complete', {
-      countries: selectedCountries,
-      tier: budgetTier,
-      travelersCount,
-      estimatedTotalUSD,
-    });
-
+    if (!name.trim() || !email.trim()) return;
+    setSubmitting(true);
     try {
-      const response = await fetch('/api/leads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          email,
-          phone,
-          status: 'new',
-          source: 'trip_planner',
-          travelersCount,
-          budgetBand: budgetTier,
-          countries: selectedCountries,
-          interests: [
-            ...interests,
-            gorillaTracking ? 'Gorilla Trekking' : '',
-            season,
-          ].filter(Boolean),
-          notes: `Safari Plan: ${daysCount} Days, Season: ${season}. Est total: $${estimatedTotalUSD} USD. Special notes: ${specialRequests}`,
-          depositAmountUSD: depositRequiredUSD,
-        }),
+      const created = await submitLead({
+        name: name.trim(),
+        email: email.trim(),
+        whatsapp: whatsapp.trim() || 'Not provided',
+        partySize,
+        targetDates: targetDates.trim() || 'Flexible 2026/2027',
+        budgetTier,
+        interests,
+        regions: selectedRegions,
+        durationDays,
+        preferredGuideSlug: preferredGuideSlug || undefined,
+        experienceSlug: experienceSlug || undefined,
+        notes: notes.trim(),
       });
-
-      const data = await response.json();
-      setSubmittedLeadId(data.id || 'lead_' + Date.now());
-      setIsSubmitted(true);
-    } catch (err) {
-      // Graceful fallback
-      setSubmittedLeadId('lead_' + Date.now());
-      setIsSubmitted(true);
+      setSubmittedLeadId(created.id);
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
-  };
-
-  // WhatsApp deep link with detailed trip breakdown
-  const getWhatsAppLeadLink = () => {
-    const summary = `Jambo Akim! I just designed a safari on your website:
-- Destination: ${selectedCountries.join(', ')}
-- Duration: ${daysCount} days (${travelersCount} travelers)
-- Tier: ${budgetTier}
-- Season: ${season}
-- Gorilla Trekking: ${gorillaTracking ? 'Yes (Include Permits)' : 'No'}
-- Estimated Deposit: $${depositRequiredUSD} USD
-My name is ${name || 'Guest'}. Can we discuss custom dates?`;
-
-    return `https://wa.me/255784123456?text=${encodeURIComponent(summary)}`;
   };
 
   return (
-    <div className="bg-stone-950 text-stone-100 min-h-screen py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
+    <div className="bg-[#FAF7F2] min-h-screen py-12 sm:py-16">
+      <SEO
+        title="Interactive Uganda Safari Trip Planner & Guide Matcher | Enganda Safaris"
+        description="Design your custom Uganda safari step-by-step: choose your wildlife interests, Uganda regions, duration, comfort tier, and optional preferred Ugandan guide."
+      />
+
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-10 space-y-2">
-          <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-amber-600/20 text-amber-400 text-xs font-bold border border-amber-500/30">
-            <Compass className="w-3.5 h-3.5" />
-            <span>Tailor-Made Safari Architect</span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-bold text-white font-display">
-            Design Your Private East African Circuit
-          </h1>
-          <p className="text-xs sm:text-sm text-stone-400">
-            Build your personalized route in 4 quick steps. Akim reviews every design and provides a formal itinerary with live lodge availability within 12 hours.
-          </p>
-        </div>
-
-        {/* Progress Step Indicator */}
-        <div className="flex items-center justify-between max-w-xl mx-auto mb-10 text-xs font-semibold">
-          {[
-            { num: 1, label: 'Destinations' },
-            { num: 2, label: 'Style & Days' },
-            { num: 3, label: 'Timing & Guests' },
-            { num: 4, label: 'Interests' },
-            { num: 5, label: 'Estimate & Book' },
-          ].map((s) => (
-            <div key={s.num} className="flex flex-col items-center">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs mb-1 transition-colors ${
-                  currentStep === s.num
-                    ? 'bg-amber-600 text-stone-950 shadow-lg shadow-amber-900/50 ring-2 ring-amber-400'
-                    : currentStep > s.num
-                    ? 'bg-emerald-700 text-white'
-                    : 'bg-stone-900 text-stone-500 border border-stone-800'
-                }`}
-              >
-                {currentStep > s.num ? '✓' : s.num}
+        <div className="bg-[#226B3E] text-[#FAF7F2] rounded-lg p-6 sm:p-10 border border-[#2E8550]">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <div className="inline-flex items-center gap-2 text-xs font-mono text-[#D99B26] uppercase tracking-wider">
+                <Compass className="w-3.5 h-3.5" />
+                <span>Enganda Custom Safari Designer • Entebbe Coordination</span>
               </div>
-              <span className={`hidden sm:inline ${currentStep === s.num ? 'text-amber-400' : 'text-stone-500'}`}>
-                {s.label}
-              </span>
+              <h1 className="font-serif text-3xl sm:text-5xl font-bold text-white mt-1">
+                Design Your Uganda Safari & Choose Your Guide
+              </h1>
             </div>
-          ))}
+            <div className="bg-[#1B5632] border border-[#34945A] rounded-md px-4 py-3 text-right">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-[#D99B26] block">
+                Indicative Price Band ({budgetTier})
+              </span>
+              <span className="font-mono text-lg sm:text-xl font-bold text-white">
+                {formatPrice(lowEstimateUSD, currency)} – {formatPrice(highEstimateUSD, currency)}
+              </span>
+              <span className="text-[11px] text-[#D6CEC2] block">per person ({durationDays} days)</span>
+            </div>
+          </div>
         </div>
 
-        {/* Form Body with Live Price Card Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Main Step Content (8 cols) */}
-          <div className="lg:col-span-8 bg-stone-900/90 rounded-2xl p-6 sm:p-8 border border-stone-800 shadow-2xl">
-            {isSubmitted ? (
-              <div className="text-center py-10 space-y-6">
-                <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/40">
-                  <CheckCircle className="w-10 h-10" />
-                </div>
-                <h3 className="text-2xl font-bold text-white font-display">
-                  Safari Architecture Received!
-                </h3>
-                <p className="text-sm text-stone-300 max-w-md mx-auto leading-relaxed">
-                  Asante sana, <strong className="text-amber-400">{name}</strong>! Akim has received your route specifications for {selectedCountries.join(' & ')}.
-                </p>
+        {submittedLeadId ? (
+          <div className="bg-white border-2 border-[#2D6A4F] rounded-lg p-8 sm:p-12 text-center space-y-6">
+            <div className="w-14 h-14 rounded-md bg-[#2D6A4F]/15 text-[#2D6A4F] flex items-center justify-center mx-auto">
+              <CheckCircle2 className="w-8 h-8" />
+            </div>
 
-                <div className="bg-stone-950 p-5 rounded-xl border border-stone-800 max-w-md mx-auto text-left text-xs space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-stone-400">Duration:</span>
-                    <span className="text-white font-medium">{daysCount} Days ({travelersCount} guests)</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-stone-400">Accommodation Style:</span>
-                    <span className="text-white font-medium">{budgetTier}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-stone-400">Estimated Total Band:</span>
-                    <span className="text-amber-400 font-bold">{formatPrice(estimatedTotalUSD, currency)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-stone-400">30% Trip Deposit:</span>
-                    <span className="text-emerald-400 font-bold">{formatPrice(depositRequiredUSD, currency)}</span>
-                  </div>
-                </div>
+            <div className="space-y-2 max-w-xl mx-auto">
+              <span className="font-mono text-xs uppercase tracking-wider text-[#2D6A4F] font-semibold">
+                Inquiry Reference: {submittedLeadId}
+              </span>
+              <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#1A1612]">
+                A Real Enganda Coordinator Replies Within 12 Hours
+              </h2>
+              <p className="text-sm text-[#5A5248] leading-relaxed">
+                Thank you, <strong className="text-[#1A1612]">{name}</strong>. Your custom {durationDays}-day Uganda safari brief has been logged with our head office in Bugonga, Entebbe. {AVAILABILITY_PROMISE}
+              </p>
+            </div>
 
-                <p className="text-xs text-stone-400 max-w-md mx-auto">
-                  Akim will personally assemble your detailed day-by-day outline, route map, and lodge availability within 12 hours.
-                </p>
-
-                {driveSaveSuccess && (
-                  <div className="bg-emerald-950/70 border border-emerald-800 text-emerald-200 px-4 py-2.5 rounded-xl text-xs max-w-md mx-auto flex items-center justify-center space-x-2">
-                    <CheckCircle className="w-4 h-4 text-emerald-400" />
-                    <span>{driveSaveSuccess}</span>
-                    <Link to="/drive" className="underline font-bold text-amber-400 ml-1">
-                      View in Drive Vault
-                    </Link>
-                  </div>
-                )}
-
-                <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
-                  <a
-                    href={getWhatsAppLeadLink()}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center space-x-2 shadow-lg"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    <span>Chat with Akim immediately on WhatsApp</span>
-                  </a>
-
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      if (!accessToken) {
-                        try {
-                          await signInWithGoogle();
-                        } catch (e) {
-                          return;
-                        }
-                      }
-                      setIsSavingToDrive(true);
-                      try {
-                        const docTitle = `Ganda_Safaris_${name.replace(/\s+/g, '_') || 'Guest'}_${daysCount}D`;
-                        const docBody = `GANDA SAFARIS - CUSTOM EXPEDITION SPECIFICATION
-Client: ${name || 'Prospective Traveler'} (${email})
-Phone: ${phone || 'N/A'}
-Contact Preference: ${preferredContact}
-Headquarters: Arusha, Tanzania (P.O. Box 2751)
-
-EXPEDITION DETAILS:
-Selected Countries: ${selectedCountries.join(', ')}
-Total Days: ${daysCount} Days
-Number of Guests: ${travelersCount}
-Tier / Style: ${budgetTier}
-Travel Window: ${season}
-Mountain Gorilla Tracking: ${gorillaTracking ? 'Yes (UWA/RDB Statutory Permits Required)' : 'No'}
-Selected Interests: ${interests.join(', ')}
-Special Notes: ${specialRequests || 'Standard Safari Architecture'}
-
-ESTIMATED BUDGET:
-Estimated Total: ${formatPrice(estimatedTotalUSD, currency)} (${currency})
-Deposit Required (30%): ${formatPrice(depositRequiredUSD, currency)} (${currency})
-
-Status: Lead generated via Ganda Safaris Platform.`;
-
-                        await exportSafariDocumentToDrive(accessToken || '', docTitle, docBody);
-                        setDriveSaveSuccess('Plan successfully archived to your Google Drive!');
-                      } catch (err: any) {
-                        alert(err.message || 'Failed to export to Google Drive');
-                      } finally {
-                        setIsSavingToDrive(false);
-                      }
-                    }}
-                    disabled={isSavingToDrive}
-                    className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-xs flex items-center justify-center space-x-2 shadow-lg transition-colors"
-                  >
-                    <HardDrive className="w-4 h-4" />
-                    <span>{isSavingToDrive ? 'Saving to Drive...' : 'Save to Google Drive'}</span>
-                  </button>
-
-                  <Link
-                    to="/"
-                    className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 font-semibold text-xs text-center"
-                  >
-                    Return to Homepage
-                  </Link>
-                </div>
+            <div className="bg-[#F3ECE1] border border-[#E4DCCF] rounded-lg p-5 max-w-lg mx-auto text-left text-xs space-y-2">
+              <div className="font-mono uppercase text-[#C85A28] font-semibold">
+                Your Safari Brief Summary
               </div>
-            ) : (
               <div>
-                {/* STEP 1: Destinations */}
-                {currentStep === 1 && (
-                  <div className="space-y-6">
-                    <div>
-                      <h2 className="text-xl font-bold text-white font-display">
-                        1. Select Countries & Focus
-                      </h2>
-                      <p className="text-xs text-stone-400 mt-1">
-                        Select one or combine multiple countries for a seamless cross-border circuit.
-                      </p>
-                    </div>
+                <strong>Duration & Party:</strong> {durationDays} Days • {partySize} Guests • Target Dates: {targetDates || 'Flexible'}
+              </div>
+              <div>
+                <strong>Uganda Regions:</strong> {selectedRegions.join(', ') || 'Custom Uganda route'}
+              </div>
+              <div>
+                <strong>Comfort Tier:</strong> <span className="capitalize">{budgetTier}</span> ({formatPrice(lowEstimateUSD, currency)} – {formatPrice(highEstimateUSD, currency)} pp)
+              </div>
+              <div>
+                <strong>Preferred Ugandan Guide:</strong>{' '}
+                {selectedGuideObj
+                  ? `${selectedGuideObj.name} (${selectedGuideObj.homeRegion})`
+                  : 'Match me with the best available specialist'}
+              </div>
+            </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {(['Tanzania', 'Uganda', 'Rwanda', 'Kenya'] as DestinationCountry[]).map((c) => {
-                        const isSelected = selectedCountries.includes(c);
-                        return (
-                          <button
-                            type="button"
-                            key={c}
-                            onClick={() => toggleCountry(c)}
-                            className={`p-5 rounded-xl text-left border transition-all ${
-                              isSelected
-                                ? 'bg-amber-600/15 border-amber-500 shadow-md ring-1 ring-amber-500'
-                                : 'bg-stone-950 border-stone-800 hover:border-stone-700'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm font-bold text-white">{c}</span>
-                              <span
-                                className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
-                                  isSelected ? 'bg-amber-600 text-stone-950' : 'border border-stone-700'
-                                }`}
-                              >
-                                {isSelected ? '✓' : ''}
-                              </span>
-                            </div>
-                            <p className="text-xs text-stone-400 leading-relaxed">
-                              {c === 'Tanzania' && 'Serengeti Migration, Ngorongoro Crater, Tarangire Elephants, & Zanzibar beaches.'}
-                              {c === 'Uganda' && 'Bwindi Mountain Gorillas ($800 permit), Kibale Chimps, Queen Elizabeth tree lions.'}
-                              {c === 'Rwanda' && 'Volcanoes NP Gorillas ($1,500 permit), Golden Monkeys, Kigali Memorial & scenery.'}
-                              {c === 'Kenya' && 'Maasai Mara big cats, Amboseli Kilimanjaro vistas, Samburu special five.'}
-                            </p>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div className="pt-4 flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => setCurrentStep(2)}
-                        className="px-6 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-xs uppercase tracking-wider flex items-center space-x-2"
-                      >
-                        <span>Continue to Style</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <a
+                href={getWhatsAppUrl(
+                  `Oli otya Enganda team! I just completed the Trip Planner (Ref ${submittedLeadId}: ${durationDays} days, ${partySize} guests, ${budgetTier} tier${
+                    selectedGuideObj ? `, preferred guide: ${selectedGuideObj.name}` : ''
+                  }).`
                 )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-[#226B3E] hover:bg-[#194E2D] text-[#FAF7F2] text-sm font-semibold px-6 py-3.5 rounded-md transition-colors"
+              >
+                <MessageCircle className="w-4 h-4 text-[#D99B26]" />
+                <span>Chat With Entebbe Coordinator on WhatsApp</span>
+              </a>
 
-                {/* STEP 2: Style & Duration */}
-                {currentStep === 2 && (
-                  <div className="space-y-6">
-                    <div>
-                      <h2 className="text-xl font-bold text-white font-display">
-                        2. Accommodation Style & Duration
-                      </h2>
-                      <p className="text-xs text-stone-400 mt-1">
-                        We work with boutique eco-lodges and luxury tented camps.
-                      </p>
-                    </div>
+              <Link
+                to="/guides"
+                className="inline-flex items-center gap-2 border border-[#226B3E] text-[#226B3E] hover:bg-[#F3ECE1] text-sm font-semibold px-6 py-3.5 rounded-md transition-colors"
+              >
+                <span>Explore Guide Profiles</span>
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white border border-[#E4DCCF] rounded-lg p-6 sm:p-8 space-y-8">
+            {/* Step Progress Indicator */}
+            <div className="grid grid-cols-6 gap-2 border-b border-[#E4DCCF] pb-5">
+              {[
+                { num: 1, label: 'Interests' },
+                { num: 2, label: 'Regions' },
+                { num: 3, label: 'Duration' },
+                { num: 4, label: 'Comfort' },
+                { num: 5, label: 'Guide' },
+                { num: 6, label: 'Confirm' },
+              ].map((s) => (
+                <button
+                  key={s.num}
+                  type="button"
+                  onClick={() => setStep(s.num)}
+                  className={`text-left p-2 rounded-md border transition-colors cursor-pointer ${
+                    step === s.num
+                      ? 'bg-[#226B3E] text-[#FAF7F2] border-[#226B3E]'
+                      : step > s.num
+                      ? 'bg-[#F3ECE1] text-[#226B3E] border-[#E4DCCF]'
+                      : 'bg-[#FAF7F2] text-[#5A5248] border-[#E4DCCF]'
+                  }`}
+                >
+                  <span className="font-mono text-[10px] block opacity-80">0{s.num}</span>
+                  <span className="text-xs font-semibold truncate block">{s.label}</span>
+                </button>
+              ))}
+            </div>
 
-                    {/* Tier selector */}
-                    <div className="space-y-3">
-                      <label className="block text-xs font-bold uppercase tracking-wider text-stone-300">
-                        Accommodation Category
-                      </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        {(['Mid-Range', 'Luxury', 'Signature / Ultra-Luxe'] as BudgetTier[]).map((tier) => (
-                          <button
-                            type="button"
-                            key={tier}
-                            onClick={() => setBudgetTier(tier)}
-                            className={`p-4 rounded-xl text-left border transition-all ${
-                              budgetTier === tier
-                                ? 'bg-amber-600/15 border-amber-500 ring-1 ring-amber-500'
-                                : 'bg-stone-950 border-stone-800 hover:border-stone-700'
-                            }`}
-                          >
-                            <div className="text-xs font-bold text-white">{tier}</div>
-                            <div className="text-[11px] text-amber-400 font-semibold mt-1">
-                              {tier === 'Mid-Range' && '~$450 - $650 pp/day'}
-                              {tier === 'Luxury' && '~$750 - $1,100 pp/day'}
-                              {tier === 'Signature / Ultra-Luxe' && '~$1,300+ pp/day'}
-                            </div>
-                            <p className="text-[10px] text-stone-400 mt-2">
-                              {tier === 'Mid-Range' && 'High-comfort tented lodges, ensuite hot showers, authentic bush atmosphere.'}
-                              {tier === 'Luxury' && 'Private plunge pools, gourmet bush dining, premium private concession locations.'}
-                              {tier === 'Signature / Ultra-Luxe' && 'Singita, One&Only, bespoke charter flights, elite private butler service.'}
-                            </p>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+            {/* STEP 1: Interests */}
+            {step === 1 && (
+              <div className="space-y-6">
+                <div>
+                  <span className="font-mono text-xs uppercase text-[#C85A28] font-semibold">
+                    Step 01 of 06
+                  </span>
+                  <h2 className="font-serif text-3xl font-bold text-[#1A1612] mt-1">
+                    What Wildlife & Experiences Call to You?
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#5A5248] mt-1">
+                    Select one or more specialties so we can match the right Ugandan naturalist.
+                  </p>
+                </div>
 
-                    {/* Days count slider */}
-                    <div className="space-y-3 pt-4 border-t border-stone-800">
-                      <div className="flex justify-between items-center">
-                        <label className="text-xs font-bold uppercase tracking-wider text-stone-300">
-                          Total Safari Days
-                        </label>
-                        <span className="text-sm font-bold text-amber-400">{daysCount} Days ({daysCount - 1} Nights)</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="3"
-                        max="21"
-                        value={daysCount}
-                        onChange={(e) => setDaysCount(Number(e.target.value))}
-                        className="w-full h-2 bg-stone-800 rounded-lg appearance-none cursor-pointer accent-amber-500"
-                      />
-                      <div className="flex justify-between text-[10px] text-stone-500">
-                        <span>3 Days (Short Tanzanian Fly-in)</span>
-                        <span>8-10 Days (Classic Circuit)</span>
-                        <span>21 Days (Grand Expedition)</span>
-                      </div>
-                    </div>
-
-                    <div className="pt-4 flex justify-between">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+                  {ALL_SPECIALTIES.map((spec) => {
+                    const active = interests.includes(spec);
+                    return (
                       <button
+                        key={spec}
                         type="button"
-                        onClick={() => setCurrentStep(1)}
-                        className="px-5 py-3 rounded-xl bg-stone-800 text-stone-300 font-semibold text-xs flex items-center space-x-1"
+                        onClick={() => toggleInterest(spec)}
+                        className={`p-4 rounded-lg border text-left transition-all cursor-pointer ${
+                          active
+                            ? 'bg-[#226B3E] text-[#FAF7F2] border-[#226B3E]'
+                            : 'bg-[#FAF7F2] text-[#1A1612] border-[#E4DCCF] hover:border-[#226B3E]'
+                        }`}
                       >
-                        <ArrowLeft className="w-4 h-4" />
-                        <span>Back</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setCurrentStep(3)}
-                        className="px-6 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-xs uppercase tracking-wider flex items-center space-x-2"
-                      >
-                        <span>Next: Timing</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* STEP 3: Timing & Guests */}
-                {currentStep === 3 && (
-                  <div className="space-y-6">
-                    <div>
-                      <h2 className="text-xl font-bold text-white font-display">
-                        3. Travel Timing & Party Size
-                      </h2>
-                      <p className="text-xs text-stone-400 mt-1">
-                        Wildlife movements change dramatically across seasons.
-                      </p>
-                    </div>
-
-                    {/* Party Size */}
-                    <div className="space-y-2">
-                      <label className="block text-xs font-bold uppercase tracking-wider text-stone-300">
-                        Number of Travelers
-                      </label>
-                      <div className="flex items-center space-x-3">
-                        {[1, 2, 3, 4, 5, 6, 8].map((num) => (
-                          <button
-                            type="button"
-                            key={num}
-                            onClick={() => setTravelersCount(num)}
-                            className={`flex-1 py-3 rounded-xl text-xs font-bold border transition-colors ${
-                              travelersCount === num
-                                ? 'bg-amber-600 text-stone-950 border-amber-500'
-                                : 'bg-stone-950 text-stone-300 border-stone-800 hover:bg-stone-800'
-                            }`}
-                          >
-                            {num}
-                          </button>
-                        ))}
-                      </div>
-                      <p className="text-[11px] text-stone-400 mt-1">
-                        (Our custom 4x4 Land Cruisers seat max 6 guests with guaranteed window seats and 360° pop-top roof hatches).
-                      </p>
-                    </div>
-
-                    {/* Season Focus */}
-                    <div className="space-y-2 pt-4 border-t border-stone-800">
-                      <label className="block text-xs font-bold uppercase tracking-wider text-stone-300">
-                        Preferred Travel Season
-                      </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {[
-                          'Great Migration River Crossings (Jul - Oct)',
-                          'Southern Serengeti Calving Season (Jan - Mar)',
-                          'Primate & Green Emerald Season (Apr - May / Nov)',
-                          'Festive Holiday Departures (Dec - Jan)',
-                        ].map((s) => (
-                          <button
-                            type="button"
-                            key={s}
-                            onClick={() => setSeason(s)}
-                            className={`p-3.5 rounded-xl text-left border text-xs font-medium transition-all ${
-                              season === s
-                                ? 'bg-amber-600/15 border-amber-500 text-white font-bold'
-                                : 'bg-stone-950 border-stone-800 text-stone-300 hover:border-stone-700'
-                            }`}
-                          >
-                            {s}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="pt-4 flex justify-between">
-                      <button
-                        type="button"
-                        onClick={() => setCurrentStep(2)}
-                        className="px-5 py-3 rounded-xl bg-stone-800 text-stone-300 font-semibold text-xs flex items-center space-x-1"
-                      >
-                        <ArrowLeft className="w-4 h-4" />
-                        <span>Back</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setCurrentStep(4)}
-                        className="px-6 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-xs uppercase tracking-wider flex items-center space-x-2"
-                      >
-                        <span>Next: Interests</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* STEP 4: Interests */}
-                {currentStep === 4 && (
-                  <div className="space-y-6">
-                    <div>
-                      <h2 className="text-xl font-bold text-white font-display">
-                        4. Safari Interests & Specifics
-                      </h2>
-                      <p className="text-xs text-stone-400 mt-1">
-                        Select any signature activities you would love integrated.
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      {[
-                        'Big Cat Tracking',
-                        'Gorilla Trekking',
-                        'Chimpanzee Habituation',
-                        'Wildlife Photography',
-                        'Birding Specialists',
-                        'Zanzibar Beach Extension',
-                        'Hadza Bushmen Cultural Walk',
-                        'Hot Air Balloon Safari',
-                        'Private Bush Flights',
-                      ].map((item) => {
-                        const isSelected = interests.includes(item) || (item === 'Gorilla Trekking' && gorillaTracking);
-                        return (
-                          <button
-                            type="button"
-                            key={item}
-                            onClick={() => {
-                              if (item === 'Gorilla Trekking') setGorillaTracking(!gorillaTracking);
-                              toggleInterest(item);
-                            }}
-                            className={`p-3.5 rounded-xl text-left border text-xs font-semibold transition-all ${
-                              isSelected
-                                ? 'bg-amber-600/15 border-amber-500 text-amber-400'
-                                : 'bg-stone-950 border-stone-800 text-stone-400 hover:border-stone-700'
-                            }`}
-                          >
-                            <span className="mr-1.5">{isSelected ? '✓' : '+'}</span>
-                            <span>{item}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    <div className="space-y-2 pt-4 border-t border-stone-800">
-                      <label className="block text-xs font-bold uppercase tracking-wider text-stone-300">
-                        Special Requests or Preferences (Optional)
-                      </label>
-                      <textarea
-                        rows={3}
-                        value={specialRequests}
-                        onChange={(e) => setSpecialRequests(e.target.value)}
-                        placeholder="Dietary requirements, anniversary celebration, preferred vehicle, or flight connections..."
-                        className="w-full bg-stone-950 border border-stone-800 rounded-xl p-3 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-amber-500"
-                      ></textarea>
-                    </div>
-
-                    <div className="pt-4 flex justify-between">
-                      <button
-                        type="button"
-                        onClick={() => setCurrentStep(3)}
-                        className="px-5 py-3 rounded-xl bg-stone-800 text-stone-300 font-semibold text-xs flex items-center space-x-1"
-                      >
-                        <ArrowLeft className="w-4 h-4" />
-                        <span>Back</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setCurrentStep(5)}
-                        className="px-6 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-xs uppercase tracking-wider flex items-center space-x-2"
-                      >
-                        <span>Review & Estimate</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* STEP 5: Review & Lead Capture */}
-                {currentStep === 5 && (
-                  <form onSubmit={handleSubmitLead} className="space-y-6">
-                    <div>
-                      <h2 className="text-xl font-bold text-white font-display">
-                        5. Finalize Your Safari Design
-                      </h2>
-                      <p className="text-xs text-stone-400 mt-1">
-                        Where should Akim send your customized day-by-day plan and lodge availability report?
-                      </p>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-stone-300 mb-1">
-                          Full Name *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          placeholder="e.g. Eleanor Vance"
-                          className="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-3 text-xs text-white placeholder-stone-600 focus:outline-none focus:border-amber-500"
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-xs font-semibold text-stone-300 mb-1">
-                            Email Address *
-                          </label>
-                          <input
-                            type="email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="eleanor@example.com"
-                            className="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-3 text-xs text-white placeholder-stone-600 focus:outline-none focus:border-amber-500"
-                          />
+                        <div className="font-serif text-xl font-bold">
+                          {SPECIALTY_LABELS[spec]}
                         </div>
-
-                        <div>
-                          <label className="block text-xs font-semibold text-stone-300 mb-1">
-                            WhatsApp / Mobile Phone (with Country Code)
-                          </label>
-                          <input
-                            type="tel"
-                            value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
-                            placeholder="+1 (555) 019-2834"
-                            className="w-full bg-stone-950 border border-stone-800 rounded-xl px-4 py-3 text-xs text-white placeholder-stone-600 focus:outline-none focus:border-amber-500"
-                          />
+                        <div
+                          className={`text-xs mt-1 ${
+                            active ? 'text-[#D6CEC2]' : 'text-[#5A5248]'
+                          }`}
+                        >
+                          {active ? 'Selected for your safari' : 'Click to include'}
                         </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="block text-xs font-semibold text-stone-300">
-                          Preferred Contact Channel
-                        </label>
-                        <div className="flex space-x-4 text-xs">
-                          <label className="flex items-center space-x-2 cursor-pointer">
-                            <input
-                              type="radio"
-                              name="contactChannel"
-                              checked={preferredContact === 'whatsapp'}
-                              onChange={() => setPreferredContact('whatsapp')}
-                              className="accent-amber-500"
-                            />
-                            <span>WhatsApp (Faster response directly from Akim)</span>
-                          </label>
-                          <label className="flex items-center space-x-2 cursor-pointer">
-                            <input
-                              type="radio"
-                              name="contactChannel"
-                              checked={preferredContact === 'email'}
-                              onChange={() => setPreferredContact('email')}
-                              className="accent-amber-500"
-                            />
-                            <span>Formal Email PDF</span>
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="p-4 rounded-xl bg-stone-950 border border-stone-800 text-xs text-stone-400 space-y-1">
-                      <div className="flex items-center space-x-1.5 text-amber-400 font-semibold">
-                        <ShieldCheck className="w-4 h-4" />
-                        <span>The Ganda Safaris Promise</span>
-                      </div>
-                      <p>
-                        No spam. No middleman broker markups. Direct contact with our Arusha headquarters and official permit reservation guarantees.
-                      </p>
-                    </div>
-
-                    <div className="pt-4 flex justify-between items-center">
-                      <button
-                        type="button"
-                        onClick={() => setCurrentStep(4)}
-                        className="px-5 py-3 rounded-xl bg-stone-800 text-stone-300 font-semibold text-xs flex items-center space-x-1"
-                      >
-                        <ArrowLeft className="w-4 h-4" />
-                        <span>Back</span>
                       </button>
-
-                      <button
-                        type="submit"
-                        disabled={isSubmitting || !name || !email}
-                        className="px-8 py-4 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-stone-950 font-bold text-xs uppercase tracking-wider flex items-center space-x-2 shadow-xl"
-                      >
-                        {isSubmitting ? (
-                          <span>Dispatching to Akim's Desk...</span>
-                        ) : (
-                          <>
-                            <span>Submit Safari Plan</span>
-                            <ArrowRight className="w-4 h-4" />
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </form>
-                )}
+                    );
+                  })}
+                </div>
               </div>
             )}
-          </div>
 
-          {/* Right Column: Live Price Band & Deposit Estimator Card (4 cols) */}
-          <div className="lg:col-span-4 space-y-6">
-            <div className="bg-stone-900 rounded-2xl p-6 border border-stone-800 shadow-2xl sticky top-28 space-y-5">
-              <div className="flex items-center justify-between border-b border-stone-800 pb-4">
-                <span className="text-xs uppercase tracking-wider text-amber-500 font-bold">
-                  Estimated Trip Budget
-                </span>
-                <span className="text-[11px] bg-stone-800 text-stone-300 px-2 py-0.5 rounded border border-stone-700">
-                  {currency}
-                </span>
-              </div>
-
-              {/* Price Band Display */}
-              <div>
-                <div className="text-xs text-stone-400">Estimated Total ({travelersCount} guests, {daysCount} days):</div>
-                <div className="text-3xl font-black text-white font-display mt-1">
-                  {formatPrice(estimatedTotalUSD, currency)}
+            {/* STEP 2: Uganda Regions */}
+            {step === 2 && (
+              <div className="space-y-6">
+                <div>
+                  <span className="font-mono text-xs uppercase text-[#C85A28] font-semibold">
+                    Step 02 of 06
+                  </span>
+                  <h2 className="font-serif text-3xl font-bold text-[#1A1612] mt-1">
+                    Which Uganda Regions Would You Like to Visit?
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#5A5248] mt-1">
+                    Every Enganda itinerary stays strictly within Uganda. Select the parks and regions you want in your route.
+                  </p>
                 </div>
-                <div className="text-xs text-amber-400 font-medium mt-1">
-                  (~{formatPrice(getEstimatedPricePerPersonUSD(), currency)} per person)
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+                  {DESTINATIONS.map((dest) => {
+                    const active = selectedRegions.includes(dest.name);
+                    return (
+                      <button
+                        key={dest.slug}
+                        type="button"
+                        onClick={() => toggleRegion(dest.name)}
+                        className={`p-4 rounded-lg border text-left transition-all cursor-pointer ${
+                          active
+                            ? 'bg-[#226B3E] text-[#FAF7F2] border-[#226B3E]'
+                            : 'bg-[#FAF7F2] text-[#1A1612] border-[#E4DCCF] hover:border-[#226B3E]'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-serif text-lg font-bold">{dest.name}</span>
+                          <MapPin
+                            className={`w-4 h-4 ${
+                              active ? 'text-[#D99B26]' : 'text-[#C85A28]'
+                            }`}
+                          />
+                        </div>
+                        <p
+                          className={`text-xs mt-1 line-clamp-2 ${
+                            active ? 'text-[#D6CEC2]' : 'text-[#5A5248]'
+                          }`}
+                        >
+                          {dest.tagline}
+                        </p>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
+            )}
 
-              {/* Deposit Line Item */}
-              <div className="p-3.5 rounded-xl bg-stone-950 border border-stone-800 space-y-2 text-xs">
-                <div className="flex justify-between items-center text-stone-300">
-                  <span>30% Deposit to Secure:</span>
-                  <span className="font-bold text-emerald-400 text-sm">
-                    {formatPrice(depositRequiredUSD, currency)}
+            {/* STEP 3: Duration & Party Size */}
+            {step === 3 && (
+              <div className="space-y-6">
+                <div>
+                  <span className="font-mono text-xs uppercase text-[#C85A28] font-semibold">
+                    Step 03 of 06
+                  </span>
+                  <h2 className="font-serif text-3xl font-bold text-[#1A1612] mt-1">
+                    Safari Duration, Group Size & Target Dates
+                  </h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-[#FAF7F2] border border-[#E4DCCF] rounded-lg p-5 space-y-3">
+                    <label className="block text-xs font-mono uppercase text-[#1A1612] font-semibold">
+                      Duration: <span className="text-[#C85A28] text-base">{durationDays} Days</span>
+                    </label>
+                    <input
+                      type="range"
+                      min={1}
+                      max={14}
+                      value={durationDays}
+                      onChange={(e) => setDurationDays(Number(e.target.value))}
+                      className="w-full accent-[#226B3E] cursor-pointer"
+                    />
+                    <div className="flex justify-between text-[10px] font-mono text-[#5A5248]">
+                      <span>1 Day (Mabamba)</span>
+                      <span>7 Days</span>
+                      <span>14 Days</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#FAF7F2] border border-[#E4DCCF] rounded-lg p-5 space-y-3">
+                    <label className="block text-xs font-mono uppercase text-[#1A1612] font-semibold">
+                      <Users className="w-3.5 h-3.5 inline mr-1 text-[#C85A28]" />
+                      Number of Travelers
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={16}
+                      value={partySize}
+                      onChange={(e) =>
+                        setPartySize(Math.max(1, parseInt(e.target.value, 10) || 1))
+                      }
+                      className="w-full bg-white border border-[#E4DCCF] rounded-md px-3 py-2 text-base font-mono text-[#1A1612]"
+                    />
+                    <p className="text-[11px] text-[#5A5248]">
+                      Private 4x4 Land Cruiser with pop-up roof accommodates up to 6 window-seat guests per vehicle.
+                    </p>
+                  </div>
+
+                  <div className="bg-[#FAF7F2] border border-[#E4DCCF] rounded-lg p-5 space-y-3">
+                    <label className="block text-xs font-mono uppercase text-[#1A1612] font-semibold">
+                      <Calendar className="w-3.5 h-3.5 inline mr-1 text-[#C85A28]" />
+                      Target Travel Window
+                    </label>
+                    <input
+                      type="text"
+                      value={targetDates}
+                      onChange={(e) => setTargetDates(e.target.value)}
+                      placeholder="e.g. November 2026 or July 2027"
+                      className="w-full bg-white border border-[#E4DCCF] rounded-md px-3 py-2 text-sm text-[#1A1612]"
+                    />
+                    <p className="text-[11px] text-[#2D6A4F]">
+                      Tip: April, May & November offer US$600 low-season UWA gorilla permits.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4: Comfort Tier */}
+            {step === 4 && (
+              <div className="space-y-6">
+                <div>
+                  <span className="font-mono text-xs uppercase text-[#C85A28] font-semibold">
+                    Step 04 of 06
+                  </span>
+                  <h2 className="font-serif text-3xl font-bold text-[#1A1612] mt-1">
+                    Select Your Lodge Comfort Tier
+                  </h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  {(
+                    [
+                      {
+                        tier: 'mid-range' as ComfortTier,
+                        title: 'Mid-Range Eco-Lodges',
+                        desc: 'Handpicked forest-edge and riverfront cottages with en-suite hot showers, private verandas, and warm Ugandan hospitality.',
+                        examples: 'Ichumbi Gorilla Lodge, Turaco Treetops, Pakuba Safari Lodge',
+                      },
+                      {
+                        tier: 'luxury' as ComfortTier,
+                        title: 'Luxury Wilderness Sanctuaries',
+                        desc: 'Intimate luxury lodges set inside or bordering the parks with panoramic decks, fine dining, and fireplace lounges.',
+                        examples: 'Buhoma Lodge, Mahogany Springs, Primate Lodge, Paraa Safari Lodge',
+                      },
+                      {
+                        tier: 'signature' as ComfortTier,
+                        title: 'Signature Premier Camps',
+                        desc: 'Uganda’s flagship architectural lodges and private sanctuaries with butler service and optional domestic bush flights.',
+                        examples: 'Sanctuary Gorilla Forest Camp, Clouds Mountain Gorilla Lodge, Nile Safari Lodge',
+                      },
+                    ]
+                  ).map((item) => {
+                    const active = budgetTier === item.tier;
+                    return (
+                      <button
+                        key={item.tier}
+                        type="button"
+                        onClick={() => setBudgetTier(item.tier)}
+                        className={`p-6 rounded-lg border text-left flex flex-col justify-between transition-all cursor-pointer ${
+                          active
+                            ? 'bg-[#226B3E] text-[#FAF7F2] border-[#226B3E]'
+                            : 'bg-[#FAF7F2] text-[#1A1612] border-[#E4DCCF] hover:border-[#226B3E]'
+                        }`}
+                      >
+                        <div className="space-y-2">
+                          <span
+                            className={`font-mono text-xs uppercase tracking-wider font-semibold ${
+                              active ? 'text-[#D99B26]' : 'text-[#C85A28]'
+                            }`}
+                          >
+                            {item.tier}
+                          </span>
+                          <h3 className="font-serif text-2xl font-bold">{item.title}</h3>
+                          <p
+                            className={`text-xs leading-relaxed ${
+                              active ? 'text-[#E4DCCF]' : 'text-[#5A5248]'
+                            }`}
+                          >
+                            {item.desc}
+                          </p>
+                        </div>
+                        <div className="pt-4 mt-4 border-t border-current/15 text-[11px] opacity-85">
+                          <strong>Examples:</strong> {item.examples}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* STEP 5: Optional Preferred Guide */}
+            {step === 5 && (
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+                  <div>
+                    <span className="font-mono text-xs uppercase text-[#C85A28] font-semibold">
+                      Step 05 of 06 • The Guide Is The Product
+                    </span>
+                    <h2 className="font-serif text-3xl font-bold text-[#1A1612] mt-1">
+                      Select an Optional Preferred Ugandan Guide
+                    </h2>
+                    <p className="text-xs sm:text-sm text-[#5A5248] mt-1">
+                      Choose the specific guide you want to lead your safari, or leave it open for our Entebbe desk to match you.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPreferredGuideSlug('')}
+                    className={`px-3.5 py-2 rounded-md text-xs font-semibold border cursor-pointer ${
+                      preferredGuideSlug === ''
+                        ? 'bg-[#C85A28] text-white border-[#C85A28]'
+                        : 'bg-[#FAF7F2] text-[#1A1612] border-[#E4DCCF]'
+                    }`}
+                  >
+                    Let Entebbe Desk Match Best Guide
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {GUIDES.map((g) => {
+                    const active = preferredGuideSlug === g.slug;
+                    return (
+                      <button
+                        key={g.id}
+                        type="button"
+                        onClick={() => setPreferredGuideSlug(g.slug)}
+                        className={`p-4 rounded-lg border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                          active
+                            ? 'bg-[#226B3E] text-[#FAF7F2] border-[#226B3E] shadow-md'
+                            : 'bg-[#FAF7F2] text-[#1A1612] border-[#E4DCCF] hover:border-[#226B3E]'
+                        }`}
+                      >
+                        <div className="space-y-2.5">
+                          <div className="flex items-center gap-2.5">
+                            <SmartImage
+                              src={g.photo}
+                              alt={g.name}
+                              className="w-11 h-11 rounded-full object-cover border border-[#C85A28]"
+                            />
+                            <div className="min-w-0">
+                              <div className="font-serif text-lg font-bold truncate">
+                                {g.name}
+                              </div>
+                              <div
+                                className={`text-[11px] font-mono truncate ${
+                                  active ? 'text-[#D99B26]' : 'text-[#5A5248]'
+                                }`}
+                              >
+                                {g.homeRegion}
+                              </div>
+                            </div>
+                          </div>
+                          <p
+                            className={`text-xs line-clamp-2 ${
+                              active ? 'text-[#E4DCCF]' : 'text-[#5A5248]'
+                            }`}
+                          >
+                            {g.tagline}
+                          </p>
+                        </div>
+
+                        <div className="pt-3 mt-3 border-t border-current/15 flex items-center justify-between text-[11px] font-mono">
+                          <span>{g.yearsExperience} yrs exp</span>
+                          <span className="inline-flex items-center gap-1">
+                            <Star className="w-3 h-3 text-[#D99B26] fill-[#D99B26]" />
+                            {g.rating.toFixed(1)}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* STEP 6: Contact Details & Final Submission */}
+            {step === 6 && (
+              <form onSubmit={handleFinalSubmit} className="space-y-6">
+                <div>
+                  <span className="font-mono text-xs uppercase text-[#C85A28] font-semibold">
+                    Step 06 of 06 • Entebbe Coordination Desk
+                  </span>
+                  <h2 className="font-serif text-3xl font-bold text-[#1A1612] mt-1">
+                    Where Should We Send Your Custom Safari Proposal?
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#5A5248] mt-1">
+                    {AVAILABILITY_PROMISE}
+                  </p>
+                </div>
+
+                {/* Summary Box */}
+                <div className="bg-[#F3ECE1] border border-[#E4DCCF] rounded-lg p-5 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                  <div>
+                    <span className="font-mono uppercase text-[#5A5248] block">
+                      Route & Duration
+                    </span>
+                    <strong className="text-[#1A1612] text-sm">
+                      {durationDays} Days • {partySize} Travelers
+                    </strong>
+                    <div className="text-[#5A5248] mt-0.5">
+                      {selectedRegions.join(', ')}
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="font-mono uppercase text-[#5A5248] block">
+                      Preferred Guide
+                    </span>
+                    <strong className="text-[#1A1612] text-sm">
+                      {selectedGuideObj
+                        ? `${selectedGuideObj.name} (${selectedGuideObj.homeRegion})`
+                        : 'Best Matched Enganda Specialist'}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span className="font-mono uppercase text-[#5A5248] block">
+                      Indicative Price Band ({budgetTier})
+                    </span>
+                    <strong className="text-[#226B3E] font-mono text-sm">
+                      {formatPrice(lowEstimateUSD, currency)} – {formatPrice(highEstimateUSD, currency)} pp
+                    </strong>
+                    <div className="text-[11px] text-[#5A5248]">
+                      Includes private 4x4 & UWA permits
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-[#1A1612] mb-1">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Eleanor Vance"
+                      className="w-full bg-[#FAF7F2] border border-[#E4DCCF] rounded-md px-3 py-2.5 text-sm text-[#1A1612]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#1A1612] mb-1">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      className="w-full bg-[#FAF7F2] border border-[#E4DCCF] rounded-md px-3 py-2.5 text-sm text-[#1A1612]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#1A1612] mb-1">
+                      WhatsApp Number
+                    </label>
+                    <input
+                      type="tel"
+                      value={whatsapp}
+                      onChange={(e) => setWhatsapp(e.target.value)}
+                      placeholder="+44 7700 900000"
+                      className="w-full bg-[#FAF7F2] border border-[#E4DCCF] rounded-md px-3 py-2.5 text-sm text-[#1A1612]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-[#1A1612] mb-1">
+                    Additional Notes (Gorilla Habituation, Birding Targets, Dietary Needs)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Share any special requests for your guide and our Entebbe team..."
+                    className="w-full bg-[#FAF7F2] border border-[#E4DCCF] rounded-md px-3 py-2.5 text-sm text-[#1A1612]"
+                  />
+                </div>
+
+                <div className="bg-[#FAF7F2] border border-[#E4DCCF] rounded-md p-3.5 flex items-center gap-2 text-xs text-[#5A5248]">
+                  <ShieldCheck className="w-4 h-4 text-[#2D6A4F] flex-shrink-0" />
+                  <span>
+                    {PERMIT_RECEIPT_GUARANTEE} A real Enganda coordinator replies within 12 hours.
                   </span>
                 </div>
-                <div className="text-[10px] text-stone-500 leading-tight">
-                  Secures official UWA/RDB gorilla permits & private 4x4 Land Cruiser. Scanned government receipt provided before final balance.
-                </div>
-              </div>
 
-              {/* Live Config Summary */}
-              <div className="space-y-2 text-xs text-stone-400 border-t border-stone-800 pt-4">
-                <div className="flex justify-between">
-                  <span>Countries:</span>
-                  <span className="text-stone-200 font-medium">{selectedCountries.join(', ')}</span>
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="inline-flex items-center gap-2 bg-[#C85A28] hover:bg-[#B04B1D] text-white font-semibold text-sm px-8 py-3.5 rounded-md transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    <span>{submitting ? 'Sending Brief...' : 'Submit My Uganda Safari Brief'}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
                 </div>
-                <div className="flex justify-between">
-                  <span>Accommodation:</span>
-                  <span className="text-stone-200 font-medium">{budgetTier}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Season:</span>
-                  <span className="text-stone-200 font-medium text-right line-clamp-1 max-w-[170px]">{season}</span>
-                </div>
-                {gorillaTracking && (
-                  <div className="flex justify-between text-emerald-400 font-medium">
-                    <span>Gorilla Permits:</span>
-                    <span>Included</span>
-                  </div>
-                )}
-              </div>
+              </form>
+            )}
 
-              {/* Direct WhatsApp Action */}
-              <div className="pt-2">
-                <a
-                  href={getWhatsAppLeadLink()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center space-x-2 py-3 rounded-xl bg-emerald-800/80 hover:bg-emerald-700 text-white font-semibold text-xs border border-emerald-600/40 transition-colors"
+            {/* Navigation Footer Controls */}
+            <div className="pt-4 border-t border-[#E4DCCF] flex items-center justify-between">
+              <button
+                type="button"
+                disabled={step === 1}
+                onClick={() => setStep((s) => Math.max(1, s - 1))}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md border border-[#E4DCCF] text-xs font-semibold text-[#1A1612] disabled:opacity-40 cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Previous Step</span>
+              </button>
+
+              {step < 6 && (
+                <button
+                  type="button"
+                  onClick={() => setStep((s) => Math.min(6, s + 1))}
+                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-md bg-[#226B3E] hover:bg-[#194E2D] text-[#FAF7F2] text-xs font-semibold cursor-pointer"
                 >
-                  <MessageCircle className="w-4 h-4" />
-                  <span>Discuss This Route on WhatsApp</span>
-                </a>
-              </div>
+                  <span>Next Step</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           </div>
-        </div>
+        )}
+      </div>
+
+      {/* AI-Powered Custom Safari Itinerary Generator (Gemini + Save to Wallet) */}
+      <div className="mt-16">
+        <SafariItineraryGenerator />
       </div>
     </div>
   );

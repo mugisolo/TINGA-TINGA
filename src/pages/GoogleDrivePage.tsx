@@ -145,55 +145,47 @@ export const GoogleDrivePage: React.FC = () => {
   };
 
   // Export Sample Safari Itinerary / Quote Document
-  const handleExportSafariDoc = async (type: 'migration' | 'gorilla') => {
+  const handleExportSafariDoc = async (type: 'circuit' | 'gorilla') => {
     if (!accessToken) return;
 
     setLoading(true);
     try {
       const parentId = currentFolder.id === 'root' ? undefined : currentFolder.id;
 
-      if (type === 'migration') {
-        const title = `Ganda_Safaris_Serengeti_Migration_Dossier_${new Date().toISOString().slice(0, 10)}`;
-        const content = `GANDA SAFARIS - EAST AFRICA EXPEDITIONS
-Official Expedition Dossier & Ground Partner Confirmation
+      if (type === 'circuit') {
+        const title = `Enganda_Safaris_7Day_Best_of_Uganda_Dossier_${new Date().toISOString().slice(0, 10)}`;
+        const content = `ENGANDA SAFARIS — UGANDA GUIDE COLLECTIVE
+Official Uganda Safari Dossier & Guide Confirmation
 Date: ${new Date().toLocaleDateString()}
-HQ: Arusha, Tanzania (P.O. Box 2751)
+Head Office: Mugwanya Road, Bugonga, Entebbe, Uganda (next to Rosemary Courts)
 
-EXPEDITION SUMMARY:
-Circuit: 7-Day Great Migration Northern Serengeti & Ngorongoro Caldera
-Ground Partner: Ganda Safaris Fleet & Local Tanzanian Safari Guides
-Ground Vehicles: Customized 4x4 Land Cruisers with Pop-Up Photographic Roofs
-Park Fees & Conservation Levies: Included (TANAPA & NCAA audited)
+SAFARI SUMMARY:
+Experience: 7-Day Best of Uganda (Murchison Falls, Kibale, Queen Elizabeth & Bwindi)
+Lead Ugandan Guide: Daniel Tumusiime / Samuel Kato (USAGA & UWA Certified)
+Inclusions: Private 4x4 Land Cruiser with pop-up roof, driven by your professional guide, full-board lodges, all park entrance fees, and airport meet & greet in Entebbe.
 
-PRICING & TERMS:
-Standard Tier: $3,650 USD per guest (Inclusive of 18% VAT)
-Required Deposit: 30% to confirm vehicle & luxury tented camp bookings
-Balance: Payable 30 days prior to departure
-
-Radical Transparency Guarantee:
-- No hidden third-party subcontractor markups
-- Direct VHF radio comms and flying doctor evacuation cover included`;
+TRANSPARENCY & ACCREDITATION:
+- Uganda Tourism Board (UTB) Registered & AUTO Member
+- Official UWA receipts shared before balance collection`;
 
         await exportSafariDocumentToDrive(accessToken, title, content, parentId);
-        setSuccessMessage('Saved "Serengeti Migration Dossier" to your Google Drive!');
+        setSuccessMessage('Saved "7-Day Best of Uganda Dossier" to your Google Drive!');
       } else {
-        const title = `Ganda_Safaris_Bwindi_Gorilla_Permit_Voucher_${new Date().toISOString().slice(0, 10)}`;
-        const content = `GANDA SAFARIS - STATUTORY PRIMATE PERMIT CERTIFICATE
-Uganda Wildlife Authority (UWA) Gorilla Trekking Allocation
-HQ: Arusha, Tanzania | Ground Partner: Steadfast Safaris (AUTO Member #204, Kampala)
+        const title = `Enganda_Safaris_Bwindi_UWA_Gorilla_Permit_Summary_${new Date().toISOString().slice(0, 10)}`;
+        const content = `ENGANDA SAFARIS — UWA PRIMATE PERMIT BRIEF
+Uganda Wildlife Authority (UWA) Mountain Gorilla Trekking
+Head Office: Mugwanya Road, Bugonga, Entebbe, Uganda (5 mins from Entebbe International Airport)
 
-PERMIT DATA:
-Tariff: $800 USD (Uganda Statutory Non-Resident Primate Tariff)
-Sector: Rushaga / Buhoma, Bwindi Impenetrable National Park
-Lead Naturalist: Senior UWA Ranger Guard (Grade 1)
+UWA PERMIT FACTS (Verified November 2026):
+Standard Tariff: US$800 per person (Bwindi Impenetrable NP & Mgahinga Gorilla NP)
+Low-Season Tariff: US$600 per person (April, May, November — date-fixed & non-reschedulable)
+Minimum Age: 15 years | Daily Quota: Max 8 guests per habituated gorilla family
 
-OPERATIONAL GUARANTEE:
-1. Official Uganda Wildlife Authority receipt scan provided upon payment of the 30% deposit.
-2. 100% refund of statutory fees if permits cannot be secured for requested date window.
-3. 20% of revenue directly funneled to Bwindi forest-edge indigenous community programs.`;
+ENGANDA GUARANTEE:
+Official UWA receipts shared with you before we collect your balance.`;
 
         await exportSafariDocumentToDrive(accessToken, title, content, parentId);
-        setSuccessMessage('Saved "Bwindi Gorilla Permit Voucher" to your Google Drive!');
+        setSuccessMessage('Saved "Bwindi UWA Gorilla Permit Summary" to your Google Drive!');
       }
 
       fetchFiles();
@@ -269,7 +261,7 @@ OPERATIONAL GUARANTEE:
               Google Drive Safari Vault
             </h1>
             <p className="text-stone-400 text-sm sm:text-base mt-1 max-w-2xl">
-              Securely access, archive, and manage your East Africa expedition documents, statutory gorilla permit
+              Securely access, archive, and manage your Uganda safari documents, official UWA gorilla permit
               receipts, traveler insurance PDFs, and custom itineraries directly in your Google Drive.
             </p>
           </div>
@@ -323,7 +315,7 @@ OPERATIONAL GUARANTEE:
               Connect Your Google Drive
             </h2>
             <p className="text-stone-300 text-sm sm:text-base leading-relaxed mb-6">
-              Grant permission to access your Google Drive to view safari vouchers, upload passport copies for UWA/RDB
+              Grant permission to access your Google Drive to view safari vouchers, upload passport copies for UWA
               gorilla permits, and sync custom itineraries seamlessly with your Google Workspace.
             </p>
 
@@ -425,13 +417,13 @@ OPERATIONAL GUARANTEE:
 
                 {/* Preset Expeditions Exporters */}
                 <button
-                  onClick={() => handleExportSafariDoc('migration')}
+                  onClick={() => handleExportSafariDoc('circuit')}
                   disabled={loading}
                   className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-stone-800 hover:bg-stone-700 text-amber-400 text-xs font-medium border border-stone-700 transition-colors"
-                  title="Export Serengeti Migration dossier to Google Drive"
+                  title="Export 7-Day Best of Uganda dossier to Google Drive"
                 >
                   <FileText className="w-3.5 h-3.5" />
-                  <span>+ Serengeti Dossier</span>
+                  <span>+ Uganda Safari Dossier</span>
                 </button>
 
                 <button
@@ -441,7 +433,7 @@ OPERATIONAL GUARANTEE:
                   title="Export Bwindi Gorilla Permit voucher to Google Drive"
                 >
                   <FileCheck className="w-3.5 h-3.5" />
-                  <span>+ Gorilla Permit Doc</span>
+                  <span>+ UWA Gorilla Permit Doc</span>
                 </button>
 
                 <button
@@ -654,7 +646,7 @@ OPERATIONAL GUARANTEE:
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Ganda Safaris - Guest Gorilla Vouchers"
+                    placeholder="e.g. Enganda Safaris - Guest UWA Gorilla Vouchers"
                     value={newFolderName}
                     onChange={(e) => setNewFolderName(e.target.value)}
                     className="w-full bg-stone-950 border border-stone-800 rounded-lg px-3 py-2 text-sm text-stone-100 placeholder-stone-500 focus:outline-none focus:border-amber-500"

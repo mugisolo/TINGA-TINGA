@@ -1,84 +1,128 @@
 import React from 'react';
-import { Heart, ShieldCheck, TreePine, Users, Droplet, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import {
+  HeartHandshake,
+  Users,
+  Droplets,
+  TreePine,
+  ShieldCheck,
+  ArrowRight,
+} from 'lucide-react';
+import { SEO } from '../components/SEO';
 
 export const ResponsibleTravelPage: React.FC = () => {
   return (
-    <div className="bg-stone-950 text-stone-100 min-h-screen py-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto space-y-12">
+    <div className="bg-[#FAF7F2] min-h-screen py-12 sm:py-16">
+      <SEO
+        title="Responsible Travel & Conservation Charter | Enganda Safaris"
+        description="Our commitment to fair living wages for Ugandan guides and mountain porters, UWA park revenue sharing, zero single-use plastics on safari, and conservation contributions."
+      />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         {/* Header */}
-        <div className="text-center max-w-2xl mx-auto space-y-3">
-          <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-600/20 text-emerald-400 text-xs font-bold border border-emerald-500/30">
-            <Heart className="w-3.5 h-3.5" />
-            <span>Ethical Tourism Standard</span>
-          </div>
-          <h1 className="text-3xl sm:text-5xl font-bold text-white font-display">
-            Responsible Travel & Community Charter
-          </h1>
-          <p className="text-sm sm:text-base text-stone-300 leading-relaxed">
-            True luxury in Africa is defined by dignity, conservation stewardship, and fair community partnership. Here is how Ganda Safaris puts ethics into practice every day.
-          </p>
-        </div>
-
-        {/* 4 Pillars */}
-        <div className="space-y-6">
-          {/* Pillar 1: Fair Guide & Porter Wages */}
-          <div className="bg-stone-900 rounded-2xl p-6 sm:p-8 border border-stone-800 space-y-3">
-            <div className="flex items-center space-x-3 text-amber-400 font-bold text-lg font-display">
-              <Users className="w-6 h-6" />
-              <span>1. 100% Fair Guide & Porter Living Wages</span>
+        <div className="bg-[#226B3E] text-[#FAF7F2] rounded-lg p-8 sm:p-12 border border-[#2E8550]">
+          <div className="max-w-3xl space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#1B5632] border border-[#D99B26]/40 text-xs font-mono text-[#D99B26]">
+              <HeartHandshake className="w-3.5 h-3.5" />
+              <span>Stewardship of Our Ugandan Home</span>
             </div>
-            <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
-              In low-cost budget safari agencies, guides and porters often receive zero baseline wage, forced to rely exclusively on discretionary guest tips to survive.
-            </p>
-            <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
-              At Ganda Safaris, every naturalist guide and driver receives a premier guaranteed daily salary, comprehensive AMREF health evacuation insurance, and full accommodations in driver quarters. Tips are welcomed as a token of excellence, never as a substitute for fair compensation.
-            </p>
-          </div>
-
-          {/* Pillar 2: AMREF Flying Doctors */}
-          <div className="bg-stone-900 rounded-2xl p-6 sm:p-8 border border-stone-800 space-y-3">
-            <div className="flex items-center space-x-3 text-amber-400 font-bold text-lg font-display">
-              <ShieldCheck className="w-6 h-6" />
-              <span>2. Guaranteed AMREF Flying Doctors Evacuation</span>
-            </div>
-            <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
-              Every guest traveling on a Ganda Safaris circuit is automatically enrolled in AMREF Flying Doctors emergency medical evacuation cover. In the unlikely event of sudden illness or trauma in remote bush locations (such as the northern Serengeti or Bwindi rainforest), a dedicated air ambulance with emergency medical personnel is dispatched immediately to airlift you to premier trauma centers in Nairobi or Dar es Salaam.
-            </p>
-          </div>
-
-          {/* Pillar 3: Plastic-Free Wilderness & Leave-No-Trace */}
-          <div className="bg-stone-900 rounded-2xl p-6 sm:p-8 border border-stone-800 space-y-3">
-            <div className="flex items-center space-x-3 text-amber-400 font-bold text-lg font-display">
-              <TreePine className="w-6 h-6" />
-              <span>3. Plastic Elimination & Leave-No-Trace Operations</span>
-            </div>
-            <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
-              We provide insulated stainless steel water flasks to all guests upon arrival at Kilimanjaro (JRO) or Entebbe (EBB). Our Land Cruisers are outfitted with 20-liter purified mineral water dispensers, eliminating thousands of single-use plastic bottles annually. Both Tanzania and Rwanda enforce total bans on single-use plastic bags.
-            </p>
-          </div>
-
-          {/* Pillar 4: Karatu & Bwindi School Initiatives */}
-          <div className="bg-stone-900 rounded-2xl p-6 sm:p-8 border border-stone-800 space-y-3">
-            <div className="flex items-center space-x-3 text-amber-400 font-bold text-lg font-display">
-              <Droplet className="w-6 h-6" />
-              <span>4. Grassroots Community Partnerships</span>
-            </div>
-            <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
-              We partner directly with the Ganako Primary School in Karatu (near Ngorongoro) and the Ride 4 a Woman community cooperative in Buhoma (Uganda). A portion of our company profits directly funds school supplies, solar lighting, and clean rainwater harvesting cisterns. Guests wishing to pack educational materials can participate in our vetted Pack-for-a-Purpose program.
+            <h1 className="font-serif text-4xl sm:text-5xl font-bold text-white">
+              Responsible Travel & Community Conservation
+            </h1>
+            <p className="text-sm sm:text-base text-[#D6CEC2] leading-relaxed">
+              Because our guides live in the communities bordering Bwindi, Kibale, Queen Elizabeth, Murchison Falls, and Kidepo, conservation is not an abstract corporate policy for us — it is the future of our own neighborhoods.
             </p>
           </div>
         </div>
 
-        {/* CTA */}
-        <div className="text-center pt-4">
-          <Link
-            to="/trip-planner"
-            className="inline-flex items-center space-x-2 px-8 py-4 rounded-xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-xs uppercase tracking-wider transition-all shadow-xl"
-          >
-            <span>Plan an Ethical Safari with Akim</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+        {/* 4 Core Commitments */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <article className="bg-white border border-[#E4DCCF] rounded-lg p-8 space-y-3">
+            <div className="w-10 h-10 rounded-md bg-[#F3ECE1] text-[#226B3E] flex items-center justify-center">
+              <Users className="w-5 h-5" />
+            </div>
+            <span className="font-mono text-xs uppercase text-[#C85A28] font-semibold">
+              01. Fair Wages for Guides & Trail Porters
+            </span>
+            <h2 className="font-serif text-2xl font-bold text-[#1A1612]">
+              Dignified Compensation Above Industry Standards
+            </h2>
+            <p className="text-sm text-[#5A5248] leading-relaxed">
+              Every Enganda guide earns a professional daily retainer, full accommodation and meal allowances, and AMREF emergency medical coverage — never relying solely on tips. On gorilla and volcano treks, we actively encourage and facilitate hiring local community porters at the trailhead (US$20), providing direct household income to forest-edge families.
+            </p>
+          </article>
+
+          <article className="bg-white border border-[#E4DCCF] rounded-lg p-8 space-y-3">
+            <div className="w-10 h-10 rounded-md bg-[#F3ECE1] text-[#226B3E] flex items-center justify-center">
+              <TreePine className="w-5 h-5" />
+            </div>
+            <span className="font-mono text-xs uppercase text-[#C85A28] font-semibold">
+              02. Park-Edge Community Revenue Sharing
+            </span>
+            <h2 className="font-serif text-2xl font-bold text-[#1A1612]">
+              Keeping Tourism Revenue in Local Ugandan Parishes
+            </h2>
+            <p className="text-sm text-[#5A5248] leading-relaxed">
+              Under Uganda Wildlife Authority regulations, 20% of park entrance fees are shared directly with communities bordering the national parks. We amplify this impact by prioritizing Ugandan-owned lodges, community-run wetlands like Bigodi and Mabamba Bay, and women’s craft and coffee cooperatives in Buhoma and Ruboni.
+            </p>
+          </article>
+
+          <article className="bg-white border border-[#E4DCCF] rounded-lg p-8 space-y-3">
+            <div className="w-10 h-10 rounded-md bg-[#F3ECE1] text-[#226B3E] flex items-center justify-center">
+              <Droplets className="w-5 h-5" />
+            </div>
+            <span className="font-mono text-xs uppercase text-[#C85A28] font-semibold">
+              03. Zero Single-Use Plastics on Safari
+            </span>
+            <h2 className="font-serif text-2xl font-bold text-[#1A1612]">
+              Stainless Steel Refillable Hydration in Every 4x4
+            </h2>
+            <p className="text-sm text-[#5A5248] leading-relaxed">
+              A two-person week-long safari can easily generate forty disposable plastic water bottles. Instead, we equip every trip with a 20-liter food-grade drinking water dispenser and complimentary insulated stainless-steel bottles for each guest to refill throughout the journey.
+            </p>
+          </article>
+
+          <article className="bg-white border border-[#E4DCCF] rounded-lg p-8 space-y-3">
+            <div className="w-10 h-10 rounded-md bg-[#F3ECE1] text-[#226B3E] flex items-center justify-center">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <span className="font-mono text-xs uppercase text-[#C85A28] font-semibold">
+              04. Direct Conservation Contribution per Booking
+            </span>
+            <h2 className="font-serif text-2xl font-bold text-[#1A1612]">
+              Supporting Primate Veterinary Care & Wetland Guardians
+            </h2>
+            <p className="text-sm text-[#5A5248] leading-relaxed">
+              For every confirmed safari, Enganda Safaris contributes US$25 per traveler to grass-roots Ugandan conservation initiatives — alternating between mountain gorilla veterinary health monitoring in Bwindi (Conservation Through Public Health) and Shoebill nest-protection boatmen in Mabamba Bay.
+            </p>
+          </article>
+        </div>
+
+        {/* Bottom CTA */}
+        <div className="bg-[#F3ECE1] border border-[#E4DCCF] rounded-lg p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+          <div>
+            <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#1A1612]">
+              Travel With Guides Who Protect What They Show You
+            </h3>
+            <p className="text-xs sm:text-sm text-[#5A5248] mt-1">
+              Meet our 8 Ugandan specialists or start designing your ethical Uganda itinerary.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              to="/guides"
+              className="inline-flex items-center gap-2 bg-[#226B3E] hover:bg-[#194E2D] text-[#FAF7F2] text-xs sm:text-sm font-semibold px-5 py-3 rounded-md transition-colors"
+            >
+              <span>Meet Our Guides</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              to="/trip-planner"
+              className="inline-flex items-center gap-2 bg-[#C85A28] hover:bg-[#B04B1D] text-white text-xs sm:text-sm font-semibold px-5 py-3 rounded-md transition-colors"
+            >
+              <span>Plan My Safari</span>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

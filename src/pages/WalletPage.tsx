@@ -1,593 +1,1463 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  Wallet as WalletIcon, 
-  ArrowUpRight, 
-  ArrowDownLeft, 
-  Lock, 
-  ShieldCheck, 
-  Download, 
-  Share2, 
-  Plus, 
-  Search, 
-  Filter, 
-  CheckCircle2, 
-  AlertCircle, 
-  Copy, 
-  FileText, 
-  Printer, 
-  ExternalLink,
-  ChevronDown,
-  Gift
+import {
+  Wallet,
+  PlusCircle,
+  ArrowUpRight,
+  ArrowDownLeft,
+  ShieldCheck,
+  Building2,
+  FileText,
+  Download,
+  RotateCcw,
+  CheckCircle2,
+  AlertCircle,
+  Lock,
+  Unlock,
+  Compass,
+  Calendar,
+  CreditCard,
+  Smartphone,
+  Landmark,
+  Search,
+  Sparkles,
+  Trash2,
 } from 'lucide-react';
-import { Wallet, WalletTransaction, Currency } from '../types';
-import { CURRENCY_RATES, formatPrice, convertFromUSD } from '../lib/currency';
-import { trackEvent } from '../lib/analytics';
+import { SEO } from '../components/SEO';
+import { useWallet } from '../context/WalletContext';
+import { useInquiry } from '../context/InquiryContext';
+import { formatPrice } from '../lib/currency';
+import {
+  PERMIT_FACTS,
+  PARTNER_ACCOMMODATIONS,
+  EXPERIENCES,
+} from '../data/seedData';
+import { WalletPaymentRail, ComfortTier } from '../types';
+
+type ActiveWalletTab = 'topup' | 'escrow' | 'book' | 'withdraw';
+type LedgerFilter = 'all' | 'deposit' | 'permit' | 'booking' | 'withdrawal' | 'reward';
+
+const PAYMENT_RAILS: {
+  id: WalletPaymentRail;
+  label: string;
+  detail: string;
+  icon: React.FC<{ className?: string }>;
+}[] = [
+  {
+    id: 'Visa / Mastercard',
+    label: 'Visa / Mastercard',
+    detail: 'Instant USD / Multi-currency card settlement',
+    icon: CreditCard,
+  },
+  {
+    id: 'MTN Mobile Money Uganda',
+    label: 'MTN Mobile Money Uganda',
+    detail: '+256 MTN MoMo instant East African settlement',
+    icon: Smartphone,
+  },
+  {
+    id: 'Airtel Money Uganda',
+    label: 'Airtel Money Uganda',
+    detail: '+256 Airtel Money instant mobile wallet',
+    icon: Smartphone,
+  },
+  {
+    id: 'International Bank Wire',
+    label: 'International Bank Wire',
+    detail: 'Stanbic Bank Uganda Entebbe Trust Account (SWIFT)',
+    icon: Landmark,
+  },
+];
 
 export const WalletPage: React.FC = () => {
-  const [wallet, setWallet] = useState<Wallet | null>(null);
-  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [displayCurrency, setDisplayCurrency] = useState<Currency>('USD');
-  const [filterType, setFilterType] = useState<string>('all');
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [copiedReferral, setCopiedReferral] = useState<boolean>(false);
-  const [showReferralModal, setShowReferralModal] = useState<boolean>(false);
-  const [showStatementModal, setShowStatementModal] = useState<boolean>(false);
-  const [statementData, setStatementData] = useState<any | null>(null);
+  const {
+    availableBalanceUSD,
+    escrowBalanceUSD,
+    rewardCreditsUSD,
+    transactions,
+    permitHolds,
+    partnerBookings,
+    topUpWallet,
+    withdrawFunds,
+    holdPermitInEscrow,
+    releasePermitEscrow,
+    bookPartnerStay,
+    paySafariDeposit,
+    savedItineraries,
+    paySavedItineraryDeposit,
+    removeSavedItinerary,
+    resetWalletToDefault,
+  } = useWallet();
 
-  const fetchWalletData = async () => {
-    try {
-      setLoading(true);
-      const [walletRes, txRes] = await Promise.all([
-        fetch('/api/wallet?userId=current_user'),
-        fetch('/api/wallet/transactions?userId=current_user'),
-      ]);
+  const { currency } = useInquiry();
 
-      const walletJson = await walletRes.json();
-      const txJson = await txRes.json();
+  const [activeTab, setActiveTab] = useState<ActiveWalletTab>('topup');
+  const [banner, setBanner] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
 
-      setWallet(walletJson);
-      setTransactions(txJson.transactions || []);
-    } catch (err) {
-      console.error('Error fetching wallet data:', err);
-    } finally {
-      setLoading(false);
+  // Top-up state
+  const [topUpAmount, setTopUpAmount] = useState<number>(800);
+  const [topUpRail, setTopUpRail] = useState<WalletPaymentRail>('Visa / Mastercard');
+  const [topUpNote, setTopUpNote] = useState('');
+
+  // Escrow state
+  const [selectedPermitId, setSelectedPermitId] = useState<string>(
+    PERMIT_FACTS[0]?.id || 'uwa-gorilla-trekking'
+  );
+  const [permitGuests, setPermitGuests] = useState<number>(2);
+  const [permitDate, setPermitDate] = useState<string>('2026-12-18');
+
+  // Partner Stay & Safari Deposit booking state
+  const [bookingMode, setBookingMode] = useState<'partner' | 'safari'>('partner');
+  const [selectedPartnerSlug, setSelectedPartnerSlug] = useState<string>(
+    PARTNER_ACCOMMODATIONS[0]?.slug || ''
+  );
+  const [stayCheckIn, setStayCheckIn] = useState<string>('2026-12-16');
+  const [stayNights, setStayNights] = useState<number>(2);
+  const [stayGuests, setStayGuests] = useState<number>(2);
+
+  const [selectedExpSlug, setSelectedExpSlug] = useState<string>(
+    EXPERIENCES[0]?.slug || ''
+  );
+  const [safariGuests, setSafariGuests] = useState<number>(2);
+  const [safariTier, setSafariTier] = useState<ComfortTier>('mid-range');
+  const [safariDate, setSafariDate] = useState<string>('2026-12-20');
+
+  // Withdraw state
+  const [withdrawAmount, setWithdrawAmount] = useState<number>(250);
+  const [withdrawRail, setWithdrawRail] = useState<WalletPaymentRail>('Visa / Mastercard');
+  const [withdrawDestination, setWithdrawDestination] = useState<string>(
+    'Original Visa Card ending 4821'
+  );
+
+  // Ledger filter state
+  const [ledgerFilter, setLedgerFilter] = useState<LedgerFilter>('all');
+  const [ledgerSearch, setLedgerSearch] = useState<string>('');
+
+  const selectedPermit = useMemo(
+    () => PERMIT_FACTS.find((p) => p.id === selectedPermitId) || PERMIT_FACTS[0],
+    [selectedPermitId]
+  );
+
+  const selectedPartner = useMemo(
+    () =>
+      PARTNER_ACCOMMODATIONS.find((p) => p.slug === selectedPartnerSlug) ||
+      PARTNER_ACCOMMODATIONS[0],
+    [selectedPartnerSlug]
+  );
+
+  const selectedExperience = useMemo(
+    () =>
+      EXPERIENCES.find((e) => e.slug === selectedExpSlug) || EXPERIENCES[0],
+    [selectedExpSlug]
+  );
+
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((tx) => {
+      if (ledgerFilter === 'deposit' && tx.type !== 'deposit') return false;
+      if (
+        ledgerFilter === 'permit' &&
+        tx.type !== 'permit_escrow' &&
+        tx.type !== 'permit_release'
+      ) {
+        return false;
+      }
+      if (
+        ledgerFilter === 'booking' &&
+        tx.type !== 'partner_booking' &&
+        tx.type !== 'safari_deposit'
+      ) {
+        return false;
+      }
+      if (ledgerFilter === 'withdrawal' && tx.type !== 'withdrawal') return false;
+      if (ledgerFilter === 'reward' && tx.type !== 'expedition_reward') return false;
+
+      if (ledgerSearch.trim()) {
+        const q = ledgerSearch.trim().toLowerCase();
+        const matchesTitle = tx.title.toLowerCase().includes(q);
+        const matchesSub = tx.subtitle.toLowerCase().includes(q);
+        const matchesRef = tx.referenceCode.toLowerCase().includes(q);
+        if (!matchesTitle && !matchesSub && !matchesRef) return false;
+      }
+
+      return true;
+    });
+  }, [transactions, ledgerFilter, ledgerSearch]);
+
+  const handleTopUpSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const res = topUpWallet(topUpAmount, topUpRail, topUpNote);
+    setBanner({
+      type: res.ok ? 'success' : 'error',
+      message: res.message,
+    });
+    if (res.ok) {
+      setTopUpNote('');
     }
   };
 
-  useEffect(() => {
-    fetchWalletData();
-  }, []);
-
-  // Filtered transactions
-  const filteredTransactions = useMemo(() => {
-    return transactions.filter((tx) => {
-      const matchesType = 
-        filterType === 'all' ? true :
-        filterType === 'topup' ? tx.type === 'topup' :
-        filterType === 'payment' ? tx.type === 'payment' :
-        filterType === 'refund' ? tx.type === 'refund' :
-        filterType === 'credits' ? ['referral_credit', 'promo_credit', 'admin_adjustment'].includes(tx.type) : true;
-
-      const matchesSearch = 
-        tx.narration.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        tx.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (tx.paymentProvider && tx.paymentProvider.toLowerCase().includes(searchTerm.toLowerCase()));
-
-      return matchesType && matchesSearch;
+  const handleEscrowSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const res = holdPermitInEscrow(selectedPermitId, permitGuests, permitDate);
+    setBanner({
+      type: res.ok ? 'success' : 'error',
+      message: res.message,
     });
-  }, [transactions, filterType, searchTerm]);
+  };
 
-  // Export CSV
+  const handleReleaseEscrow = (holdId: string) => {
+    const res = releasePermitEscrow(holdId);
+    setBanner({
+      type: res.ok ? 'success' : 'error',
+      message: res.message,
+    });
+  };
+
+  const handlePartnerBookingSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const res = bookPartnerStay(
+      selectedPartnerSlug,
+      stayCheckIn,
+      stayNights,
+      stayGuests
+    );
+    setBanner({
+      type: res.ok ? 'success' : 'error',
+      message: res.message,
+    });
+  };
+
+  const handleSafariDepositSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const res = paySafariDeposit(
+      selectedExpSlug,
+      safariGuests,
+      safariTier,
+      safariDate
+    );
+    setBanner({
+      type: res.ok ? 'success' : 'error',
+      message: res.message,
+    });
+  };
+
+  const handleWithdrawSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const res = withdrawFunds(withdrawAmount, withdrawRail, withdrawDestination);
+    setBanner({
+      type: res.ok ? 'success' : 'error',
+      message: res.message,
+    });
+  };
+
   const handleExportCSV = () => {
-    if (transactions.length === 0) return;
-
-    const headers = ['Date', 'Reference', 'Type', 'Direction', 'Amount_USD', 'Currency', 'Status', 'Provider', 'Narration'];
-    const rows = transactions.map((t) => [
-      t.createdAt.split('T')[0],
-      t.reference,
-      t.type,
-      t.direction,
-      t.amount.toFixed(2),
-      t.currency,
-      t.status,
-      t.paymentProvider || 'N/A',
-      `"${t.narration.replace(/"/g, '""')}"`,
+    const headers = [
+      'Date',
+      'Reference Code',
+      'Type',
+      'Title',
+      'Details',
+      'Direction',
+      'Amount (USD)',
+      'Status',
+      'Payment Rail',
+    ];
+    const rows = transactions.map((tx) => [
+      new Date(tx.createdAt).toISOString().split('T')[0],
+      tx.referenceCode,
+      tx.type,
+      `"${tx.title.replace(/"/g, '""')}"`,
+      `"${tx.subtitle.replace(/"/g, '""')}"`,
+      tx.direction,
+      tx.amountUSD.toString(),
+      tx.status,
+      `"${tx.paymentRail}"`,
     ]);
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+    const csvContent =
+      'data:text/csv;charset=utf-8,' +
+      [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Ganda_Wallet_Ledger_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute(
+      'download',
+      `enganda-safari-wallet-statement-${new Date().toISOString().slice(0, 10)}.csv`
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
 
-  // Open Monthly Statement Modal
-  const handleOpenStatement = async () => {
-    try {
-      const res = await fetch('/api/wallet/statement?userId=current_user');
-      const data = await res.json();
-      setStatementData(data);
-      setShowStatementModal(true);
-    } catch (err) {
-      console.error('Error fetching statement:', err);
-    }
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedReferral(true);
-    setTimeout(() => setCopiedReferral(false), 2500);
+    setBanner({
+      type: 'success',
+      message: 'Downloaded your Enganda Safari Wallet statement (.csv).',
+    });
   };
 
   return (
-    <div className="min-h-screen bg-stone-50 py-10 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto space-y-8">
-        
-        {/* Header Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-amber-900 mb-1">
-              <ShieldCheck className="w-4 h-4" />
-              <span>Verified Customer Travel Ledger</span>
+    <div className="min-h-screen bg-[#FAF7F2] text-[#1A1612] pb-20">
+      <SEO
+        title="Safari Wallet & UWA Permit Escrow"
+        description="Manage your Enganda Safari Wallet, hold Uganda Wildlife Authority gorilla and chimpanzee permits in escrow, and book partner lodges, hotels, motels, and camp sites."
+        canonicalPath="/wallet"
+      />
+
+      {/* Header Banner */}
+      <section className="bg-[#144225] text-[#FAF7F2] border-b border-[#2E8550] py-14">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+            <div className="space-y-3 max-w-3xl">
+              <div className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#D99B26]">
+                <ShieldCheck className="w-4 h-4" />
+                <span>Entebbe Trust Account • UWA Permit Escrow & Partner Bookings</span>
+              </div>
+              <h1 className="font-serif text-4xl sm:text-5xl font-bold text-white">
+                Enganda Safari Wallet
+              </h1>
+              <p className="text-sm sm:text-base text-[#E4DCCF] leading-relaxed">
+                Fund your Uganda expedition in one place. Lock official UWA gorilla and chimpanzee permits in protected escrow until your receipt is verified, pay 30% safari deposits, or book partner lodges, hotels, motels, and camp sites directly.
+              </p>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900">
-              Ganda Safari Wallet
-            </h1>
-            <p className="text-stone-600 text-sm">
-              Manage your East African safari credits, escrow deposits, and referral rewards.
-            </p>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={handleExportCSV}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md bg-[#226B3E] hover:bg-[#287A47] text-white border border-white/15 text-xs font-semibold transition-colors cursor-pointer"
+              >
+                <Download className="w-4 h-4 text-[#D99B26]" />
+                <span>Export CSV Statement</span>
+              </button>
+              <Link
+                to="/guides"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md bg-[#C85A28] hover:bg-[#B04B1D] text-white text-xs font-semibold transition-colors"
+              >
+                <Building2 className="w-4 h-4" />
+                <span>Browse Guides & Partners</span>
+              </Link>
+            </div>
           </div>
 
-          {/* Currency Switcher */}
-          <div className="flex items-center gap-3 self-start sm:self-auto bg-white p-1.5 rounded-xl border border-stone-200 shadow-sm">
-            <span className="text-xs font-medium text-stone-500 pl-2">Display:</span>
-            <div className="flex gap-1">
-              {(['USD', 'TZS', 'UGX', 'KES', 'EUR', 'GBP'] as Currency[]).map((curr) => (
-                <button
-                  key={curr}
-                  onClick={() => setDisplayCurrency(curr)}
-                  className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${
-                    displayCurrency === curr
-                      ? 'bg-amber-900 text-white shadow-sm'
-                      : 'text-stone-600 hover:bg-stone-100'
-                  }`}
-                >
-                  {curr}
-                </button>
-              ))}
+          {/* 3 Balance Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-10">
+            <div className="bg-[#1B5632] border border-white/15 rounded-xl p-6 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono uppercase tracking-wider text-[#D6CEC2]">
+                  Available Safari Balance
+                </span>
+                <Wallet className="w-5 h-5 text-[#D99B26]" />
+              </div>
+              <div className="font-mono text-3xl sm:text-4xl font-bold text-white tabular-nums">
+                {formatPrice(availableBalanceUSD, currency)}
+              </div>
+              <div className="text-xs text-[#D6CEC2] flex items-center justify-between pt-1">
+                <span>Ready for instant permits & partner stays</span>
+                <span className="font-mono text-[#D99B26]">
+                  US${availableBalanceUSD.toLocaleString()}
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-[#1B5632] border border-white/15 rounded-xl p-6 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono uppercase tracking-wider text-[#D6CEC2]">
+                  Held in UWA Permit Escrow
+                </span>
+                <Lock className="w-5 h-5 text-[#D99B26]" />
+              </div>
+              <div className="font-mono text-3xl sm:text-4xl font-bold text-[#D99B26] tabular-nums">
+                {formatPrice(escrowBalanceUSD, currency)}
+              </div>
+              <div className="text-xs text-[#D6CEC2] flex items-center justify-between pt-1">
+                <span>
+                  {permitHolds.filter((h) => h.status === 'active_escrow').length} active UWA permit{' '}
+                  {permitHolds.filter((h) => h.status === 'active_escrow').length === 1
+                    ? 'hold'
+                    : 'holds'}
+                </span>
+                <span className="font-mono text-[#E4DCCF]">
+                  100% Refundable pre-issue
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-[#1B5632] border border-white/15 rounded-xl p-6 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono uppercase tracking-wider text-[#D6CEC2]">
+                  Total Expedition Value
+                </span>
+                <ShieldCheck className="w-5 h-5 text-[#D99B26]" />
+              </div>
+              <div className="font-mono text-3xl sm:text-4xl font-bold text-white tabular-nums">
+                {formatPrice(availableBalanceUSD + escrowBalanceUSD, currency)}
+              </div>
+              <div className="text-xs text-[#D6CEC2] flex items-center justify-between pt-1">
+                <span>Includes Expedition Credits earned</span>
+                <span className="font-mono text-[#D99B26]">
+                  +{formatPrice(rewardCreditsUSD, currency)} Rewards
+                </span>
+              </div>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* Suspended Wallet Warning if applicable */}
-        {wallet?.status === 'suspended' && (
-          <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-rose-600" />
-            <div className="text-sm">
-              <strong>Wallet Temporarily Suspended:</strong> For your security, automated transactions are currently paused following high-frequency activity. Please contact founder Akim Mmari via WhatsApp at +255 784 123 456 to verify and reactivate.
+      {/* Main Content Container */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 space-y-12">
+        {/* Feedback Banner */}
+        {banner && (
+          <div
+            className={`p-4 rounded-lg border flex items-start justify-between gap-4 ${
+              banner.type === 'success'
+                ? 'bg-[#226B3E]/10 border-[#226B3E] text-[#144225]'
+                : 'bg-[#C85A28]/10 border-[#C85A28] text-[#9E3F16]'
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              {banner.type === 'success' ? (
+                <CheckCircle2 className="w-5 h-5 text-[#226B3E] shrink-0 mt-0.5" />
+              ) : (
+                <AlertCircle className="w-5 h-5 text-[#C85A28] shrink-0 mt-0.5" />
+              )}
+              <p className="text-sm font-medium">{banner.message}</p>
             </div>
+            <button
+              type="button"
+              onClick={() => setBanner(null)}
+              className="text-xs font-mono uppercase underline cursor-pointer shrink-0"
+            >
+              Dismiss
+            </button>
           </div>
         )}
 
-        {/* Balance Hero Card */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* 1. Available Balance */}
-          <div className="bg-gradient-to-br from-stone-900 to-stone-800 text-white rounded-2xl p-6 shadow-sm border border-stone-800 relative overflow-hidden">
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-amber-400">
-                  Available Safari Balance
-                </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  Ready to Book
-                </span>
-              </div>
-              <div className="text-3xl sm:text-4xl font-mono font-bold text-white mb-2">
-                {formatPrice(wallet?.availableBalance || 0, displayCurrency)}
-              </div>
-              <div className="text-xs text-stone-400 font-mono">
-                Base: ${wallet?.availableBalance?.toLocaleString() || '0'} USD
-              </div>
-              <div className="mt-6 flex items-center gap-2">
-                <Link
-                  to="/wallet/topup"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shadow-sm transition-colors"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Top-Up Wallet
-                </Link>
-                <Link
-                  to="/itineraries"
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-stone-200 text-xs font-medium transition-colors"
-                >
-                  Browse Circuits
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* 2. In Escrow Hold */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-stone-200 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-stone-500 flex items-center gap-1.5">
-                  <Lock className="w-3.5 h-3.5 text-amber-600" /> In Escrow Hold
-                </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
-                  Pending Verification
-                </span>
-              </div>
-              <div className="text-3xl font-mono font-bold text-stone-900 mb-1">
-                {formatPrice(wallet?.holdBalance || 0, displayCurrency)}
-              </div>
-              <div className="text-xs text-stone-500 font-mono">
-                Base: ${wallet?.holdBalance?.toLocaleString() || '0'} USD
-              </div>
-            </div>
-            <div className="pt-4 border-t border-stone-100 mt-4 text-xs text-stone-500 leading-relaxed">
-              Deposits held securely until Akim confirms vehicle allocation and locks in statutory gorilla permits.
-            </div>
-          </div>
-
-          {/* 3. Total Balance & Quick Actions */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-stone-200 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-stone-500">
-                  Total Safari Credits
-                </span>
-                <span className="text-xs text-stone-400 font-mono">{wallet?.id}</span>
-              </div>
-              <div className="text-3xl font-mono font-bold text-stone-900 mb-1">
-                {formatPrice(wallet?.balance || 0, displayCurrency)}
-              </div>
-              <div className="text-xs text-stone-500 font-mono">
-                Base: ${wallet?.balance?.toLocaleString() || '0'} USD
-              </div>
-            </div>
-
-            <div className="pt-4 border-t border-stone-100 mt-4 flex items-center gap-2">
+        {/* Interactive Wallet Operations Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Left 7 Columns: Action Workspace */}
+          <div className="lg:col-span-7 bg-white border border-[#E4DCCF] rounded-xl overflow-hidden shadow-sm">
+            {/* Action Tabs */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 border-b border-[#E4DCCF] bg-[#F3ECE1]">
               <button
-                onClick={handleOpenStatement}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-stone-300 hover:bg-stone-50 text-stone-700 text-xs font-medium transition-colors"
+                type="button"
+                onClick={() => setActiveTab('topup')}
+                className={`py-3.5 px-3 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer border-b-2 ${
+                  activeTab === 'topup'
+                    ? 'bg-white text-[#226B3E] border-[#226B3E]'
+                    : 'text-[#5A5248] border-transparent hover:text-[#1A1612]'
+                }`}
               >
-                <Download className="w-3.5 h-3.5" /> PDF Statement
+                <PlusCircle className="w-4 h-4" />
+                <span>Add Funds</span>
               </button>
+
               <button
-                onClick={() => setShowReferralModal(true)}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-stone-300 hover:bg-stone-50 text-stone-700 text-xs font-medium transition-colors"
+                type="button"
+                onClick={() => setActiveTab('escrow')}
+                className={`py-3.5 px-3 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer border-b-2 ${
+                  activeTab === 'escrow'
+                    ? 'bg-white text-[#226B3E] border-[#226B3E]'
+                    : 'text-[#5A5248] border-transparent hover:text-[#1A1612]'
+                }`}
               >
-                <Share2 className="w-3.5 h-3.5" /> Share $50 Gift
+                <Lock className="w-4 h-4" />
+                <span>UWA Permit Escrow</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('book')}
+                className={`py-3.5 px-3 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer border-b-2 ${
+                  activeTab === 'book'
+                    ? 'bg-white text-[#226B3E] border-[#226B3E]'
+                    : 'text-[#5A5248] border-transparent hover:text-[#1A1612]'
+                }`}
+              >
+                <Building2 className="w-4 h-4" />
+                <span>Book Partner / Safari</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('withdraw')}
+                className={`py-3.5 px-3 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer border-b-2 ${
+                  activeTab === 'withdraw'
+                    ? 'bg-white text-[#226B3E] border-[#226B3E]'
+                    : 'text-[#5A5248] border-transparent hover:text-[#1A1612]'
+                }`}
+              >
+                <ArrowUpRight className="w-4 h-4" />
+                <span>Withdraw</span>
               </button>
             </div>
-          </div>
-        </div>
 
-        {/* Escrow Transparency Manifesto Card */}
-        <div className="p-5 rounded-2xl bg-amber-50/70 border border-amber-200 text-amber-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <ShieldCheck className="w-6 h-6 text-amber-800 shrink-0 mt-0.5" />
-            <div>
-              <h4 className="font-bold text-sm text-stone-900">
-                Our Escrow & Non-Banking Guarantee
-              </h4>
-              <p className="text-xs text-stone-700 mt-0.5 leading-relaxed max-w-2xl">
-                Ganda Safaris is an independent boutique safari tour operator, not a bank. All balances are dedicated travel credits. Deposits stay in escrow until founder Akim personally confirms lodge availability and secures statutory gorilla permits.
-              </p>
+            <div className="p-6 sm:p-8">
+              {/* TAB 1: TOP UP */}
+              {activeTab === 'topup' && (
+                <form onSubmit={handleTopUpSubmit} className="space-y-6">
+                  <div>
+                    <span className="font-mono text-xs uppercase tracking-wider text-[#C85A28] font-semibold">
+                      Instant Wallet Funding
+                    </span>
+                    <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#1A1612] mt-1">
+                      Top Up Your Safari Wallet
+                    </h2>
+                    <p className="text-xs sm:text-sm text-[#5A5248] mt-1">
+                      Select a preset safari milestone amount or enter a custom USD figure. All balances automatically display in your chosen currency ({currency}).
+                    </p>
+                  </div>
+
+                  {/* Quick Amount Buttons */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-[#1A1612]">
+                      Quick Milestone Presets
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      {[
+                        { usd: 100, label: 'Partner Camp Pitch' },
+                        { usd: 250, label: 'Kibale Chimp Permit' },
+                        { usd: 500, label: 'Lodge Stay Deposit' },
+                        { usd: 800, label: 'Bwindi Gorilla Permit' },
+                        { usd: 1500, label: 'Gorilla Habituation' },
+                        { usd: 2500, label: 'Full Safari Deposit' },
+                      ].map((preset) => (
+                        <button
+                          key={preset.usd}
+                          type="button"
+                          onClick={() => setTopUpAmount(preset.usd)}
+                          className={`p-3 rounded-lg border text-left transition-colors cursor-pointer ${
+                            topUpAmount === preset.usd
+                              ? 'bg-[#226B3E]/10 border-[#226B3E] text-[#1A1612]'
+                              : 'bg-[#FAF7F2] border-[#E4DCCF] text-[#5A5248] hover:border-[#226B3E]/50'
+                          }`}
+                        >
+                          <div className="font-mono text-sm font-bold text-[#1A1612] tabular-nums">
+                            {formatPrice(preset.usd, currency)}
+                          </div>
+                          <div className="text-[11px] text-[#5A5248] mt-0.5">
+                            {preset.label} (US${preset.usd})
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Custom Amount Input */}
+                  <div>
+                    <label
+                      htmlFor="wallet-topup-amount"
+                      className="block text-xs font-semibold text-[#1A1612] mb-1.5"
+                    >
+                      Amount in USD (Equivalent: {formatPrice(topUpAmount || 0, currency)})
+                    </label>
+                    <input
+                      id="wallet-topup-amount"
+                      type="number"
+                      min={10}
+                      max={50000}
+                      value={topUpAmount}
+                      onChange={(e) => setTopUpAmount(Number(e.target.value))}
+                      className="w-full px-4 py-2.5 rounded-md bg-[#FAF7F2] border border-[#D6CEC2] font-mono text-base font-bold text-[#1A1612] focus:outline-none focus:border-[#226B3E]"
+                    />
+                  </div>
+
+                  {/* Payment Rail Selection */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-[#1A1612]">
+                      Payment Method
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {PAYMENT_RAILS.map((rail) => {
+                        const Icon = rail.icon;
+                        const active = topUpRail === rail.id;
+                        return (
+                          <button
+                            key={rail.id}
+                            type="button"
+                            onClick={() => setTopUpRail(rail.id)}
+                            className={`p-3 rounded-lg border text-left flex items-start gap-3 transition-colors cursor-pointer ${
+                              active
+                                ? 'bg-[#226B3E]/10 border-[#226B3E]'
+                                : 'bg-[#FAF7F2] border-[#E4DCCF] hover:border-[#226B3E]/40'
+                            }`}
+                          >
+                            <Icon className="w-4 h-4 text-[#226B3E] shrink-0 mt-0.5" />
+                            <div>
+                              <div className="text-xs font-semibold text-[#1A1612]">
+                                {rail.label}
+                              </div>
+                              <div className="text-[11px] text-[#5A5248] mt-0.5">
+                                {rail.detail}
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="wallet-topup-note"
+                      className="block text-xs font-semibold text-[#1A1612] mb-1.5"
+                    >
+                      Reference Note <span className="font-normal text-[#5A5248]">(Optional)</span>
+                    </label>
+                    <input
+                      id="wallet-topup-note"
+                      type="text"
+                      value={topUpNote}
+                      onChange={(e) => setTopUpNote(e.target.value)}
+                      placeholder="e.g. December Bwindi trek & Hotel No.5 stay"
+                      className="w-full px-3.5 py-2.5 rounded-md bg-[#FAF7F2] border border-[#D6CEC2] text-sm text-[#1A1612] focus:outline-none focus:border-[#226B3E]"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full inline-flex items-center justify-center gap-2 bg-[#226B3E] hover:bg-[#194E2D] text-white font-semibold text-sm px-6 py-3.5 rounded-md transition-colors cursor-pointer"
+                  >
+                    <PlusCircle className="w-4 h-4 text-[#D99B26]" />
+                    <span>
+                      Add {formatPrice(topUpAmount || 0, currency)} to Safari Wallet
+                    </span>
+                  </button>
+                </form>
+              )}
+
+              {/* TAB 2: UWA PERMIT ESCROW */}
+              {activeTab === 'escrow' && (
+                <form onSubmit={handleEscrowSubmit} className="space-y-6">
+                  <div>
+                    <span className="font-mono text-xs uppercase tracking-wider text-[#C85A28] font-semibold">
+                      Official UWA Receipt Protection
+                    </span>
+                    <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#1A1612] mt-1">
+                      Lock Gorilla & Chimp Permits in Escrow
+                    </h2>
+                    <p className="text-xs sm:text-sm text-[#5A5248] mt-1">
+                      When you lock permit funds in escrow, our Entebbe desk reserves your date slot with the Uganda Wildlife Authority and shares your official UWA receipt before releasing the funds.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="escrow-permit-select"
+                      className="block text-xs font-semibold text-[#1A1612] mb-1.5"
+                    >
+                      Select Official UWA Permit
+                    </label>
+                    <select
+                      id="escrow-permit-select"
+                      value={selectedPermitId}
+                      onChange={(e) => setSelectedPermitId(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-md bg-[#FAF7F2] border border-[#D6CEC2] text-sm text-[#1A1612] focus:outline-none focus:border-[#226B3E]"
+                    >
+                      {PERMIT_FACTS.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} — {formatPrice(p.costUSD, currency)} (US${p.costUSD}) / person
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {selectedPermit && (
+                    <div className="bg-[#FAF7F2] border border-[#E4DCCF] rounded-lg p-4 space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-mono uppercase text-[#226B3E] font-semibold">
+                          {selectedPermit.park}
+                        </span>
+                        <span className="font-mono font-bold text-[#1A1612]">
+                          Min Age: {selectedPermit.minAge} yrs
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#5A5248]">{selectedPermit.validity}</p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label
+                        htmlFor="escrow-guests"
+                        className="block text-xs font-semibold text-[#1A1612] mb-1.5"
+                      >
+                        Number of Trekkers
+                      </label>
+                      <input
+                        id="escrow-guests"
+                        type="number"
+                        min={1}
+                        max={8}
+                        value={permitGuests}
+                        onChange={(e) => setPermitGuests(Number(e.target.value))}
+                        className="w-full px-3.5 py-2.5 rounded-md bg-[#FAF7F2] border border-[#D6CEC2] font-mono text-sm font-bold text-[#1A1612]"
+                      />
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="escrow-date"
+                        className="block text-xs font-semibold text-[#1A1612] mb-1.5"
+                      >
+                        Preferred Trekking Date
+                      </label>
+                      <input
+                        id="escrow-date"
+                        type="date"
+                        value={permitDate}
+                        onChange={(e) => setPermitDate(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-md bg-[#FAF7F2] border border-[#D6CEC2] font-mono text-sm text-[#1A1612]"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-[#F3ECE1] border border-[#E4DCCF] rounded-lg p-4 flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-semibold text-[#1A1612]">
+                        Total Escrow Hold Required
+                      </div>
+                      <div className="text-[11px] text-[#5A5248]">
+                        Deducted from your Available Balance ({formatPrice(availableBalanceUSD, currency)})
+                      </div>
+                    </div>
+                    <div className="font-mono text-xl font-bold text-[#226B3E] tabular-nums">
+                      {formatPrice(
+                        (selectedPermit?.costUSD || 800) * (permitGuests || 1),
+                        currency
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full inline-flex items-center justify-center gap-2 bg-[#C85A28] hover:bg-[#B04B1D] text-white font-semibold text-sm px-6 py-3.5 rounded-md transition-colors cursor-pointer"
+                  >
+                    <Lock className="w-4 h-4" />
+                    <span>
+                      Lock{' '}
+                      {formatPrice(
+                        (selectedPermit?.costUSD || 800) * (permitGuests || 1),
+                        currency
+                      )}{' '}
+                      in UWA Permit Escrow
+                    </span>
+                  </button>
+                </form>
+              )}
+
+              {/* TAB 3: BOOK PARTNER STAY OR SAFARI DEPOSIT */}
+              {activeTab === 'book' && (
+                <div className="space-y-6">
+                  <div className="flex items-center gap-2 border-b border-[#E4DCCF] pb-4">
+                    <button
+                      type="button"
+                      onClick={() => setBookingMode('partner')}
+                      className={`px-4 py-2 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                        bookingMode === 'partner'
+                          ? 'bg-[#226B3E] text-white'
+                          : 'bg-[#F3ECE1] text-[#5A5248] hover:text-[#1A1612]'
+                      }`}
+                    >
+                      Book Partner Hotel, Motel, Camp Site or Lodge
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBookingMode('safari')}
+                      className={`px-4 py-2 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                        bookingMode === 'safari'
+                          ? 'bg-[#226B3E] text-white'
+                          : 'bg-[#F3ECE1] text-[#5A5248] hover:text-[#1A1612]'
+                      }`}
+                    >
+                      Pay 30% Safari Package Deposit
+                    </button>
+                  </div>
+
+                  {bookingMode === 'partner' ? (
+                    <form onSubmit={handlePartnerBookingSubmit} className="space-y-5">
+                      <div>
+                        <span className="font-mono text-xs uppercase tracking-wider text-[#C85A28] font-semibold">
+                          Direct Partner Settlement
+                        </span>
+                        <h2 className="font-serif text-2xl font-bold text-[#1A1612] mt-0.5">
+                          Book a Verified Uganda Partner Stay
+                        </h2>
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="wallet-partner-select"
+                          className="block text-xs font-semibold text-[#1A1612] mb-1.5"
+                        >
+                          Select Partner Lodge, Hotel, Motel, or Camp Site
+                        </label>
+                        <select
+                          id="wallet-partner-select"
+                          value={selectedPartnerSlug}
+                          onChange={(e) => setSelectedPartnerSlug(e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-md bg-[#FAF7F2] border border-[#D6CEC2] text-sm text-[#1A1612]"
+                        >
+                          {PARTNER_ACCOMMODATIONS.map((p) => (
+                            <option key={p.id} value={p.slug}>
+                              [{p.categoryLabel}] {p.name} ({p.region}) —{' '}
+                              {formatPrice(p.pricePerNightUSD, currency)}/night
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-[#1A1612] mb-1.5">
+                            Check-In Date
+                          </label>
+                          <input
+                            type="date"
+                            value={stayCheckIn}
+                            onChange={(e) => setStayCheckIn(e.target.value)}
+                            className="w-full px-3 py-2 rounded-md bg-[#FAF7F2] border border-[#D6CEC2] font-mono text-xs text-[#1A1612]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#1A1612] mb-1.5">
+                            Nights
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={14}
+                            value={stayNights}
+                            onChange={(e) => setStayNights(Number(e.target.value))}
+                            className="w-full px-3 py-2 rounded-md bg-[#FAF7F2] border border-[#D6CEC2] font-mono text-sm font-bold text-[#1A1612]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#1A1612] mb-1.5">
+                            Guests
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={10}
+                            value={stayGuests}
+                            onChange={(e) => setStayGuests(Number(e.target.value))}
+                            className="w-full px-3 py-2 rounded-md bg-[#FAF7F2] border border-[#D6CEC2] font-mono text-sm font-bold text-[#1A1612]"
+                          />
+                        </div>
+                      </div>
+
+                      {selectedPartner && (
+                        <div className="bg-[#F3ECE1] border border-[#E4DCCF] rounded-lg p-4 flex items-center justify-between">
+                          <div>
+                            <div className="text-xs font-semibold text-[#1A1612]">
+                              {selectedPartner.name} ({selectedPartner.categoryLabel})
+                            </div>
+                            <div className="text-[11px] text-[#5A5248]">
+                              {stayNights} {stayNights === 1 ? 'night' : 'nights'} •{' '}
+                              {Math.ceil(stayGuests / 2)}{' '}
+                              {Math.ceil(stayGuests / 2) === 1 ? 'room/unit' : 'rooms/units'}
+                            </div>
+                          </div>
+                          <div className="font-mono text-xl font-bold text-[#226B3E] tabular-nums">
+                            {formatPrice(
+                              selectedPartner.pricePerNightUSD *
+                                stayNights *
+                                Math.ceil(stayGuests / 2),
+                              currency
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      <button
+                        type="submit"
+                        className="w-full inline-flex items-center justify-center gap-2 bg-[#226B3E] hover:bg-[#194E2D] text-white font-semibold text-sm px-6 py-3.5 rounded-md transition-colors cursor-pointer"
+                      >
+                        <Building2 className="w-4 h-4 text-[#D99B26]" />
+                        <span>Confirm Partner Booking from Wallet</span>
+                      </button>
+                    </form>
+                  ) : (
+                    <form onSubmit={handleSafariDepositSubmit} className="space-y-5">
+                      <div>
+                        <span className="font-mono text-xs uppercase tracking-wider text-[#C85A28] font-semibold">
+                          30% Private Safari Deposit
+                        </span>
+                        <h2 className="font-serif text-2xl font-bold text-[#1A1612] mt-0.5">
+                          Reserve a Signature Uganda Safari
+                        </h2>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-[#1A1612] mb-1.5">
+                          Select Uganda Safari Experience
+                        </label>
+                        <select
+                          value={selectedExpSlug}
+                          onChange={(e) => setSelectedExpSlug(e.target.value)}
+                          className="w-full px-3.5 py-2.5 rounded-md bg-[#FAF7F2] border border-[#D6CEC2] text-sm text-[#1A1612]"
+                        >
+                          {EXPERIENCES.map((exp) => (
+                            <option key={exp.id} value={exp.slug}>
+                              {exp.title} ({exp.durationDays} Days)
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-xs font-semibold text-[#1A1612] mb-1.5">
+                            Comfort Tier
+                          </label>
+                          <select
+                            value={safariTier}
+                            onChange={(e) => setSafariTier(e.target.value as ComfortTier)}
+                            className="w-full px-3 py-2 rounded-md bg-[#FAF7F2] border border-[#D6CEC2] text-xs font-semibold text-[#1A1612]"
+                          >
+                            <option value="mid-range">Mid-Range</option>
+                            <option value="luxury">Luxury</option>
+                            <option value="signature">Signature</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#1A1612] mb-1.5">
+                            Travelers
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={10}
+                            value={safariGuests}
+                            onChange={(e) => setSafariGuests(Number(e.target.value))}
+                            className="w-full px-3 py-2 rounded-md bg-[#FAF7F2] border border-[#D6CEC2] font-mono text-sm font-bold text-[#1A1612]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#1A1612] mb-1.5">
+                            Departure Date
+                          </label>
+                          <input
+                            type="date"
+                            value={safariDate}
+                            onChange={(e) => setSafariDate(e.target.value)}
+                            className="w-full px-3 py-2 rounded-md bg-[#FAF7F2] border border-[#D6CEC2] font-mono text-xs text-[#1A1612]"
+                          />
+                        </div>
+                      </div>
+
+                      {selectedExperience && (
+                        <div className="bg-[#F3ECE1] border border-[#E4DCCF] rounded-lg p-4 flex items-center justify-between">
+                          <div>
+                            <div className="text-xs font-semibold text-[#1A1612]">
+                              30% Deposit for {selectedExperience.title}
+                            </div>
+                            <div className="text-[11px] text-[#5A5248]">
+                              Balance due after official UWA permit & lodge confirmation
+                            </div>
+                          </div>
+                          <div className="font-mono text-xl font-bold text-[#C85A28] tabular-nums">
+                            {formatPrice(
+                              Math.round(
+                                ((selectedExperience.priceBands.find(
+                                  (b) => b.tier === safariTier
+                                )?.perPersonUSD ||
+                                  selectedExperience.priceBands[0].perPersonUSD) *
+                                  safariGuests) *
+                                  0.3
+                              ),
+                              currency
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      <button
+                        type="submit"
+                        className="w-full inline-flex items-center justify-center gap-2 bg-[#C85A28] hover:bg-[#B04B1D] text-white font-semibold text-sm px-6 py-3.5 rounded-md transition-colors cursor-pointer"
+                      >
+                        <Compass className="w-4 h-4" />
+                        <span>Pay 30% Safari Deposit from Wallet</span>
+                      </button>
+                    </form>
+                  )}
+                </div>
+              )}
+
+              {/* TAB 4: WITHDRAW */}
+              {activeTab === 'withdraw' && (
+                <form onSubmit={handleWithdrawSubmit} className="space-y-6">
+                  <div>
+                    <span className="font-mono text-xs uppercase tracking-wider text-[#C85A28] font-semibold">
+                      Instant Available Balance Refund
+                    </span>
+                    <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#1A1612] mt-1">
+                      Withdraw Unused Wallet Funds
+                    </h2>
+                    <p className="text-xs sm:text-sm text-[#5A5248] mt-1">
+                      Transfer any unallocated funds from your Available Safari Balance ({formatPrice(availableBalanceUSD, currency)}) back to your card, Ugandan mobile money account, or bank wire.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-[#1A1612] mb-1.5">
+                        Withdrawal Amount (USD)
+                      </label>
+                      <input
+                        type="number"
+                        min={10}
+                        max={availableBalanceUSD}
+                        value={withdrawAmount}
+                        onChange={(e) => setWithdrawAmount(Number(e.target.value))}
+                        className="w-full px-3.5 py-2.5 rounded-md bg-[#FAF7F2] border border-[#D6CEC2] font-mono text-base font-bold text-[#1A1612]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-[#1A1612] mb-1.5">
+                        Destination Rail
+                      </label>
+                      <select
+                        value={withdrawRail}
+                        onChange={(e) =>
+                          setWithdrawRail(e.target.value as WalletPaymentRail)
+                        }
+                        className="w-full px-3.5 py-2.5 rounded-md bg-[#FAF7F2] border border-[#D6CEC2] text-sm text-[#1A1612]"
+                      >
+                        {PAYMENT_RAILS.map((r) => (
+                          <option key={r.id} value={r.id}>
+                            {r.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-[#1A1612] mb-1.5">
+                      Destination Account / Card / Mobile Number
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={withdrawDestination}
+                      onChange={(e) => setWithdrawDestination(e.target.value)}
+                      placeholder="e.g. Visa ending 4821 or +256 772 000 000"
+                      className="w-full px-3.5 py-2.5 rounded-md bg-[#FAF7F2] border border-[#D6CEC2] text-sm text-[#1A1612]"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full inline-flex items-center justify-center gap-2 bg-[#1A1612] hover:bg-[#332C24] text-white font-semibold text-sm px-6 py-3.5 rounded-md transition-colors cursor-pointer"
+                  >
+                    <ArrowUpRight className="w-4 h-4 text-[#D99B26]" />
+                    <span>
+                      Withdraw {formatPrice(withdrawAmount || 0, currency)} Now
+                    </span>
+                  </button>
+                </form>
+              )}
             </div>
           </div>
-          <Link
-            to="/wallet/terms"
-            className="whitespace-nowrap px-4 py-2 rounded-lg bg-white hover:bg-amber-100/50 border border-amber-300 text-amber-950 text-xs font-bold transition-colors"
-          >
-            Review Transparency Terms &rarr;
-          </Link>
-        </div>
 
-        {/* Transaction Ledger Table Section */}
-        <div className="bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden">
-          {/* Header and Filters */}
-          <div className="p-6 border-b border-stone-200 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h3 className="text-lg font-bold text-stone-900 font-serif">
-                  Immutable Transaction Ledger
-                </h3>
-                <p className="text-xs text-stone-500">
-                  Append-only audit history of all wallet top-ups, escrow holds, and credits.
+          {/* Right 5 Columns: Active Escrow Certificates & Partner Vouchers */}
+          <div className="lg:col-span-5 space-y-6">
+            {/* Active UWA Permit Escrow Holds */}
+            <div className="bg-white border border-[#E4DCCF] rounded-xl p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="font-mono text-[11px] uppercase tracking-wider text-[#226B3E] font-semibold">
+                    Protected UWA Quotas
+                  </span>
+                  <h3 className="font-serif text-xl font-bold text-[#1A1612]">
+                    Active Permit Escrow Holds
+                  </h3>
+                </div>
+                <Lock className="w-5 h-5 text-[#226B3E]" />
+              </div>
+
+              {permitHolds.length === 0 ? (
+                <p className="text-xs text-[#5A5248] py-4">
+                  No UWA permits currently held in escrow. Use the UWA Permit Escrow tab to lock gorilla or chimpanzee permits.
                 </p>
-              </div>
+              ) : (
+                <div className="space-y-3">
+                  {permitHolds.map((hold) => (
+                    <div
+                      key={hold.id}
+                      className={`p-4 rounded-lg border space-y-2 ${
+                        hold.status === 'active_escrow'
+                          ? 'bg-[#FAF7F2] border-[#226B3E]/40'
+                          : 'bg-[#F3ECE1]/60 border-[#E4DCCF] opacity-75'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <span className="inline-block font-mono text-[10px] uppercase px-2 py-0.5 rounded bg-[#226B3E] text-white">
+                            {hold.uwaReceiptCode}
+                          </span>
+                          <h4 className="font-serif text-base font-bold text-[#1A1612] mt-1">
+                            {hold.permitName}
+                          </h4>
+                        </div>
+                        <div className="text-right font-mono text-sm font-bold text-[#226B3E] tabular-nums">
+                          {formatPrice(hold.amountHeldUSD, currency)}
+                        </div>
+                      </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleExportCSV}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-stone-300 hover:bg-stone-50 text-stone-700 text-xs font-semibold transition-colors"
-                >
-                  <Download className="w-3.5 h-3.5" /> Export CSV
-                </button>
-              </div>
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#5A5248]">
+                        <span>
+                          {hold.guests} {hold.guests === 1 ? 'Trekker' : 'Trekkers'} • Target:{' '}
+                          <strong className="font-mono text-[#1A1612]">
+                            {hold.PreferredTrekDate}
+                          </strong>
+                        </span>
+                        <span className="font-mono uppercase text-[11px]">
+                          {hold.status === 'active_escrow'
+                            ? 'Escrow Locked'
+                            : 'Released to Balance'}
+                        </span>
+                      </div>
+
+                      {hold.status === 'active_escrow' && (
+                        <div className="pt-2 border-t border-[#E4DCCF] flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => handleReleaseEscrow(hold.id)}
+                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#C85A28] hover:underline cursor-pointer"
+                          >
+                            <Unlock className="w-3.5 h-3.5" />
+                            <span>Release Escrow to Available Balance</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Filters and Search Bar */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
-                <Search className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
+            {/* Confirmed Partner Accommodation Vouchers */}
+            <div className="bg-white border border-[#E4DCCF] rounded-xl p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="font-mono text-[11px] uppercase tracking-wider text-[#C85A28] font-semibold">
+                    Hotels, Motels, Camp Sites & Lodges
+                  </span>
+                  <h3 className="font-serif text-xl font-bold text-[#1A1612]">
+                    Confirmed Partner Stay Vouchers
+                  </h3>
+                </div>
+                <Building2 className="w-5 h-5 text-[#C85A28]" />
+              </div>
+
+              {partnerBookings.length === 0 ? (
+                <div className="p-4 rounded-lg bg-[#FAF7F2] border border-[#E4DCCF] space-y-2">
+                  <p className="text-xs text-[#5A5248] leading-relaxed">
+                    You have not booked any partner hotels, motels, camp sites, or lodges from your wallet yet.
+                  </p>
+                  <Link
+                    to="/guides?view=partners"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-[#226B3E] hover:text-[#C85A28]"
+                  >
+                    <span>Explore Partner Hotels, Motels, Camp Sites & Lodges</span>
+                    <ArrowUpRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {partnerBookings.map((stay) => (
+                    <div
+                      key={stay.id}
+                      className="p-4 rounded-lg bg-[#FAF7F2] border border-[#E4DCCF] space-y-1.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-[10px] uppercase px-2 py-0.5 rounded bg-[#C85A28] text-white">
+                          {stay.voucherCode}
+                        </span>
+                        <span className="font-mono text-sm font-bold text-[#1A1612] tabular-nums">
+                          {formatPrice(stay.totalPaidUSD, currency)}
+                        </span>
+                      </div>
+                      <h4 className="font-serif text-base font-bold text-[#1A1612]">
+                        {stay.partnerName}
+                      </h4>
+                      <div className="text-xs text-[#5A5248] flex items-center justify-between">
+                        <span>
+                          Check-in: {stay.checkInDate} ({stay.nights}{' '}
+                          {stay.nights === 1 ? 'night' : 'nights'}, {stay.guests}{' '}
+                          {stay.guests === 1 ? 'guest' : 'guests'})
+                        </span>
+                        <span className="font-mono text-[11px] text-[#226B3E]">
+                          Paid in Full
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Saved AI Custom Safari Itineraries (Generated with Gemini) */}
+            <div className="bg-white border border-[#E4DCCF] rounded-xl p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="font-mono text-[11px] uppercase tracking-wider text-[#226B3E] font-semibold">
+                    Gemini AI Safari Plans
+                  </span>
+                  <h3 className="font-serif text-xl font-bold text-[#1A1612]">
+                    Saved Custom Itineraries ({savedItineraries.length})
+                  </h3>
+                </div>
+                <Sparkles className="w-5 h-5 text-[#D99B26]" />
+              </div>
+
+              {savedItineraries.length === 0 ? (
+                <div className="p-4 rounded-lg bg-[#FAF7F2] border border-[#E4DCCF] space-y-2">
+                  <p className="text-xs text-[#5A5248] leading-relaxed">
+                    No AI-generated custom safari itineraries saved yet. Build a personalized multi-day Uganda plan using our Gemini Safari Itinerary Generator and save it here.
+                  </p>
+                  <Link
+                    to="/#ai-safari-generator"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-[#226B3E] hover:text-[#C85A28]"
+                  >
+                    <span>Open AI Safari Itinerary Generator</span>
+                    <ArrowUpRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {savedItineraries.map((itin) => (
+                    <div
+                      key={itin.id}
+                      className="p-4 rounded-lg bg-[#FAF7F2] border border-[#226B3E]/30 space-y-2.5"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-[10px] uppercase px-2 py-0.5 rounded bg-[#226B3E] text-white">
+                              {itin.referenceCode}
+                            </span>
+                            <span className="font-mono text-[10px] uppercase px-2 py-0.5 rounded bg-[#F3ECE1] text-[#5A5248] border border-[#E4DCCF]">
+                              {itin.durationDays} Days • {itin.budgetTier}
+                            </span>
+                          </div>
+                          <h4 className="font-serif text-base font-bold text-[#1A1612] mt-1">
+                            {itin.title}
+                          </h4>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeSavedItinerary(itin.id)}
+                          aria-label={`Remove ${itin.title} from wallet`}
+                          className="text-[#5A5248] hover:text-[#C85A28] p-1 cursor-pointer"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div className="text-xs text-[#5A5248] space-y-1">
+                        <div>
+                          <strong className="text-[#1A1612]">Region:</strong> {itin.region}
+                        </div>
+                        <div>
+                          <strong className="text-[#1A1612]">Matched Guide:</strong>{' '}
+                          <Link
+                            to={`/guides/${itin.matchedGuideSlug}`}
+                            className="text-[#226B3E] font-semibold hover:underline"
+                          >
+                            {itin.matchedGuideName}
+                          </Link>{' '}
+                          • {itin.partySize} {itin.partySize === 1 ? 'Guest' : 'Guests'}
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-[#E4DCCF] flex flex-wrap items-center justify-between gap-2">
+                        <div className="text-xs">
+                          <span className="text-[#5A5248]">Est. Total: </span>
+                          <strong className="font-mono text-[#1A1612]">
+                            {formatPrice(itin.totalPackageUSD, currency)}
+                          </strong>
+                        </div>
+
+                        {itin.depositPaid ? (
+                          <span className="inline-flex items-center gap-1 font-mono text-[11px] text-[#226B3E] font-semibold">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            30% Deposit Paid
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const res = paySavedItineraryDeposit(itin.id);
+                              setBanner({
+                                type: res.ok ? 'success' : 'error',
+                                message: res.message,
+                              });
+                            }}
+                            className="px-3 py-1.5 rounded bg-[#C85A28] hover:bg-[#B04B1D] text-white text-xs font-semibold transition-colors cursor-pointer"
+                          >
+                            Pay 30% Deposit ({formatPrice(itin.depositAmountUSD, currency)})
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Full Transaction Ledger */}
+        <div className="bg-white border border-[#E4DCCF] rounded-xl p-6 sm:p-8 space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <span className="font-mono text-xs uppercase tracking-wider text-[#C85A28] font-semibold">
+                Audited Entebbe Trust Ledger
+              </span>
+              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#1A1612]">
+                Transaction History & Receipts
+              </h2>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative">
+                <Search className="w-4 h-4 text-[#5A5248] absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Search by reference, booking, or narration..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 border border-stone-300 rounded-xl text-xs text-stone-900 focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  value={ledgerSearch}
+                  onChange={(e) => setLedgerSearch(e.target.value)}
+                  placeholder="Search reference or title..."
+                  className="pl-9 pr-3 py-2 rounded-md bg-[#FAF7F2] border border-[#D6CEC2] text-xs text-[#1A1612] focus:outline-none focus:border-[#226B3E]"
                 />
               </div>
 
-              {/* Filter Tabs */}
-              <div className="flex flex-wrap gap-1 bg-stone-100 p-1 rounded-xl">
-                {[
-                  { id: 'all', label: 'All' },
-                  { id: 'topup', label: 'Top-ups' },
-                  { id: 'payment', label: 'Escrow Holds' },
-                  { id: 'refund', label: 'Refunds' },
-                  { id: 'credits', label: 'Promo/Referral' },
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setFilterType(tab.id)}
-                    className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
-                      filterType === tab.id
-                        ? 'bg-white text-stone-900 shadow-sm'
-                        : 'text-stone-600 hover:text-stone-900'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
+              <button
+                type="button"
+                onClick={resetWalletToDefault}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-[#E4DCCF] text-xs text-[#5A5248] hover:text-[#1A1612] hover:bg-[#F3ECE1] transition-colors cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset Demo Ledger</span>
+              </button>
             </div>
           </div>
 
-          {/* Transactions List */}
-          {loading ? (
-            <div className="p-12 text-center text-sm text-stone-500">
-              Loading wallet ledger...
-            </div>
-          ) : filteredTransactions.length === 0 ? (
-            <div className="p-12 text-center space-y-2">
-              <WalletIcon className="w-8 h-8 text-stone-400 mx-auto" />
-              <p className="text-sm font-semibold text-stone-800">No transactions found</p>
-              <p className="text-xs text-stone-500 max-w-sm mx-auto">
-                No ledger entries match your filter. Top-up your wallet or book a circuit to see your history.
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-stone-600">
-                <thead className="bg-stone-50 text-stone-500 font-semibold border-b border-stone-200">
-                  <tr>
-                    <th className="py-3 px-4">Date</th>
-                    <th className="py-3 px-4">Type</th>
-                    <th className="py-3 px-4">Reference</th>
-                    <th className="py-3 px-4">Narration</th>
-                    <th className="py-3 px-4">Provider</th>
-                    <th className="py-3 px-4 text-right">Amount</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-stone-100">
-                  {filteredTransactions.map((tx) => {
-                    const isCredit = tx.direction === 'credit';
-                    return (
-                      <tr key={tx.id} className="hover:bg-stone-50/60 transition-colors">
-                        <td className="py-3.5 px-4 whitespace-nowrap text-stone-500 font-mono">
-                          {tx.createdAt.split('T')[0]}
-                        </td>
-                        <td className="py-3.5 px-4 whitespace-nowrap">
-                          {tx.type === 'topup' && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                              <ArrowDownLeft className="w-3 h-3" /> Top-Up
-                            </span>
-                          )}
-                          {tx.type === 'payment' && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
-                              <Lock className="w-3 h-3" /> Escrow Hold
-                            </span>
-                          )}
-                          {tx.type === 'refund' && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">
-                              <ArrowDownLeft className="w-3 h-3" /> Refund
-                            </span>
-                          )}
-                          {['referral_credit', 'promo_credit'].includes(tx.type) && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800">
-                              <Gift className="w-3 h-3" /> Safari Reward
-                            </span>
-                          )}
-                          {tx.type === 'admin_adjustment' && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-stone-800">
-                              HQ Adjustment
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-3.5 px-4 font-mono font-semibold text-stone-800 whitespace-nowrap">
-                          {tx.reference}
-                        </td>
-                        <td className="py-3.5 px-4 text-stone-800 max-w-xs truncate">
-                          {tx.narration}
-                        </td>
-                        <td className="py-3.5 px-4 text-stone-500 uppercase font-semibold text-[10px]">
-                          {tx.paymentProvider || 'Internal'}
-                        </td>
-                        <td className={`py-3.5 px-4 text-right font-mono font-bold whitespace-nowrap ${
-                          isCredit ? 'text-emerald-600' : 'text-stone-800'
-                        }`}>
-                          {isCredit ? '+' : '-'}{formatPrice(tx.amount, displayCurrency)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Share Referral Code Modal */}
-        {showReferralModal && (
-          <div className="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-6">
-              <div className="flex items-center justify-between pb-4 border-b border-stone-200">
-                <div className="flex items-center gap-2 text-amber-900 font-serif font-bold text-lg">
-                  <Gift className="w-5 h-5" />
-                  <span>Ganda Safari Referral Club</span>
-                </div>
-                <button
-                  onClick={() => setShowReferralModal(false)}
-                  className="text-stone-400 hover:text-stone-600 text-sm font-bold"
-                >
-                  &times;
-                </button>
-              </div>
-
-              <div className="text-center space-y-2">
-                <h3 className="text-xl font-serif font-bold text-stone-900">
-                  Give $50 USD, Earn $50 USD
-                </h3>
-                <p className="text-xs text-stone-600">
-                  Share your personalized referral code with friends planning a trip to East Africa. When they book their first safari, they receive $50 USD off their 30% deposit, and we credit $50 USD into your wallet!
-                </p>
-              </div>
-
-              <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 text-center space-y-2">
-                <span className="text-[11px] font-semibold text-amber-800 block">Your Exclusive Referral Code</span>
-                <div className="text-2xl font-mono font-bold text-amber-950 tracking-wider">
-                  GANDA-EXPLORER-88
-                </div>
-                <button
-                  onClick={() => copyToClipboard('GANDA-EXPLORER-88')}
-                  className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-amber-900 text-white text-xs font-bold hover:bg-amber-800 transition-colors"
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                  {copiedReferral ? 'Copied to Clipboard!' : 'Copy Code'}
-                </button>
-              </div>
-
-              <div className="text-[11px] text-stone-500 text-center">
-                Credits never expire and can be applied directly toward gorilla permits or lodge upgrades.
-              </div>
-            </div>
+          {/* Filter Tabs */}
+          <div className="flex flex-wrap gap-2 border-b border-[#E4DCCF] pb-4">
+            {(
+              [
+                { id: 'all', label: 'All Transactions' },
+                { id: 'deposit', label: 'Deposits' },
+                { id: 'permit', label: 'UWA Permit Escrow' },
+                { id: 'booking', label: 'Partner Stays & Safaris' },
+                { id: 'reward', label: 'Expedition Credits' },
+                { id: 'withdrawal', label: 'Withdrawals' },
+              ] as { id: LedgerFilter; label: string }[]
+            ).map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setLedgerFilter(tab.id)}
+                className={`px-3.5 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                  ledgerFilter === tab.id
+                    ? 'bg-[#226B3E] text-white'
+                    : 'bg-[#FAF7F2] text-[#5A5248] border border-[#E4DCCF] hover:text-[#1A1612]'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
-        )}
 
-        {/* Monthly PDF Statement Modal / Print View */}
-        {showStatementModal && statementData && (
-          <div className="fixed inset-0 z-50 bg-stone-900/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 space-y-6 max-h-[90vh] overflow-y-auto print:max-w-none print:shadow-none print:p-0">
-              
-              {/* Statement Controls */}
-              <div className="flex items-center justify-between pb-4 border-b border-stone-200 print:hidden">
-                <span className="text-xs font-bold text-stone-500 uppercase tracking-wider">
-                  Safari Travel Credit Statement
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => window.print()}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-semibold"
-                  >
-                    <Printer className="w-3.5 h-3.5" /> Print / Save PDF
-                  </button>
-                  <button
-                    onClick={() => setShowStatementModal(false)}
-                    className="px-3 py-1.5 rounded-lg text-stone-500 hover:text-stone-800 text-sm font-bold"
-                  >
-                    &times; Close
-                  </button>
-                </div>
+          {/* Ledger Rows */}
+          <div className="divide-y divide-[#E4DCCF]">
+            {filteredTransactions.length === 0 ? (
+              <div className="py-10 text-center text-sm text-[#5A5248]">
+                No wallet transactions match the current filter.
               </div>
+            ) : (
+              filteredTransactions.map((tx) => {
+                const isCredit =
+                  tx.direction === 'credit' || tx.direction === 'escrow_unlock';
+                return (
+                  <div
+                    key={tx.id}
+                    className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                  >
+                    <div className="flex items-start gap-3.5">
+                      <div
+                        className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+                          tx.direction === 'credit'
+                            ? 'bg-[#226B3E]/15 text-[#226B3E]'
+                            : tx.direction === 'escrow_lock'
+                            ? 'bg-[#D99B26]/20 text-[#9E6B0E]'
+                            : 'bg-[#C85A28]/15 text-[#C85A28]'
+                        }`}
+                      >
+                        {isCredit ? (
+                          <ArrowDownLeft className="w-4 h-4" />
+                        ) : tx.direction === 'escrow_lock' ? (
+                          <Lock className="w-4 h-4" />
+                        ) : (
+                          <ArrowUpRight className="w-4 h-4" />
+                        )}
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-mono text-[11px] font-semibold px-2 py-0.5 rounded bg-[#F3ECE1] text-[#1A1612]">
+                            {tx.referenceCode}
+                          </span>
+                          <span className="text-xs font-mono text-[#5A5248]">
+                            {new Date(tx.createdAt).toLocaleDateString('en-GB', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                            })}
+                          </span>
+                          <span className="text-[11px] font-mono text-[#5A5248]">
+                            • {tx.paymentRail}
+                          </span>
+                        </div>
+                        <h4 className="font-serif text-lg font-bold text-[#1A1612]">
+                          {tx.title}
+                        </h4>
+                        <p className="text-xs text-[#5A5248]">{tx.subtitle}</p>
+                      </div>
+                    </div>
 
-              {/* Official Letterhead */}
-              <div className="flex justify-between items-start border-b border-stone-200 pb-6">
-                <div>
-                  <h2 className="text-2xl font-serif font-bold text-stone-900">
-                    {statementData.operator}
-                  </h2>
-                  <p className="text-xs text-stone-600 mt-1">{statementData.headquarters}</p>
-                  <p className="text-xs text-stone-500">Tourism License: {statementData.license}</p>
-                  <p className="text-xs text-stone-500">Contact: Akim Mmari (+255 784 123 456)</p>
-                </div>
-                <div className="text-right">
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 block mb-2">
-                    TRAVEL CREDIT STATEMENT
-                  </span>
-                  <div className="text-xs text-stone-500 font-mono">
-                    Date: {new Date().toLocaleDateString()}
+                    <div className="text-left sm:text-right shrink-0">
+                      <div
+                        className={`font-mono text-lg font-bold tabular-nums ${
+                          isCredit
+                            ? 'text-[#226B3E]'
+                            : tx.direction === 'escrow_lock'
+                            ? 'text-[#B37B14]'
+                            : 'text-[#1A1612]'
+                        }`}
+                      >
+                        {isCredit ? '+' : '-'}
+                        {formatPrice(tx.amountUSD, currency)}
+                      </div>
+                      <div className="text-[11px] font-mono uppercase text-[#5A5248]">
+                        {tx.status === 'escrow_held'
+                          ? 'Locked in UWA Escrow'
+                          : tx.status === 'refunded'
+                          ? 'Escrow Released'
+                          : 'Completed'}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-
-              {/* Account Overview */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-xl bg-stone-50 border border-stone-200 text-xs">
-                <div>
-                  <span className="text-stone-500 block">Account Holder:</span>
-                  <strong className="text-stone-900">{statementData.accountHolder}</strong>
-                </div>
-                <div>
-                  <span className="text-stone-500 block">Total Credits:</span>
-                  <strong className="text-emerald-700">${statementData.totalCredits} USD</strong>
-                </div>
-                <div>
-                  <span className="text-stone-500 block">Held in Escrow:</span>
-                  <strong className="text-amber-800">${statementData.holdBalance} USD</strong>
-                </div>
-                <div>
-                  <span className="text-stone-500 block">Available Balance:</span>
-                  <strong className="text-stone-900">${statementData.availableBalance} USD</strong>
-                </div>
-              </div>
-
-              {/* Statement Transactions */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-stone-700">
-                  Statement Line Items
-                </h4>
-                <div className="border border-stone-200 rounded-xl overflow-hidden">
-                  <table className="w-full text-left text-[11px]">
-                    <thead className="bg-stone-100 text-stone-600 font-semibold border-b border-stone-200">
-                      <tr>
-                        <th className="py-2 px-3">Date</th>
-                        <th className="py-2 px-3">Reference</th>
-                        <th className="py-2 px-3">Narration</th>
-                        <th className="py-2 px-3 text-right">Amount (USD)</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-stone-100 font-mono">
-                      {statementData.transactions.map((tx: any) => (
-                        <tr key={tx.id}>
-                          <td className="py-2 px-3">{tx.createdAt.split('T')[0]}</td>
-                          <td className="py-2 px-3 font-semibold">{tx.reference}</td>
-                          <td className="py-2 px-3 font-sans text-stone-800">{tx.narration}</td>
-                          <td className={`py-2 px-3 text-right font-bold ${
-                            tx.direction === 'credit' ? 'text-emerald-700' : 'text-stone-900'
-                          }`}>
-                            {tx.direction === 'credit' ? '+' : '-'}${tx.amount.toFixed(2)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Legal Notice */}
-              <div className="pt-4 border-t border-stone-200 text-[10px] text-stone-500 leading-relaxed">
-                Ganda Safaris and Holiday Ltd operates in Arusha, Tanzania under TTBL License #TTBL-TZ-2018-842. Balances represent dedicated safari travel credits and are not bank deposits. Deposits held in escrow are subject to lodge availability and statutory UWA/RDB permit quotas.
-              </div>
-            </div>
+                );
+              })
+            )}
           </div>
-        )}
-
+        </div>
       </div>
     </div>
   );

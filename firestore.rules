@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
+    // Global Helpers
     function isSignedIn() {
       return request.auth != null;
     }
@@ -15,43 +15,110 @@ service cloud.firestore {
       return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
     function isValidUser(data) {
-      return data.uid is string && data.uid.size() <= 128 &&
-             data.email is string && data.email.size() <= 256 &&
+      return data.keys().hasAll(['uid', 'email', 'createdAt']) &&
+             data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'role', 'createdAt']) &&
+             data.uid is string && data.uid.size() > 0 && data.uid.size() <= 128 &&
+             data.email is string && data.email.size() > 0 && data.email.size() <= 256 &&
+             data.createdAt is string && data.createdAt.size() <= 64 &&
              data.uid == request.auth.uid;
     }
 
     function isValidSafariDocument(data) {
-      return data.id is string && data.id.size() <= 128 &&
-             data.driveFileId is string && data.driveFileId.size() <= 256 &&
+      return data.keys().hasAll(['id', 'driveFileId', 'name', 'userId', 'createdAt']) &&
+             data.keys().hasOnly(['id', 'driveFileId', 'name', 'mimeType', 'size', 'webViewLink', 'category', 'userId', 'createdAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.driveFileId is string && data.driveFileId.size() > 0 && data.driveFileId.size() <= 256 &&
              data.name is string && data.name.size() > 0 && data.name.size() <= 256 &&
-             data.userId is string && data.userId == request.auth.uid;
+             data.userId is string && data.userId.size() <= 128 &&
+             data.createdAt is string && data.createdAt.size() <= 64 &&
+             data.userId == request.auth.uid;
     }
 
-    // Default deny
+    function isValidTestimonial(data) {
+      return data.keys().hasAll(['id', 'guestName', 'country', 'destination', 'rating', 'title', 'text', 'date', 'status', 'authorId']) &&
+             data.keys().hasOnly(['id', 'guestName', 'country', 'destination', 'experienceSlug', 'guideSlug', 'guideName', 'rating', 'title', 'text', 'date', 'partyType', 'status', 'authorId']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.guestName is string && data.guestName.size() > 0 && data.guestName.size() <= 128 &&
+             data.country is string && data.country.size() > 0 && data.country.size() <= 100 &&
+             data.destination is string && data.destination.size() > 0 && data.destination.size() <= 160 &&
+             data.rating is number && data.rating >= 1 && data.rating <= 5 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.text is string && data.text.size() > 0 && data.text.size() <= 1500 &&
+             data.date is string && data.date.size() > 0 && data.date.size() <= 64 &&
+             data.status == 'published' &&
+             data.authorId is string && data.authorId.size() <= 128 &&
+             data.authorId == request.auth.uid;
+    }
+
+    function isValidSavedItinerary(data) {
+      return data.keys().hasAll(['id', 'userId', 'title', 'region', 'budgetTier', 'durationDays', 'estimatedPerPersonUSD', 'referenceCode', 'createdAt']) &&
+             data.keys().hasOnly(['id', 'userId', 'title', 'region', 'budgetTier', 'activityFocus', 'durationDays', 'estimatedPerPersonUSD', 'depositAmountUSD', 'matchedGuideName', 'matchedGuideSlug', 'referenceCode', 'createdAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.region is string && data.region.size() > 0 && data.region.size() <= 200 &&
+             data.budgetTier in ['mid-range', 'luxury', 'signature'] &&
+             data.durationDays is number && data.durationDays >= 1 && data.durationDays <= 30 &&
+             data.estimatedPerPersonUSD is number && data.estimatedPerPersonUSD >= 0 &&
+             data.referenceCode is string && data.referenceCode.size() <= 64 &&
+             data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    // Default deny catch-all
     match /{document=**} {
       allow read, write: if false;
     }
 
     // Users collection
     match /users/{userId} {
-      allow get: if isOwner(userId);
+      allow get: if isValidId(userId) && isOwner(userId);
       allow list: if false;
-      allow create: if isOwner(userId) && isValidUser(request.resource.data);
-      allow update: if isOwner(userId) && isValidUser(request.resource.data) &&
-                    request.resource.data.uid == resource.data.uid;
+      allow create: if isValidId(userId) && isOwner(userId) && isValidUser(incoming());
+      allow update: if isValidId(userId) && isOwner(userId) && isValidUser(incoming()) &&
+                    incoming().uid == existing().uid &&
+                    incoming().createdAt == existing().createdAt &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL']);
       allow delete: if false;
     }
 
     // Safari Documents collection (Google Drive tracking)
     match /safari_documents/{docId} {
-      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow create: if isSignedIn() && isValidSafariDocument(request.resource.data);
-      allow update: if isSignedIn() && resource.data.userId == request.auth.uid &&
-                    isValidSafariDocument(request.resource.data) &&
-                    request.resource.data.userId == resource.data.userId;
-      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && isValidId(docId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(docId) && isValidSafariDocument(incoming());
+      allow update: if isSignedIn() && isValidId(docId) && existing().userId == request.auth.uid &&
+                    isValidSafariDocument(incoming()) &&
+                    incoming().userId == existing().userId &&
+                    incoming().createdAt == existing().createdAt &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['name', 'category', 'webViewLink']);
+      allow delete: if isSignedIn() && isValidId(docId) && existing().userId == request.auth.uid;
+    }
+
+    // Client Testimonials collection (Public read for published testimonials, authenticated write)
+    match /testimonials/{testimonialId} {
+      allow get: if isValidId(testimonialId) && existing().status == 'published';
+      allow list: if existing().status == 'published';
+      allow create: if isSignedIn() && isValidId(testimonialId) && isValidTestimonial(incoming());
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // Saved AI Safari Itineraries collection (Private per user wallet)
+    match /saved_itineraries/{itineraryId} {
+      allow get: if isSignedIn() && isValidId(itineraryId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(itineraryId) && isValidSavedItinerary(incoming());
+      allow update: if false;
+      allow delete: if isSignedIn() && isValidId(itineraryId) && existing().userId == request.auth.uid;
     }
   }
 }

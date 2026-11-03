@@ -1,214 +1,204 @@
-import React, { useState } from 'react';
-import { REVIEWS } from '../data/seedData';
-import { Review, DestinationCountry, BudgetTier } from '../types';
-import { Star, ShieldCheck, CheckCircle2, Filter, MessageSquare, ArrowRight } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { Star, Filter, RotateCcw, Info, ArrowRight } from 'lucide-react';
+import { SAMPLE_REVIEWS, GUIDES, EXPERIENCES } from '../data/seedData';
+import { SmartImage } from '../components/SmartImage';
+import { SEO } from '../components/SEO';
 
 export const ReviewsPage: React.FC = () => {
-  const [selectedCountry, setSelectedCountry] = useState<string>('All');
-  const [selectedTier, setSelectedTier] = useState<string>('All');
-  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  const [selectedGuideSlug, setSelectedGuideSlug] = useState<string>('all');
+  const [selectedExpSlug, setSelectedExpSlug] = useState<string>('all');
+  const [minRating, setMinRating] = useState<number>(0);
 
-  // Filter reviews
-  const filteredReviews = REVIEWS.filter((rev) => {
-    if (selectedCountry !== 'All' && !rev.itineraryName.toLowerCase().includes(selectedCountry.toLowerCase())) {
-      return false;
-    }
-    if (selectedTier !== 'All' && rev.budgetTier !== selectedTier) {
-      return false;
-    }
-    return true;
-  });
+  const filteredReviews = useMemo(() => {
+    return SAMPLE_REVIEWS.filter((r) => {
+      const matchGuide =
+        selectedGuideSlug === 'all' || r.guideSlug === selectedGuideSlug;
+      const matchExp =
+        selectedExpSlug === 'all' || r.experienceSlug === selectedExpSlug;
+      const matchRating = r.rating >= minRating;
+      return matchGuide && matchExp && matchRating;
+    });
+  }, [selectedGuideSlug, selectedExpSlug, minRating]);
 
-  const averageRating = 4.96;
+  const resetFilters = () => {
+    setSelectedGuideSlug('all');
+    setSelectedExpSlug('all');
+    setMinRating(0);
+  };
 
   return (
-    <div className="bg-stone-950 text-stone-100 min-h-screen py-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto space-y-12">
+    <div className="bg-[#FAF7F2] min-h-screen py-12 sm:py-16">
+      <SEO
+        title="Guest Stories & Guide Reviews | Enganda Safaris"
+        description="Read guest stories from Uganda safaris led by our named Ugandan guides across Bwindi Impenetrable Forest, Kibale, Mabamba Swamp, Murchison Falls, and Kidepo Valley."
+      />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-3">
-          <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-amber-600/20 text-amber-400 text-xs font-bold border border-amber-500/30">
-            <Star className="w-3.5 h-3.5 fill-current" />
-            <span>4.96 / 5 Verified Guest Score</span>
+        <div className="bg-[#226B3E] text-[#FAF7F2] rounded-lg p-8 sm:p-12 border border-[#2E8550]">
+          <div className="max-w-3xl space-y-4">
+            <h1 className="font-serif text-4xl sm:text-5xl font-bold text-white">
+              Guest Stories & Guide Reviews
+            </h1>
+            <p className="text-sm sm:text-base text-[#D6CEC2] leading-relaxed">
+              Every review below links directly to the Ugandan guide who led the safari and the Uganda itinerary the guests traveled on.
+            </p>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-bold text-white font-display">
-            Field Reviews & Guest Chronicles
-          </h1>
-          <p className="text-sm sm:text-base text-stone-300 leading-relaxed">
-            Read candid feedback from photographers, honeymooners, and multi-generational families who have traversed East Africa with Ganda Safaris.
-          </p>
         </div>
 
-        {/* Rating Breakdown Summary Box */}
-        <div className="bg-stone-900 rounded-3xl p-8 border border-stone-800 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center space-x-6 text-center md:text-left">
+        {/* Sample Reviews Transparency Notice (Content Rule 4) */}
+        <div className="bg-[#F3ECE1] border border-[#E4DCCF] rounded-lg p-4 flex items-start gap-3 text-xs text-[#5A5248]">
+          <Info className="w-4 h-4 text-[#C85A28] flex-shrink-0 mt-0.5" />
+          <div>
+            <strong className="text-[#1A1612]">Transparency Note:</strong> These representative sample guest reviews (<code className="font-mono">SAMPLE_REVIEWS</code>) illustrate how guest feedback links directly to each named Enganda guide and Uganda experience. Ask our Entebbe desk for direct references for your chosen guide.
+          </div>
+        </div>
+
+        {/* Filter Bar */}
+        <div className="bg-white border border-[#E4DCCF] rounded-lg p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#226B3E] font-semibold">
+              <Filter className="w-4 h-4 text-[#C85A28]" />
+              <span>Filter by Enganda Guide, Experience, or Rating</span>
+            </div>
+            {(selectedGuideSlug !== 'all' || selectedExpSlug !== 'all' || minRating > 0) && (
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-[#C85A28] hover:underline cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset</span>
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <div className="text-5xl font-black text-white font-display">4.96</div>
-              <div className="flex items-center justify-center md:justify-start text-amber-400 mt-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-current" />
+              <label className="block text-xs font-semibold text-[#1A1612] mb-1">
+                Filter by Guide
+              </label>
+              <select
+                value={selectedGuideSlug}
+                onChange={(e) => setSelectedGuideSlug(e.target.value)}
+                className="w-full bg-[#FAF7F2] border border-[#E4DCCF] rounded-md px-3 py-2 text-sm text-[#1A1612]"
+              >
+                <option value="all">All 8 Enganda Guides</option>
+                {GUIDES.map((g) => (
+                  <option key={g.slug} value={g.slug}>
+                    {g.name} ({g.homeRegion})
+                  </option>
                 ))}
-              </div>
-              <div className="text-xs text-stone-400 mt-1">128+ Verified Departures</div>
+              </select>
             </div>
 
-            <div className="h-12 w-px bg-stone-800 hidden md:block"></div>
-
-            <div className="text-xs text-stone-300 space-y-1 hidden md:block">
-              <div>• <strong>Naturalist Guides:</strong> 5.0 / 5 (Wildlife spotting & safety)</div>
-              <div>• <strong>Vehicles & Fleet:</strong> 4.95 / 5 (Comfort, inverters & pop-tops)</div>
-              <div>• <strong>Akim's Accountability:</strong> 5.0 / 5 (24/7 WhatsApp responsiveness)</div>
+            <div>
+              <label className="block text-xs font-semibold text-[#1A1612] mb-1">
+                Filter by Uganda Experience
+              </label>
+              <select
+                value={selectedExpSlug}
+                onChange={(e) => setSelectedExpSlug(e.target.value)}
+                className="w-full bg-[#FAF7F2] border border-[#E4DCCF] rounded-md px-3 py-2 text-sm text-[#1A1612]"
+              >
+                <option value="all">All 6 Experiences</option>
+                {EXPERIENCES.map((exp) => (
+                  <option key={exp.slug} value={exp.slug}>
+                    {exp.title}
+                  </option>
+                ))}
+              </select>
             </div>
-          </div>
 
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => setIsSubmitModalOpen(true)}
-              className="px-5 py-3 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-semibold border border-stone-700 transition-colors"
-            >
-              Submit Guest Review
-            </button>
-            <Link
-              to="/trip-planner"
-              className="px-6 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-xs uppercase tracking-wider transition-colors shadow-lg"
-            >
-              Plan Your Trip
-            </Link>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-800 pb-4 text-xs">
-          <div className="flex items-center space-x-2">
-            <span className="text-stone-400 font-medium">Destination:</span>
-            {['All', 'Tanzania', 'Uganda', 'Rwanda', 'Kenya'].map((country) => (
-              <button
-                key={country}
-                onClick={() => setSelectedCountry(country)}
-                className={`px-3 py-1 rounded-lg transition-colors ${
-                  selectedCountry === country
-                    ? 'bg-amber-600 text-stone-950 font-bold'
-                    : 'bg-stone-900 text-stone-400 hover:text-stone-200'
-                }`}
+            <div>
+              <label className="block text-xs font-semibold text-[#1A1612] mb-1">
+                Minimum Rating
+              </label>
+              <select
+                value={minRating}
+                onChange={(e) => setMinRating(Number(e.target.value))}
+                className="w-full bg-[#FAF7F2] border border-[#E4DCCF] rounded-md px-3 py-2 text-sm text-[#1A1612]"
               >
-                {country}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <span className="text-stone-400 font-medium">Tier:</span>
-            {['All', 'Mid-Range', 'Luxury', 'Signature / Ultra-Luxe'].map((tier) => (
-              <button
-                key={tier}
-                onClick={() => setSelectedTier(tier)}
-                className={`px-3 py-1 rounded-lg transition-colors ${
-                  selectedTier === tier
-                    ? 'bg-amber-600 text-stone-950 font-bold'
-                    : 'bg-stone-900 text-stone-400 hover:text-stone-200'
-                }`}
-              >
-                {tier}
-              </button>
-            ))}
+                <option value={0}>All Ratings</option>
+                <option value={5}>5 Stars Only</option>
+                <option value={4}>4+ Stars</option>
+              </select>
+            </div>
           </div>
         </div>
 
         {/* Reviews Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredReviews.map((rev) => (
-            <div
-              key={rev.id}
-              className="bg-stone-900 rounded-2xl border border-stone-800 p-6 sm:p-8 space-y-4 shadow-lg flex flex-col justify-between hover:border-stone-700 transition-colors"
-            >
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center text-amber-400">
-                    {[...Array(rev.rating)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-current" />
-                    ))}
-                  </div>
-                  <span className="text-[10px] bg-stone-950 text-emerald-400 px-2 py-0.5 rounded border border-emerald-900/60 font-semibold">
-                    Verified Guest
-                  </span>
-                </div>
+          {filteredReviews.map((rev) => {
+            const guide = GUIDES.find((g) => g.slug === rev.guideSlug);
+            const exp = EXPERIENCES.find((e) => e.slug === rev.experienceSlug);
 
-                <h3 className="text-base font-bold text-white leading-snug">
-                  "{rev.title}"
-                </h3>
-
-                <p className="text-xs text-stone-300 leading-relaxed">
-                  {rev.content}
-                </p>
-
-                <div className="p-3 rounded-lg bg-stone-950 text-[11px] text-stone-400 border border-stone-800/80">
-                  <span className="text-amber-400 font-medium">Circuit:</span> {rev.itineraryName} ({rev.budgetTier})
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-stone-800 flex items-center justify-between text-xs text-stone-400">
-                <div>
-                  <span className="font-semibold text-stone-200 block">{rev.guestName}</span>
-                  <span className="text-[11px] text-stone-500">{rev.country}</span>
-                </div>
-                <span className="text-[11px] text-stone-500">{rev.tripMonthYear}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Submit Review Modal */}
-        {isSubmitModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-in fade-in">
-            <div className="relative w-full max-w-md bg-stone-900 border border-stone-700 rounded-2xl p-6 shadow-2xl space-y-4">
-              <div className="flex items-center justify-between border-b border-stone-800 pb-3">
-                <h3 className="text-base font-bold text-white">Share Your Field Review</h3>
-                <button
-                  onClick={() => setIsSubmitModalOpen(false)}
-                  className="text-stone-400 hover:text-white"
-                >
-                  ✕
-                </button>
-              </div>
-              <p className="text-xs text-stone-400">
-                Did you recently return from a safari with Akim? Your direct feedback helps fellow travelers.
-              </p>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  alert('Asante sana! Your review has been submitted to Akim for moderation.');
-                  setIsSubmitModalOpen(false);
-                }}
-                className="space-y-3 text-xs"
+            return (
+              <article
+                key={rev.id}
+                className="bg-white border border-[#E4DCCF] rounded-lg p-6 flex flex-col justify-between space-y-5"
               >
-                <input
-                  type="text"
-                  required
-                  placeholder="Your Full Name & Home Country"
-                  className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2.5 text-white"
-                />
-                <input
-                  type="text"
-                  required
-                  placeholder="Itinerary / Circuit Name (e.g. Serengeti Great Migration)"
-                  className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2.5 text-white"
-                />
-                <textarea
-                  rows={4}
-                  required
-                  placeholder="Describe your guide, vehicle, lodge experience, and wildlife sightings..."
-                  className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2.5 text-white"
-                ></textarea>
-                <button
-                  type="submit"
-                  className="w-full py-3 rounded-lg bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold uppercase tracking-wider"
-                >
-                  Submit Review to Akim
-                </button>
-              </form>
-            </div>
-          </div>
-        )}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1 text-[#D99B26]">
+                      {Array.from({ length: rev.rating }).map((_, idx) => (
+                        <Star key={idx} className="w-4 h-4 fill-[#D99B26]" />
+                      ))}
+                    </div>
+                    <span className="font-mono text-xs text-[#5A5248]">{rev.date}</span>
+                  </div>
+
+                  <h2 className="font-serif text-2xl font-bold text-[#1A1612]">
+                    “{rev.title}”
+                  </h2>
+
+                  <p className="text-sm text-[#5A5248] leading-relaxed">
+                    {rev.text}
+                  </p>
+                </div>
+
+                <div className="pt-4 border-t border-[#E4DCCF] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <div className="text-xs font-bold text-[#1A1612]">
+                      {rev.guestName} • {rev.country}
+                    </div>
+                    {exp && (
+                      <Link
+                        to={`/experiences/${exp.slug}`}
+                        className="text-xs text-[#226B3E] hover:underline block mt-0.5"
+                      >
+                        Experience: {exp.title}
+                      </Link>
+                    )}
+                  </div>
+
+                  {guide && (
+                    <Link
+                      to={`/guides/${guide.slug}`}
+                      className="inline-flex items-center gap-2 bg-[#FAF7F2] hover:bg-[#F3ECE1] border border-[#E4DCCF] rounded-md px-3 py-1.5 transition-colors"
+                    >
+                      <SmartImage
+                        src={guide.photo}
+                        alt={guide.name}
+                        className="w-7 h-7 rounded-full object-cover border border-[#C85A28]"
+                      />
+                      <div className="text-left">
+                        <span className="text-[10px] font-mono uppercase text-[#5A5248] block">
+                          Guided by
+                        </span>
+                        <span className="text-xs font-semibold text-[#C85A28] flex items-center gap-1">
+                          {guide.name}
+                          <ArrowRight className="w-3 h-3" />
+                        </span>
+                      </div>
+                    </Link>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

@@ -1,998 +1,585 @@
 import express from 'express';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from 'fs';
 import { GoogleGenAI, Type, FunctionDeclaration } from '@google/genai';
-import { ITINERARIES, PERMITS_DATA, GROUND_PARTNERS, REVIEWS, TEAM_MEMBERS } from './src/data/seedData';
-import { TINGA_ASSISTANT_SYSTEM_PROMPT } from './src/config/systemPrompt';
-import { Lead, ChatSession, ChatMessage } from './src/types';
-import { 
-  getOrCreateWallet, 
-  applyWalletTransaction, 
-  inMemoryWallets, 
-  inMemoryTransactions, 
-  inMemoryPaymentIntents, 
-  inMemoryAuditLogs, 
-  inMemoryReferrals, 
-  inMemoryFXRates, 
-  inMemoryOTPs, 
-  checkTopupVelocity, 
-  verifyDPOSignature, 
-  verifyStripeSignature, 
-  verifyPayPalSignature, 
-  verifyMpesaSignature 
-} from './src/services/walletLedger';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import {
+  GUIDES,
+  EXPERIENCES,
+  PERMIT_FACTS,
+  DESTINATIONS,
+  SAMPLE_REVIEWS,
+  JOURNAL_ARTICLES,
+  HQ_ADDRESS,
+} from './src/data/seedData';
+import { ENGANDA_CONCIERGE_SYSTEM_PROMPT } from './src/config/systemPrompt';
+import {
+  executeConciergeTool,
+  generateRuleBasedConciergeReply,
+} from './src/concierge/conciergeEngine';
+import { Lead, ChatSession } from './src/types';
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 app.use(express.json());
 
-// In-memory persistent stores for leads and chat sessions
-let inMemoryLeads: Lead[] = [
+// In-memory store for submitted leads and chat sessions
+const inMemoryLeads: Lead[] = [
   {
-    id: 'lead_001',
-    createdAt: new Date(Date.now() - 3600000).toISOString(),
-    updatedAt: new Date().toISOString(),
-    status: 'new',
-    source: 'trip_planner',
-    name: 'Charlotte Dubois',
-    email: 'charlotte.dubois@paris-travel.fr',
-    phone: '+33 6 12 34 56 78',
-    countries: ['Tanzania', 'Uganda'],
-    budgetBand: 'Luxury',
-    travelersCount: 2,
-    targetDates: 'August 2025',
-    notes: 'Honeymoon safari: Great Migration in Serengeti + 2 Uganda Gorilla Permits in Bwindi.',
-    depositAmountUSD: 4980,
-  },
-  {
-    id: 'lead_002',
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-    updatedAt: new Date().toISOString(),
-    status: 'deposit_paid',
-    source: 'web_chat',
-    name: 'Dr. Marcus Becker',
-    email: 'm.becker@berlin-wildlife.de',
-    phone: '+49 171 9876543',
-    countries: ['Tanzania'],
-    budgetBand: 'Signature / Ultra-Luxe',
-    travelersCount: 4,
-    targetDates: 'October 2025',
-    notes: '30% Deposit Paid ($7,800 USD) via DPO Group. Needs 2 custom Land Cruisers with camera beanbags.',
-    depositAmountUSD: 7800,
-  },
-  {
-    id: 'lead_003',
-    createdAt: new Date(Date.now() - 172800000).toISOString(),
-    updatedAt: new Date().toISOString(),
+    id: 'eng_lead_seed_1',
+    name: 'Eleanor Vance',
+    email: 'eleanor.vance@example.co.uk',
+    whatsapp: '+44 7700 900123',
+    partySize: 2,
+    targetDates: 'November 2026',
+    budgetTier: 'luxury',
+    interests: ['gorillas', 'chimps'],
+    regions: ['Bwindi & Mgahinga', 'Kibale Forest'],
+    durationDays: 5,
+    preferredGuideSlug: 'samuel-kato',
+    experienceSlug: '5-day-gorillas-and-kibale-chimps',
+    notes: 'Interested in US$600 low-season November Bwindi gorilla permits with Samuel Kato.',
     status: 'quote_sent',
-    source: 'contact_page',
-    name: 'Sarah & Liam Jenkins',
-    email: 'sarah.j@melbourne-law.com.au',
-    phone: '+61 412 345 678',
-    countries: ['Rwanda', 'Uganda'],
-    budgetBand: 'Luxury',
-    travelersCount: 2,
-    targetDates: 'January 2026',
-    notes: 'Primate focus: Volcanoes NP gorilla trek + Kibale chimps. Quote sent by Akim.',
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
   },
 ];
 
-let inMemorySessions: Record<string, ChatSession> = {};
+const inMemorySessions: Record<string, ChatSession> = {};
 
-// ================= API ENDPOINTS =================
+// ================= REST API ENDPOINTS =================
 
-// Health check
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
-    operator: 'Ganda Safaris (Arusha, Tanzania)',
+    operator: 'Enganda Safaris',
+    headOffice: HQ_ADDRESS,
     timeEAT: new Date().toISOString(),
   });
 });
 
-// Itineraries
-app.get('/api/itineraries', (req, res) => {
-  res.json(ITINERARIES);
+app.get('/api/guides', (_req, res) => {
+  res.json(GUIDES);
 });
 
-app.get('/api/itineraries/:slug', (req, res) => {
-  const item = ITINERARIES.find((it) => it.slug === req.params.slug);
-  if (!item) return res.status(404).json({ error: 'Itinerary not found' });
-  res.json(item);
+app.get('/api/guides/:slug', (req, res) => {
+  const guide = GUIDES.find((g) => g.slug === req.params.slug);
+  if (!guide) return res.status(404).json({ error: 'Guide not found' });
+  res.json(guide);
 });
 
-// Permits
-app.get('/api/permits', (req, res) => {
-  res.json(PERMITS_DATA);
+app.get('/api/experiences', (_req, res) => {
+  res.json(EXPERIENCES);
 });
 
-// Ground Partners
-app.get('/api/partners', (req, res) => {
-  res.json(GROUND_PARTNERS);
+app.get('/api/experiences/:slug', (req, res) => {
+  const exp = EXPERIENCES.find((e) => e.slug === req.params.slug);
+  if (!exp) return res.status(404).json({ error: 'Experience not found' });
+  res.json(exp);
 });
 
-// Reviews
-app.get('/api/reviews', (req, res) => {
-  res.json(REVIEWS);
+app.get('/api/destinations', (_req, res) => {
+  res.json(DESTINATIONS);
 });
 
-// Leads
-app.get('/api/leads', (req, res) => {
+app.get('/api/permits', (_req, res) => {
+  res.json(PERMIT_FACTS);
+});
+
+app.get('/api/reviews', (_req, res) => {
+  res.json(SAMPLE_REVIEWS);
+});
+
+app.get('/api/testimonials', (_req, res) => {
+  res.json(SAMPLE_REVIEWS);
+});
+
+app.get('/api/journal', (_req, res) => {
+  res.json(JOURNAL_ARTICLES);
+});
+
+app.get('/api/leads', (_req, res) => {
   res.json(inMemoryLeads);
 });
 
 app.post('/api/leads', (req, res) => {
   const newLead: Lead = {
-    id: 'lead_' + Date.now(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    status: req.body.status || 'new',
-    source: req.body.source || 'trip_planner',
-    name: req.body.name || 'Anonymous Traveler',
+    id: req.body.id || 'eng_lead_' + Date.now(),
+    name: req.body.name || 'Safari Guest',
     email: req.body.email || '',
-    phone: req.body.phone,
-    countries: req.body.countries,
-    budgetBand: req.body.budgetBand,
-    travelersCount: req.body.travelersCount,
-    targetDates: req.body.targetDates,
+    whatsapp: req.body.whatsapp || '',
+    partySize: Number(req.body.partySize) || 2,
+    targetDates: req.body.targetDates || 'Flexible 2026/2027',
+    budgetTier: req.body.budgetTier || 'luxury',
+    interests: Array.isArray(req.body.interests) ? req.body.interests : ['gorillas'],
+    regions: req.body.regions,
+    durationDays: req.body.durationDays,
+    preferredGuideSlug: req.body.preferredGuideSlug,
+    experienceSlug: req.body.experienceSlug,
     notes: req.body.notes,
-    depositAmountUSD: req.body.depositAmountUSD,
+    status: 'new',
+    createdAt: new Date().toISOString(),
   };
 
   inMemoryLeads.unshift(newLead);
   res.status(201).json(newLead);
 });
 
-app.patch('/api/leads/:id/status', (req, res) => {
-  const lead = inMemoryLeads.find((l) => l.id === req.params.id);
-  if (!lead) return res.status(404).json({ error: 'Lead not found' });
-  lead.status = req.body.status;
-  lead.updatedAt = new Date().toISOString();
-  res.json(lead);
-});
+// ================= AI SAFARI ITINERARY GENERATOR (GEMINI 3.8 FLASH) =================
 
-// Chat Sessions for Admin Inspector
-app.get('/api/chat/sessions', (req, res) => {
-  res.json(Object.values(inMemorySessions));
-});
+function buildDeterministicUgandaItinerary(params: {
+  region: string;
+  budgetTier: 'mid-range' | 'luxury' | 'signature';
+  activities: string[];
+  durationDays: number;
+  partySize: number;
+  specialRequests?: string;
+}) {
+  const { region, budgetTier, activities, durationDays, partySize } = params;
+  const cleanDays = Math.max(2, Math.min(12, Number(durationDays) || 5));
+  const cleanParty = Math.max(1, Math.min(12, Number(partySize) || 2));
 
-// Analytics Event Telemetry
-app.post('/api/analytics/event', (req, res) => {
-  console.log(`[Analytics Event] ${req.body.event}:`, req.body.payload || {});
-  res.json({ tracked: true });
-});
+  // Match guide based on region & activity
+  const matchedGuide =
+    GUIDES.find((g) =>
+      g.regionsCovered.some((r) =>
+        region.toLowerCase().includes(r.toLowerCase().split(' ')[0])
+      )
+    ) ||
+    GUIDES.find((g) =>
+      activities.some((act) =>
+        g.specialties.some((s) => act.toLowerCase().includes(s))
+      )
+    ) ||
+    GUIDES[0];
 
-// WhatsApp Cloud API Webhook verification & incoming
-app.get('/api/waba/webhook', (req, res) => {
-  const mode = req.query['hub.mode'];
-  const token = req.query['hub.verify_token'];
-  const challenge = req.query['hub.challenge'];
+  const includeGorillas =
+    activities.some((a) => a.toLowerCase().includes('gorilla') || a.toLowerCase().includes('trek')) ||
+    region.toLowerCase().includes('bwindi') ||
+    region.toLowerCase().includes('mgahinga') ||
+    region.toLowerCase().includes('grand');
 
-  if (mode === 'subscribe' && token === (process.env.WABA_VERIFY_TOKEN || 'tinga_safari_secret')) {
-    console.log('[WABA] Webhook verified successfully');
-    res.status(200).send(challenge);
-  } else {
-    res.sendStatus(403);
+  const includeChimps =
+    activities.some((a) => a.toLowerCase().includes('chimp') || a.toLowerCase().includes('primate')) ||
+    region.toLowerCase().includes('kibale') ||
+    region.toLowerCase().includes('queen');
+
+  const dailyBase =
+    budgetTier === 'signature' ? 890 : budgetTier === 'luxury' ? 590 : 390;
+
+  const permitBreakdown: { permitName: string; costUSD: number }[] = [];
+  if (includeGorillas) {
+    permitBreakdown.push({
+      permitName: 'UWA Mountain Gorilla Trekking Permit (Bwindi/Mgahinga)',
+      costUSD: 800,
+    });
   }
-});
-
-app.post('/api/waba/webhook', (req, res) => {
-  console.log('[WABA] Incoming event payload:', JSON.stringify(req.body).substring(0, 200));
-  res.status(200).send('EVENT_RECEIVED');
-});
-
-// ================= USER WALLET API ENDPOINTS =================
-
-// 1. Get Wallet
-app.get('/api/wallet', (req, res) => {
-  const userId = (req.query.userId as string) || 'current_user';
-  const email = req.query.email as string;
-  const name = req.query.name as string;
-  const wallet = getOrCreateWallet(userId, { email, name });
-  res.json(wallet);
-});
-
-// 2. Get Transaction Ledger
-app.get('/api/wallet/transactions', (req, res) => {
-  const userId = (req.query.userId as string) || 'current_user';
-  const wallet = getOrCreateWallet(userId);
-  const type = req.query.type as string;
-  const direction = req.query.direction as string;
-  const search = (req.query.search as string || '').toLowerCase();
-  const limit = parseInt(req.query.limit as string, 10) || 50;
-
-  let txs = inMemoryTransactions.filter((tx) => tx.walletId === wallet.id);
-
-  if (type && type !== 'all') {
-    txs = txs.filter((tx) => tx.type === type);
+  if (includeChimps) {
+    permitBreakdown.push({
+      permitName: 'UWA Kibale Chimpanzee Tracking Permit',
+      costUSD: 250,
+    });
   }
-  if (direction && direction !== 'all') {
-    txs = txs.filter((tx) => tx.direction === direction);
-  }
-  if (search) {
-    txs = txs.filter((tx) => 
-      tx.narration.toLowerCase().includes(search) || 
-      tx.reference.toLowerCase().includes(search) ||
-      (tx.providerRef && tx.providerRef.toLowerCase().includes(search))
-    );
-  }
-
-  res.json({
-    walletId: wallet.id,
-    count: txs.length,
-    transactions: txs.slice(0, limit),
-  });
-});
-
-// 3. Create Top-up Payment Intent
-app.post('/api/wallet/topup/intent', (req, res) => {
-  const { userId = 'current_user', amount, provider = 'dpo', currency = 'USD' } = req.body;
-  const parsedAmount = parseFloat(amount);
-
-  if (isNaN(parsedAmount) || parsedAmount < 50 || parsedAmount > 10000) {
-    return res.status(400).json({ 
-      error: 'Invalid top-up amount. Minimum deposit is $50 USD and maximum is $10,000 USD per transaction.' 
+  if (permitBreakdown.length === 0) {
+    permitBreakdown.push({
+      permitName: 'Uganda Wildlife Authority National Park Entry & Ranger Fees',
+      costUSD: 160,
     });
   }
 
-  // Velocity anomaly and rate-limiting check (5 attempts per 10 mins)
-  const velocityCheck = checkTopupVelocity(userId);
-  if (!velocityCheck.allowed) {
-    return res.status(429).json({ error: velocityCheck.reason });
-  }
+  const permitTotal = permitBreakdown.reduce((sum, p) => sum + p.costUSD, 0);
+  const estimatedPerPersonUSD = cleanDays * dailyBase + permitTotal;
+  const totalPackageUSD = estimatedPerPersonUSD * cleanParty;
+  const depositAmountUSD = Math.round(totalPackageUSD * 0.3);
 
-  const wallet = getOrCreateWallet(userId);
-  if (wallet.status !== 'active') {
-    return res.status(403).json({ error: `Wallet is ${wallet.status}. Please contact Akim at Arusha HQ.` });
-  }
+  const lodgePool =
+    budgetTier === 'signature'
+      ? ['Sanctuary Gorilla Forest Camp', 'Nile Safari Lodge', 'Apoka Safari Lodge', 'Hotel No.5 Entebbe']
+      : budgetTier === 'luxury'
+      ? ['Buhoma Lodge Bwindi', 'Primate Lodge Kibale', 'Paraa Safari Lodge', 'Kyambura Gorge Lodge']
+      : ['Ichumbi Gorilla Lodge', 'Turaco Treetops Kibale', 'Pakuba Safari Lodge', 'Mabamba Papyrus Eco-Camp'];
 
-  const intentId = 'pi_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
-  const idempotencyKey = req.body.idempotencyKey || `idemp_${intentId}`;
-
-  const intent = {
-    id: intentId,
-    walletId: wallet.id,
-    userId,
-    provider,
-    amount: parsedAmount,
-    currency: 'USD' as const,
-    status: 'pending' as const,
-    webhookVerified: false,
-    idempotencyKey,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  inMemoryPaymentIntents.set(intentId, intent);
-
-  // Return checkout URL and provider details
-  const checkoutUrl = `/wallet/checkout?intent_id=${intentId}&provider=${provider}&amount=${parsedAmount}`;
-
-  res.status(201).json({
-    intentId,
-    checkoutUrl,
-    amount: parsedAmount,
-    currency: 'USD',
-    provider,
-    idempotencyKey,
-    message: `Payment intent created for $${parsedAmount} USD via ${provider.toUpperCase()}`,
-  });
-});
-
-// 4. Instant Simulation of Top-up completion (for testing/demo without live merchant webhooks)
-app.post('/api/wallet/simulate-topup', async (req, res) => {
-  try {
-    const { userId = 'current_user', amount, provider = 'dpo', idempotencyKey } = req.body;
-    const parsedAmount = parseFloat(amount);
-    if (isNaN(parsedAmount) || parsedAmount < 50 || parsedAmount > 10000) {
-      return res.status(400).json({ error: 'Top-up amount must be between $50 and $10,000 USD.' });
+  const days = Array.from({ length: cleanDays }, (_, i) => {
+    const dayNum = i + 1;
+    if (dayNum === 1) {
+      return {
+        day: 1,
+        title: `Entebbe Welcome Briefing & Overland Transfer to ${region}`,
+        destination: `Entebbe to ${region}`,
+        morningActivity: `Meet your named Enganda specialist ${matchedGuide.name} at our Bugonga Head Office (5 mins from Entebbe Airport) for Ugandan coffee, route map review, and official UWA permit inspection.`,
+        afternoonActivity: `Scenic drive in your private 4x4 Land Cruiser with pop-up roof toward ${region}, stopping at the Equator crossing or Mabamba/Ziwa conservation corridor en route.`,
+        accommodation: lodgePool[0],
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '4.5–6 hours via scenic highway',
+        wildlifeHighlight: 'Grey Crowned Crane, Rothschild Giraffe or Papyrus Endemics',
+      };
     }
-
-    const wallet = getOrCreateWallet(userId);
-    const key = idempotencyKey || `sim_topup_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-    const ref = `TOP-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 900 + 100)}`;
-
-    const result = await applyWalletTransaction({
-      walletId: wallet.id,
-      type: 'topup',
-      direction: 'credit',
-      amount: parsedAmount,
-      currency: 'USD',
-      reference: ref,
-      idempotencyKey: key,
-      paymentProvider: provider,
-      providerRef: `${provider.toUpperCase()}-SIM-${Date.now().toString().slice(-4)}`,
-      narration: `Safari credit top-up via ${provider.toUpperCase()}`,
-      meta: { action: 'topup', provider },
-    });
-
-    res.json({
-      success: true,
-      wallet: getOrCreateWallet(userId),
-      transaction: result.transaction,
-      message: `Successfully credited $${parsedAmount} USD to your safari wallet.`,
-    });
-  } catch (err: any) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-// 5. Pay Deposit with Wallet (Escrow Hold)
-app.post('/api/wallet/pay-deposit', async (req, res) => {
-  try {
-    const { userId = 'current_user', bookingId, amount, confirmed = true } = req.body;
-    const otpCode = req.body.otpCode || req.body.otp;
-    const parsedAmount = parseFloat(amount);
-
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      return res.status(400).json({ error: 'Invalid deposit amount.' });
+    if (dayNum === cleanDays) {
+      return {
+        day: dayNum,
+        title: `Sunrise Nature Walk in ${region} & Return to Entebbe`,
+        destination: `${region} to Entebbe Peninsula`,
+        morningActivity: `Final dawn birding or crater rim walk led by ${matchedGuide.name}, capturing golden-hour photography before breakfast.`,
+        afternoonActivity: `Return journey to Entebbe with an artisanal lunch stop and evening drop-off at Entebbe International Airport or your lakeside partner hotel.`,
+        accommodation: 'Entebbe Departure / Optional Hotel No.5 Day Room',
+        meals: 'Breakfast, Lunch',
+        driveTime: '5 hours return to Entebbe',
+        wildlifeHighlight: 'Great Blue Turaco, Black-and-White Colobus, Ankole Long-Horned Cattle',
+      };
     }
-
-    const wallet = getOrCreateWallet(userId);
-    const available = Number((wallet.balance - wallet.holdBalance).toFixed(2));
-
-    if (available < parsedAmount) {
-      return res.status(400).json({
-        error: 'Insufficient available wallet balance.',
-        availableBalance: available,
-        requiredAmount: parsedAmount,
-        shortfall: Number((parsedAmount - available).toFixed(2)),
-      });
+    if (dayNum === 2 && includeGorillas) {
+      return {
+        day: 2,
+        title: 'Bwindi Impenetrable Forest Mountain Gorilla Trekking',
+        destination: 'Bwindi Impenetrable National Park',
+        morningActivity: `7:30 AM UWA ranger briefing at the trailhead followed by a guided montane rainforest trek to spend one full, unhurried hour observing a habituated mountain gorilla family.`,
+        afternoonActivity: `Receive your official UWA Gorilla Trekking Certificate and enjoy an optional Batwa forest heritage walk or quiet forest-edge recovery at the lodge.`,
+        accommodation: lodgePool[0],
+        meals: 'Breakfast, Packed Trail Lunch, Dinner',
+        driveTime: '30 mins to trailhead',
+        wildlifeHighlight: 'Mountain Gorilla Silverback & Infant Family, L’Hoest’s Monkey',
+      };
     }
-
-    // High-value check: If transaction > $500, require 6-digit OTP verification
-    if (parsedAmount > 500 && !otpCode) {
-      const generatedCode = '784' + Math.floor(Math.random() * 900 + 100);
-      inMemoryOTPs.set(userId, {
-        code: generatedCode,
-        userId,
-        amount: parsedAmount,
-        bookingId,
-        expiresAt: Date.now() + 10 * 60 * 1000,
-      });
-
-      return res.json({
-        requiresOtp: true,
-        message: `High-value safari transaction ($${parsedAmount} USD). A 6-digit OTP code has been dispatched to your verified contact.`,
-        simulatedOtp: generatedCode, // Exposed in demo environment for convenience
-      });
+    if (dayNum === 3 && includeChimps) {
+      return {
+        day: 3,
+        title: 'Kibale Forest Chimpanzee Tracking & Bigodi Wetland Walk',
+        destination: 'Kibale Forest & Bigodi Sanctuary',
+        morningActivity: `Dawn trek from Kanyanchu Visitor Centre under towering fig trees to track wild Eastern chimpanzees and 12 other primate species with ${matchedGuide.name}.`,
+        afternoonActivity: `Guided boardwalk excursion through the community-run Bigodi Wetland Sanctuary and visit to the Bigodi Women’s Basketry Cooperative.`,
+        accommodation: lodgePool[1 % lodgePool.length],
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '2–3 hours between sectors',
+        wildlifeHighlight: 'Eastern Chimpanzee, Uganda Red Colobus, Great Blue Turaco',
+      };
     }
-
-    // If OTP was submitted, verify it
-    if (parsedAmount > 500 && otpCode) {
-      const stored = inMemoryOTPs.get(userId);
-      if (!stored || stored.code !== otpCode || Date.now() > stored.expiresAt) {
-        return res.status(400).json({ error: 'Invalid or expired OTP verification code.' });
-      }
-      inMemoryOTPs.delete(userId);
-    }
-
-    // Apply escrow hold
-    const ref = `HOLD-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 900 + 100)}`;
-    const idempotencyKey = `hold_${bookingId || 'custom'}_${Date.now()}`;
-
-    const result = await applyWalletTransaction({
-      walletId: wallet.id,
-      type: 'payment',
-      direction: 'debit',
-      amount: parsedAmount,
-      currency: 'USD',
-      reference: ref,
-      idempotencyKey,
-      paymentProvider: 'wallet',
-      bookingId,
-      narration: `Escrow hold for 30% deposit on safari booking #${bookingId || 'custom'}`,
-      meta: { 
-        action: 'hold', 
-        bookingId,
-        status: 'escrow_held',
-        transparencyNotice: 'Held in escrow until Akim confirms lodge reservations & gorilla permits.'
-      },
-    });
-
-    // Update existing lead or create lead status
-    let lead = inMemoryLeads.find((l) => l.id === bookingId);
-    if (lead) {
-      lead.status = 'deposit_paid';
-      lead.depositAmountUSD = parsedAmount;
-      lead.updatedAt = new Date().toISOString();
-    }
-
-    res.json({
-      success: true,
-      message: `Deposit of $${parsedAmount} USD placed in escrow hold. Akim’s team will verify lodge inventory and statutory permits within 12 hours.`,
-      transaction: result.transaction,
-      balance: result.balance,
-      holdBalance: result.holdBalance,
-      availableBalance: result.availableBalance,
-    });
-  } catch (err: any) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-// 6. User Referral Code & Stats
-app.get('/api/wallet/referral', (req, res) => {
-  const userId = (req.query.userId as string) || 'current_user';
-  let referral = Array.from(inMemoryReferrals.values()).find((r) => r.userId === userId);
-
-  if (!referral) {
-    const code = 'GANDA-' + (userId.toUpperCase().slice(0, 4) || 'SAF') + '-' + Math.floor(Math.random() * 90 + 10);
-    referral = {
-      id: 'ref_' + Date.now(),
-      userId,
-      referralCode: code,
-      rewardAmount: 50.00,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    return {
+      day: dayNum,
+      title: `${region} Savanna Game Drive, Boat Launch & Cultural Encounter`,
+      destination: region,
+      morningActivity: `Sunrise off-track wildlife and photography circuit with ${matchedGuide.name} in the private 4x4 Land Cruiser, scanning for lions, elephants, and endemic birds.`,
+      afternoonActivity: `Private boat launch along the Kazinga Channel / Victoria Nile or a respectful visit to a local Ugandan community homestead and coffee farm.`,
+      accommodation: lodgePool[dayNum % lodgePool.length],
+      meals: 'Breakfast, Lunch, Dinner',
+      driveTime: 'Game viewing & short park transfers',
+      wildlifeHighlight: 'Tree-Climbing Lions, African Bush Elephant, Hippo Pods, Fish Eagle',
     };
-    inMemoryReferrals.set(code, referral);
-  }
-
-  const allUserReferrals = Array.from(inMemoryReferrals.values()).filter((r) => r.userId === userId);
-  const creditedCount = allUserReferrals.filter((r) => r.status === 'credited').length;
-  const totalEarned = creditedCount * 50;
-
-  res.json({
-    referralCode: referral.referralCode,
-    rewardPerFriendUSD: 50.00,
-    totalReferrals: allUserReferrals.length,
-    successfulBookings: creditedCount,
-    totalCreditsEarnedUSD: totalEarned,
-    shareUrl: `https://gandasafaris.com/?ref=${referral.referralCode}`,
-    terms: 'Earn $50 USD in safari travel credits when a friend books their first circuit with Ganda Safaris.',
   });
-});
 
-// 7. Monthly Statement Generator Data
-app.get('/api/wallet/statement', (req, res) => {
-  const userId = (req.query.userId as string) || 'current_user';
-  const wallet = getOrCreateWallet(userId);
-  const userTxs = inMemoryTransactions.filter((tx) => tx.walletId === wallet.id);
-
-  const totalCredits = userTxs
-    .filter((tx) => tx.direction === 'credit')
-    .reduce((sum, tx) => sum + tx.amount, 0);
-
-  const totalDebits = userTxs
-    .filter((tx) => tx.direction === 'debit')
-    .reduce((sum, tx) => sum + tx.amount, 0);
-
-  res.json({
-    operator: 'Ganda Safaris and Holiday Ltd',
-    headquarters: 'Clock Tower Roundabout, P.O. Box 2751, Arusha, Tanzania',
-    license: 'TTBL-TZ-2018-842',
-    statementDate: new Date().toISOString(),
-    period: 'Current Active Statement',
-    walletId: wallet.id,
-    accountHolder: wallet.userName || 'Valued Safari Traveler',
-    accountEmail: wallet.userEmail,
-    currency: 'USD',
-    openingBalance: 0.00,
-    totalCredits: Number(totalCredits.toFixed(2)),
-    totalDebits: Number(totalDebits.toFixed(2)),
-    currentBalance: wallet.balance,
-    holdBalance: wallet.holdBalance,
-    availableBalance: wallet.availableBalance,
-    transactions: userTxs,
-  });
-});
-
-// 8. Display FX Rates Switcher
-app.get('/api/wallet/fx-rates', (req, res) => {
-  res.json(inMemoryFXRates);
-});
-
-// Admin update FX rate
-app.patch('/api/wallet/fx-rates', (req, res) => {
-  const { currency, rateToUSD } = req.body;
-  if (!currency || !rateToUSD || !inMemoryFXRates[currency as any]) {
-    return res.status(400).json({ error: 'Invalid currency or rate.' });
-  }
-
-  inMemoryFXRates[currency as any].rateToUSD = parseFloat(rateToUSD);
-  inMemoryFXRates[currency as any].updatedAt = new Date().toISOString();
-
-  inMemoryAuditLogs.push({
-    id: 'aud_' + Date.now(),
-    adminId: req.body.adminId || 'akim_mmari',
-    action: 'update_fx_rate',
-    target: currency,
-    narration: `Updated ${currency} rate to ${rateToUSD}`,
-    diff: { currency, rateToUSD },
+  const randCode = Math.floor(100000 + Math.random() * 900000);
+  return {
+    id: `itin_${Date.now()}`,
+    referenceCode: `ENG-AI-${randCode}`,
+    title: `${cleanDays}-Day Custom ${region} & ${activities[0] || 'Uganda'} Expedition`,
+    subtitle: `Private ${budgetTier} Uganda safari tailored for ${cleanParty} ${
+      cleanParty === 1 ? 'traveler' : 'travelers'
+    }, led from Entebbe by ${matchedGuide.name}.`,
+    region,
+    budgetTier,
+    activityFocus: activities.join(', ') || 'Wildlife, Primate Trekking & Culture',
+    durationDays: cleanDays,
+    partySize: cleanParty,
+    estimatedPerPersonUSD,
+    totalPackageUSD,
+    depositAmountUSD,
+    matchedGuideSlug: matchedGuide.slug,
+    matchedGuideName: matchedGuide.name,
+    matchedGuideReason: `${matchedGuide.name} is a UTB-licensed specialist from ${matchedGuide.homeRegion} with ${matchedGuide.yearsExperience} years of field experience leading ${activities.join(' and ') || 'custom Uganda'} safaris.`,
+    permitBreakdown,
+    recommendedPartnerStays: lodgePool.slice(0, 3),
+    days,
+    conservationNote:
+      'Every Enganda itinerary stays 100% within Uganda, includes official UWA conservation permits, and contributes US$25 per booking to our Porter Welfare & Community Water Fund.',
     createdAt: new Date().toISOString(),
-  });
+  };
+}
 
-  res.json(inMemoryFXRates[currency as any]);
-});
+app.post('/api/itinerary/generate', async (req, res) => {
+  const {
+    region = 'Bwindi & Mgahinga + Queen Elizabeth NP',
+    budgetTier = 'luxury',
+    activities = ['Mountain Gorilla Trekking', 'Savanna Wildlife & Boat Cruise'],
+    durationDays = 5,
+    partySize = 2,
+    specialRequests = '',
+  } = req.body || {};
 
-// ================= PROVIDER WEBHOOKS (WITH SIGNATURE VERIFICATION) =================
+  const cleanDays = Math.max(2, Math.min(12, Number(durationDays) || 5));
+  const cleanParty = Math.max(1, Math.min(12, Number(partySize) || 2));
+  const cleanTier = (['mid-range', 'luxury', 'signature'].includes(budgetTier)
+    ? budgetTier
+    : 'luxury') as 'mid-range' | 'luxury' | 'signature';
+  const activityList: string[] = Array.isArray(activities)
+    ? activities
+    : [String(activities || 'Gorilla Trekking & Wildlife')];
 
-// 1. DPO Group Webhook
-app.post('/api/wallet/webhooks/dpo', async (req, res) => {
-  const signature = req.headers['x-dpo-signature'] as string;
-  const companyToken = process.env.DPO_COMPANY_TOKEN || 'tinga_dpo_secret_token';
-  const rawBody = JSON.stringify(req.body);
+  const apiKey = process.env.GEMINI_API_KEY;
 
-  // Signature check
-  if (process.env.NODE_ENV === 'production' && !verifyDPOSignature(rawBody, companyToken, signature)) {
-    return res.status(401).json({ error: 'Invalid DPO signature' });
-  }
-
-  const { TransactionToken, Result, ResultExplanation, CustomerName, Amount, Currency: dpoCurrency, IdempotencyKey } = req.body;
-  
-  if (Result === '000' || Result === 'OK') {
+  if (apiKey) {
     try {
-      const wallet = getOrCreateWallet('current_user', { name: CustomerName });
-      const amount = parseFloat(Amount || '0');
-      const key = IdempotencyKey || `dpo_tx_${TransactionToken}`;
-
-      await applyWalletTransaction({
-        walletId: wallet.id,
-        type: 'topup',
-        direction: 'credit',
-        amount,
-        currency: 'USD',
-        reference: `DPO-${TransactionToken}`,
-        idempotencyKey: key,
-        paymentProvider: 'dpo',
-        providerRef: TransactionToken,
-        narration: `DPO Group deposit confirmed: ${ResultExplanation || 'Successful payment'}`,
-        meta: { action: 'topup', rawResult: Result },
+      const ai = new GoogleGenAI({
+        apiKey,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          },
+        },
       });
 
-      console.log(`[WABA Notification] Dispatched topup_success HSM template to guest for $${amount} USD.`);
-      return res.status(200).send('<API3G><Response>OK</Response></API3G>');
+      const guideRosterSummary = GUIDES.map(
+        (g) =>
+          `${g.name} (slug: "${g.slug}", homeRegion: "${g.homeRegion}", specialties: [${g.specialties.join(
+            ', '
+          )}], yearsExperience: ${g.yearsExperience})`
+      ).join('\n');
+
+      const prompt = `Design a custom ${cleanDays}-day private Uganda safari itinerary for ${cleanParty} guests.
+User Preferences:
+- Target Uganda Region(s): ${region}
+- Comfort / Budget Tier: ${cleanTier} (mid-range ~$390/day + permits, luxury ~$590/day + permits, signature ~$890/day + permits)
+- Preferred Activities: ${activityList.join(', ')}
+- Additional Notes: ${specialRequests || 'Include authentic Ugandan cultural touchpoints and unhurried wildlife viewing'}
+
+Strict Enganda Safaris Rules:
+1. All destinations MUST be 100% inside Uganda (e.g., Entebbe, Mabamba Swamp, Bwindi Impenetrable NP, Mgahinga, Kibale Forest, Queen Elizabeth NP, Murchison Falls NP, Ziwa Rhino Sanctuary, Kidepo Valley NP, Rwenzori Mountains, Lake Bunyonyi, Jinja).
+2. Match the itinerary to the best guide from this exact Enganda roster:
+${guideRosterSummary}
+3. Use accurate UWA permit tariffs (Mountain Gorilla Trekking Permit = US$800, Gorilla Habituation = US$1500, Kibale Chimpanzee Permit = US$250, Kyambura Gorge Chimp Permit = US$100).
+4. Provide exactly ${cleanDays} day objects in the "days" array.`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.8-flash',
+        contents: prompt,
+        config: {
+          systemInstruction:
+            'You are the Chief Expedition Architect at Enganda Safaris in Entebbe, Uganda. Build accurate, inspiring, logistically realistic multi-day Uganda safari itineraries led by a named Ugandan guide from our collective. Always return valid JSON matching the schema.',
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              title: {
+                type: Type.STRING,
+                description: 'Compelling editorial title for the custom Uganda safari.',
+              },
+              subtitle: {
+                type: Type.STRING,
+                description: '1-2 sentence summary highlighting the route, pace, and named guide.',
+              },
+              matchedGuideSlug: {
+                type: Type.STRING,
+                description: 'Exact slug of the matched guide from the Enganda roster.',
+              },
+              matchedGuideName: {
+                type: Type.STRING,
+                description: 'Full name of the matched Ugandan guide.',
+              },
+              matchedGuideReason: {
+                type: Type.STRING,
+                description: 'Why this specific guide is the ideal match for the region and activities.',
+              },
+              estimatedPerPersonUSD: {
+                type: Type.INTEGER,
+                description: 'Realistic per-person total price in USD including vehicle, full-board lodges, and UWA permits.',
+              },
+              permitBreakdown: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    permitName: { type: Type.STRING },
+                    costUSD: { type: Type.INTEGER },
+                  },
+                  required: ['permitName', 'costUSD'],
+                },
+              },
+              recommendedPartnerStays: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+                description: '2 to 4 recommended Ugandan partner lodges, hotels, or camp sites.',
+              },
+              days: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    day: { type: Type.INTEGER },
+                    title: { type: Type.STRING },
+                    destination: { type: Type.STRING },
+                    morningActivity: { type: Type.STRING },
+                    afternoonActivity: { type: Type.STRING },
+                    accommodation: { type: Type.STRING },
+                    meals: { type: Type.STRING },
+                    driveTime: { type: Type.STRING },
+                    wildlifeHighlight: { type: Type.STRING },
+                  },
+                  required: [
+                    'day',
+                    'title',
+                    'destination',
+                    'morningActivity',
+                    'afternoonActivity',
+                    'accommodation',
+                    'meals',
+                    'driveTime',
+                    'wildlifeHighlight',
+                  ],
+                },
+              },
+              conservationNote: {
+                type: Type.STRING,
+                description: 'How this itinerary supports UWA conservation and Ugandan local communities.',
+              },
+            },
+            required: [
+              'title',
+              'subtitle',
+              'matchedGuideSlug',
+              'matchedGuideName',
+              'matchedGuideReason',
+              'estimatedPerPersonUSD',
+              'permitBreakdown',
+              'recommendedPartnerStays',
+              'days',
+              'conservationNote',
+            ],
+          },
+        },
+      });
+
+      const rawJson = (response.text ?? '').trim();
+      if (rawJson) {
+        const parsed = JSON.parse(rawJson);
+        const validGuide =
+          GUIDES.find((g) => g.slug === parsed.matchedGuideSlug) || GUIDES[0];
+        const perPersonUSD = Number(parsed.estimatedPerPersonUSD) || cleanDays * 590 + 800;
+        const totalPackageUSD = perPersonUSD * cleanParty;
+        const depositAmountUSD = Math.round(totalPackageUSD * 0.3);
+        const randCode = Math.floor(100000 + Math.random() * 900000);
+
+        return res.json({
+          id: `itin_${Date.now()}`,
+          referenceCode: `ENG-AI-${randCode}`,
+          title: parsed.title,
+          subtitle: parsed.subtitle,
+          region,
+          budgetTier: cleanTier,
+          activityFocus: activityList.join(', '),
+          durationDays: cleanDays,
+          partySize: cleanParty,
+          estimatedPerPersonUSD: perPersonUSD,
+          totalPackageUSD,
+          depositAmountUSD,
+          matchedGuideSlug: validGuide.slug,
+          matchedGuideName: validGuide.name,
+          matchedGuideReason: parsed.matchedGuideReason,
+          permitBreakdown: Array.isArray(parsed.permitBreakdown)
+            ? parsed.permitBreakdown
+            : [],
+          recommendedPartnerStays: Array.isArray(parsed.recommendedPartnerStays)
+            ? parsed.recommendedPartnerStays
+            : [],
+          days: Array.isArray(parsed.days) ? parsed.days : [],
+          conservationNote: parsed.conservationNote,
+          createdAt: new Date().toISOString(),
+        });
+      }
     } catch (err: any) {
-      return res.status(400).json({ error: err.message });
+      console.error('[Gemini Itinerary Generator Error]:', err?.message || err);
     }
   }
 
-  res.status(200).send('<API3G><Response>REJECTED</Response></API3G>');
-});
-
-// 2. Stripe Webhook
-app.post('/api/wallet/webhooks/stripe', async (req, res) => {
-  const sigHeader = req.headers['stripe-signature'] as string;
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_tinga_demo';
-  const rawBody = JSON.stringify(req.body);
-
-  if (process.env.NODE_ENV === 'production' && !verifyStripeSignature(rawBody, sigHeader, webhookSecret)) {
-    return res.status(401).json({ error: 'Invalid Stripe signature' });
-  }
-
-  const event = req.body;
-  if (event.type === 'payment_intent.succeeded') {
-    const pi = event.data.object;
-    const amount = (pi.amount || 0) / 100;
-    const customerEmail = pi.receipt_email || pi.customer_details?.email;
-    const wallet = getOrCreateWallet(customerEmail || 'current_user');
-
-    try {
-      await applyWalletTransaction({
-        walletId: wallet.id,
-        type: 'topup',
-        direction: 'credit',
-        amount,
-        currency: 'USD',
-        reference: `STRIPE-${pi.id}`,
-        idempotencyKey: `stripe_${pi.id}`,
-        paymentProvider: 'stripe',
-        providerRef: pi.id,
-        narration: 'Online credit card deposit via Stripe',
-        meta: { action: 'topup' },
-      });
-      console.log(`[WABA Notification] Dispatched topup_success HSM to ${customerEmail}`);
-    } catch (e: any) {
-      console.error('[Stripe Webhook] Error:', e.message);
-    }
-  }
-
-  res.json({ received: true });
-});
-
-// 3. PayPal Webhook
-app.post('/api/wallet/webhooks/paypal', async (req, res) => {
-  const webhookId = process.env.PAYPAL_WEBHOOK_ID || 'wh_paypal_demo';
-  if (process.env.NODE_ENV === 'production' && !verifyPayPalSignature(req.headers, webhookId)) {
-    return res.status(401).json({ error: 'Invalid PayPal transmission signature' });
-  }
-
-  const { event_type, resource } = req.body;
-  if (event_type === 'PAYMENT.CAPTURE.COMPLETED') {
-    const amount = parseFloat(resource.amount?.value || '0');
-    const payerEmail = resource.payer?.email_address;
-    const wallet = getOrCreateWallet(payerEmail || 'current_user');
-
-    try {
-      await applyWalletTransaction({
-        walletId: wallet.id,
-        type: 'topup',
-        direction: 'credit',
-        amount,
-        currency: 'USD',
-        reference: `PAYPAL-${resource.id}`,
-        idempotencyKey: `paypal_${resource.id}`,
-        paymentProvider: 'paypal',
-        providerRef: resource.id,
-        narration: 'PayPal deposit confirmed',
-        meta: { action: 'topup' },
-      });
-      console.log(`[WABA Notification] Dispatched topup_success HSM to ${payerEmail}`);
-    } catch (e: any) {
-      console.error('[PayPal Webhook] Error:', e.message);
-    }
-  }
-
-  res.json({ status: 'success' });
-});
-
-// 4. M-Pesa Daraja STK Push Callback
-app.post('/api/wallet/webhooks/mpesa', async (req, res) => {
-  const authHeader = req.headers['authorization'];
-  const passkey = process.env.MPESA_PASSKEY || 'mpesa_passkey_demo';
-
-  if (process.env.NODE_ENV === 'production' && !verifyMpesaSignature(authHeader, passkey)) {
-    return res.status(401).json({ error: 'Unauthorized M-Pesa request' });
-  }
-
-  const { Body } = req.body;
-  const stkCallback = Body?.stkCallback;
-
-  if (stkCallback && stkCallback.ResultCode === 0) {
-    const items = stkCallback.CallbackMetadata?.Item || [];
-    const amountItem = items.find((i: any) => i.Name === 'Amount');
-    const mpesaReceiptItem = items.find((i: any) => i.Name === 'MpesaReceiptNumber');
-    const phoneItem = items.find((i: any) => i.Name === 'PhoneNumber');
-
-    const amountKES = amountItem?.Value || 0;
-    const usdAmount = Number((amountKES / 130).toFixed(2)); // Converted at fixed KES rate
-    const receipt = mpesaReceiptItem?.Value || 'MPESA_' + Date.now();
-    const phone = phoneItem?.Value?.toString() || '';
-
-    const wallet = getOrCreateWallet('current_user', { phone });
-
-    try {
-      await applyWalletTransaction({
-        walletId: wallet.id,
-        type: 'topup',
-        direction: 'credit',
-        amount: usdAmount,
-        currency: 'USD',
-        reference: `MPESA-${receipt}`,
-        idempotencyKey: `mpesa_${receipt}`,
-        paymentProvider: 'mpesa',
-        providerRef: receipt,
-        narration: `M-Pesa STK Mobile Money deposit (KES ${amountKES.toLocaleString()} / $${usdAmount} USD)`,
-        meta: { action: 'topup', phone, amountKES },
-      });
-      console.log(`[WABA Notification] Dispatched topup_success HSM to +${phone}`);
-    } catch (e: any) {
-      console.error('[M-Pesa Webhook] Error:', e.message);
-    }
-  }
-
-  res.json({ ResultCode: 0, ResultDesc: 'Accepted' });
-});
-
-// ================= ADMIN WALLET CONTROLS =================
-
-// Admin List Wallets
-app.get('/api/admin/wallets', (req, res) => {
-  const search = (req.query.search as string || '').toLowerCase();
-  const status = req.query.status as string;
-
-  let walletsList = Array.from(inMemoryWallets.values()).filter(
-    // Filter duplicates because email/id can point to same object
-    (w, idx, self) => self.findIndex((x) => x.id === w.id) === idx
-  );
-
-  if (status && status !== 'all') {
-    walletsList = walletsList.filter((w) => w.status === status);
-  }
-  if (search) {
-    walletsList = walletsList.filter(
-      (w) =>
-        (w.userName && w.userName.toLowerCase().includes(search)) ||
-        (w.userEmail && w.userEmail.toLowerCase().includes(search)) ||
-        w.id.toLowerCase().includes(search)
-    );
-  }
-
-  res.json(walletsList);
-});
-
-// Admin Manual Balance Adjustment (Credit/Debit)
-app.post('/api/admin/wallets/:id/adjustment', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { amount, direction, reasonCode, narration, adminId = 'akim_mmari' } = req.body;
-    const parsedAmount = parseFloat(amount);
-
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      return res.status(400).json({ error: 'Valid positive adjustment amount is required.' });
-    }
-    if (!reasonCode || !narration) {
-      return res.status(400).json({ error: 'Reason code and detailed narration are mandatory for auditing.' });
-    }
-
-    const wallet = inMemoryWallets.get(id);
-    if (!wallet) return res.status(404).json({ error: 'Wallet not found' });
-
-    const ref = `ADJ-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 900 + 100)}`;
-    const result = await applyWalletTransaction({
-      walletId: wallet.id,
-      type: 'admin_adjustment',
-      direction: direction === 'debit' ? 'debit' : 'credit',
-      amount: parsedAmount,
-      currency: 'USD',
-      reference: ref,
-      idempotencyKey: `adj_${id}_${Date.now()}`,
-      paymentProvider: 'manual',
-      narration: `[Admin Adjustment] ${narration} (${reasonCode})`,
-      meta: { reasonCode, adminId, operatorNote: narration },
-    });
-
-    inMemoryAuditLogs.push({
-      id: 'aud_' + Date.now(),
-      adminId,
-      action: `manual_${direction}`,
-      target: wallet.id,
-      reasonCode,
-      narration,
-      diff: { amount: parsedAmount, direction, newBalance: result.balance },
-      createdAt: new Date().toISOString(),
-    });
-
-    res.json({
-      success: true,
-      wallet: getOrCreateWallet(wallet.userId),
-      transaction: result.transaction,
-    });
-  } catch (err: any) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-// Admin Suspend or Unsuspend Wallet
-app.post('/api/admin/wallets/:id/status', (req, res) => {
-  const { id } = req.params;
-  const { status, reason, adminId = 'akim_mmari' } = req.body;
-
-  if (!['active', 'suspended', 'closed'].includes(status)) {
-    return res.status(400).json({ error: 'Invalid wallet status' });
-  }
-
-  const wallet = inMemoryWallets.get(id);
-  if (!wallet) return res.status(404).json({ error: 'Wallet not found' });
-
-  const previousStatus = wallet.status;
-  wallet.status = status;
-  wallet.updatedAt = new Date().toISOString();
-
-  inMemoryAuditLogs.push({
-    id: 'aud_' + Date.now(),
-    adminId,
-    action: `set_status_${status}`,
-    target: wallet.id,
-    reasonCode: 'STATUS_UPDATE',
-    narration: reason || `Wallet status changed from ${previousStatus} to ${status}`,
-    diff: { previousStatus, newStatus: status },
-    createdAt: new Date().toISOString(),
+  // Fallback itinerary if GEMINI_API_KEY is not present or call fails
+  const fallbackItinerary = buildDeterministicUgandaItinerary({
+    region,
+    budgetTier: cleanTier,
+    activities: activityList,
+    durationDays: cleanDays,
+    partySize: cleanParty,
+    specialRequests,
   });
 
-  res.json(wallet);
+  return res.json(fallbackItinerary);
 });
 
-// Admin Escrow Capture (Akim confirms lodge & gorilla permits)
-app.post('/api/admin/bookings/:id/capture', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { amount, adminId = 'akim_mmari' } = req.body;
-    const lead = inMemoryLeads.find((l) => l.id === id);
-    const depositAmount = parseFloat(amount) || lead?.depositAmountUSD || 0;
+// ================= GEMINI AI CONCIERGE ("GUIDE MATCHER") =================
 
-    if (!lead || depositAmount <= 0) {
-      return res.status(400).json({ error: 'Booking or valid deposit amount not found.' });
-    }
-
-    const wallet = getOrCreateWallet(lead.id, { email: lead.email, name: lead.name });
-    
-    await applyWalletTransaction({
-      walletId: wallet.id,
-      type: 'payment',
-      direction: 'debit',
-      amount: depositAmount,
-      reference: `CAP-${id}-${Date.now().toString().slice(-4)}`,
-      idempotencyKey: `cap_${id}_${Date.now()}`,
-      bookingId: lead.id,
-      narration: `Escrow capture confirmed by founder Akim Mmari: official permits & lodge booked for ${lead.name}`,
-      meta: { action: 'capture', bookingId: lead.id },
-    });
-
-    lead.status = 'confirmed';
-    lead.updatedAt = new Date().toISOString();
-
-    inMemoryAuditLogs.push({
-      id: 'aud_' + Date.now(),
-      adminId,
-      action: 'escrow_captured',
-      target: lead.id,
-      reasonCode: 'SAFARI_CONFIRMED',
-      narration: `Deposit of $${depositAmount} captured. Permits & lodges secured.`,
-      diff: { bookingId: lead.id, depositAmount },
-      createdAt: new Date().toISOString(),
-    });
-
-    res.json({ success: true, lead, wallet: getOrCreateWallet(wallet.userId) });
-  } catch (err: any) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-// Admin Escrow Release (Booking cancelled/rejected)
-app.post('/api/admin/bookings/:id/release', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { amount, reason = 'Trip cancelled prior to permit purchase', adminId = 'akim_mmari' } = req.body;
-    const lead = inMemoryLeads.find((l) => l.id === id);
-    const releaseAmount = parseFloat(amount) || lead?.depositAmountUSD || 0;
-
-    if (!lead || releaseAmount <= 0) {
-      return res.status(400).json({ error: 'Booking or valid deposit amount not found.' });
-    }
-
-    const wallet = getOrCreateWallet(lead.id, { email: lead.email, name: lead.name });
-
-    await applyWalletTransaction({
-      walletId: wallet.id,
-      type: 'payment',
-      direction: 'debit',
-      amount: releaseAmount,
-      reference: `REL-${id}-${Date.now().toString().slice(-4)}`,
-      idempotencyKey: `rel_${id}_${Date.now()}`,
-      bookingId: lead.id,
-      narration: `Escrow released back to traveler available balance: ${reason}`,
-      meta: { action: 'release', reason },
-    });
-
-    lead.status = 'cancelled';
-    lead.updatedAt = new Date().toISOString();
-
-    res.json({ success: true, lead, wallet: getOrCreateWallet(wallet.userId) });
-  } catch (err: any) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-// Admin Refund Processing (To Wallet or Provider)
-app.post('/api/admin/bookings/:id/refund', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { amount, refundTo = 'wallet', reasonCode = 'TRIP_CANCELLED', narration = 'Customer refund approved', adminId = 'akim_mmari' } = req.body;
-    const lead = inMemoryLeads.find((l) => l.id === id);
-    const refundAmount = parseFloat(amount) || lead?.depositAmountUSD || 0;
-
-    if (!lead || refundAmount <= 0) {
-      return res.status(400).json({ error: 'Booking or valid refund amount not found.' });
-    }
-
-    const wallet = getOrCreateWallet(lead.id, { email: lead.email, name: lead.name });
-
-    if (refundTo === 'wallet') {
-      await applyWalletTransaction({
-        walletId: wallet.id,
-        type: 'refund',
-        direction: 'credit',
-        amount: refundAmount,
-        currency: 'USD',
-        reference: `REF-${id}-${Date.now().toString().slice(-4)}`,
-        idempotencyKey: `ref_${id}_${Date.now()}`,
-        bookingId: lead.id,
-        narration: `Refund credited to safari wallet: ${narration} (${reasonCode})`,
-        meta: { action: 'refund', reasonCode, refundTo: 'wallet' },
-      });
-    }
-
-    lead.status = 'refunded';
-    lead.updatedAt = new Date().toISOString();
-
-    inMemoryAuditLogs.push({
-      id: 'aud_' + Date.now(),
-      adminId,
-      action: 'process_refund',
-      target: lead.id,
-      reasonCode,
-      narration: `${refundTo.toUpperCase()} refund of $${refundAmount} for ${lead.name}: ${narration}`,
-      diff: { refundAmount, refundTo, reasonCode },
-      createdAt: new Date().toISOString(),
-    });
-
-    res.json({ success: true, lead, wallet: getOrCreateWallet(wallet.userId) });
-  } catch (err: any) {
-    res.status(400).json({ error: err.message });
-  }
-});
-
-// Admin Audit Logs List
-app.get('/api/admin/audit', (req, res) => {
-  res.json(inMemoryAuditLogs);
-});
-
-// Admin Wallet Settings
-let inMemoryWalletSettings = {
-  referralRewardUSD: 50.00,
-  minTopupUSD: 50.00,
-  maxTopupUSD: 10000.00,
-  escrowHoldMaxDays: 30,
-  wabaAutoNotify: true,
-  requireOtpAboveUSD: 500.00,
-};
-
-app.get('/api/admin/wallet/settings', (req, res) => {
-  res.json(inMemoryWalletSettings);
-});
-
-app.patch('/api/admin/wallet/settings', (req, res) => {
-  inMemoryWalletSettings = { ...inMemoryWalletSettings, ...req.body };
-  res.json(inMemoryWalletSettings);
-});
-
-// ================= GEMINI AGENTIC CHAT ENGINE =================
-
-// Tool declarations for Gemini Function Calling
-const safariTools: FunctionDeclaration[] = [
+const conciergeToolDeclarations: FunctionDeclaration[] = [
   {
-    name: 'search_itineraries',
-    description: 'Search official Ganda Safaris circuits across Tanzania, Uganda, Rwanda, Kenya, or Cross-Border.',
+    name: 'match_guide',
+    description:
+      'Match the guest with 1 to 3 named Ugandan safari guides from the Enganda collective based on wildlife specialty, Uganda region, or spoken language.',
     parameters: {
       type: Type.OBJECT,
       properties: {
-        country: { type: Type.STRING, description: 'Tanzania, Uganda, Rwanda, or Kenya' },
-        maxDays: { type: Type.NUMBER, description: 'Maximum days' },
-        interests: { type: Type.STRING, description: 'Keywords like migration, gorillas, cats, photography' },
+        interest: {
+          type: Type.STRING,
+          description: 'Specialty e.g. gorillas, chimps, birding, big-game, culture, hiking, photography',
+        },
+        region: {
+          type: Type.STRING,
+          description: 'Uganda region e.g. Bwindi, Kibale, Queen Elizabeth, Murchison Falls, Kidepo, Rwenzori, Mabamba',
+        },
+        language: {
+          type: Type.STRING,
+          description: 'Preferred language e.g. English, French, German, Luganda, Runyankole, Swahili',
+        },
+      },
+    },
+  },
+  {
+    name: 'search_experiences',
+    description: 'Search Enganda Safaris signature Uganda itineraries by duration, region, or wildlife interest.',
+    parameters: {
+      type: Type.OBJECT,
+      properties: {
+        maxDays: { type: Type.NUMBER, description: 'Maximum duration in days (1 to 10)' },
+        interest: { type: Type.STRING, description: 'Wildlife or activity interest' },
+        region: { type: Type.STRING, description: 'Uganda park or region' },
       },
     },
   },
   {
     name: 'get_permit_info',
-    description: 'Fetch statutory gorilla, chimpanzee, and park permit tariffs for UWA, RDB, and TANAPA.',
+    description:
+      'Fetch official Uganda Wildlife Authority (UWA) gorilla and chimpanzee permit tariffs, low-season discounts (April, May, November), and 1 January 2027 tariff updates.',
     parameters: {
       type: Type.OBJECT,
       properties: {
-        park: { type: Type.STRING, description: 'Park name e.g. Bwindi, Volcanoes, Kibale, Serengeti' },
+        parkOrSpecies: {
+          type: Type.STRING,
+          description: 'Optional filter such as gorilla, chimp, habituation, Bwindi, Kibale, or Kyambura',
+        },
       },
-      required: ['park'],
     },
   },
   {
     name: 'build_custom_quote',
-    description: 'Draft a customized day-by-day outline and price band. Note: Always quotes in price bands; enforced rule: QUOTES_NEED_APPROVAL=true.',
+    description:
+      'Calculate an indicative per-person price band in USD for a custom Uganda safari based on duration, comfort tier, and primate permits.',
     parameters: {
       type: Type.OBJECT,
       properties: {
-        countries: { type: Type.ARRAY, items: { type: Type.STRING } },
-        days: { type: Type.NUMBER },
-        travelers: { type: Type.NUMBER },
-        budgetTier: { type: Type.STRING },
+        days: { type: Type.NUMBER, description: 'Number of safari days in Uganda' },
+        partySize: { type: Type.NUMBER, description: 'Number of travelers' },
+        comfortTier: { type: Type.STRING, description: 'mid-range, luxury, or signature' },
+        includeGorillas: { type: Type.BOOLEAN, description: 'Include US$800 Bwindi gorilla permit' },
+        includeChimps: { type: Type.BOOLEAN, description: 'Include US$250 Kibale chimpanzee permit' },
       },
-      required: ['countries', 'days'],
+      required: ['days'],
     },
   },
   {
     name: 'create_lead',
-    description: 'Create a safari lead for founder Akim in our Arusha office.',
+    description: 'Save a safari inquiry lead for the Entebbe coordination desk.',
     parameters: {
       type: Type.OBJECT,
       properties: {
         name: { type: Type.STRING },
         email: { type: Type.STRING },
-        phone: { type: Type.STRING },
+        whatsapp: { type: Type.STRING },
+        partySize: { type: Type.NUMBER },
+        targetDates: { type: Type.STRING },
+        budgetTier: { type: Type.STRING },
+        preferredGuideSlug: { type: Type.STRING },
         notes: { type: Type.STRING },
       },
       required: ['name'],
@@ -1000,272 +587,38 @@ const safariTools: FunctionDeclaration[] = [
   },
   {
     name: 'check_availability',
-    description: 'Check dates. Never fabricates live lodge inventory; always responds that Akim confirms within 12 hours.',
+    description:
+      'Record requested dates and return the 12-hour human verification promise with UWA and lodges (never claim live availability).',
     parameters: {
       type: Type.OBJECT,
       properties: {
-        dates: { type: Type.STRING },
-        circuitName: { type: Type.STRING },
+        dates: { type: Type.STRING, description: 'Target travel dates or month' },
       },
       required: ['dates'],
     },
   },
   {
     name: 'handoff_to_human',
-    description: 'Flag conversation for Akim on WhatsApp due to special requests or traveler booking intent.',
+    description: 'Provide direct WhatsApp and Entebbe head office contact details for human coordinator follow-up.',
     parameters: {
       type: Type.OBJECT,
       properties: {
-        reason: { type: Type.STRING },
+        reason: { type: Type.STRING, description: 'Reason for human coordinator handoff' },
       },
       required: ['reason'],
     },
   },
-  {
-    name: 'get_wallet_balance',
-    description: 'Check guest safari wallet available balance, funds in escrow hold for pending reservations, and total credits.',
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        userId: { type: Type.STRING, description: 'Traveler user ID or email (defaults to active session)' },
-      },
-    },
-  },
-  {
-    name: 'create_topup_link',
-    description: 'Generate a secure safari wallet top-up link with specified amount and payment provider.',
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        amount: { type: Type.NUMBER, description: 'Amount in USD ($50 min - $10,000 max)' },
-        provider: { type: Type.STRING, description: 'dpo, stripe, paypal, or mpesa' },
-        userId: { type: Type.STRING },
-      },
-      required: ['amount'],
-    },
-  },
-  {
-    name: 'pay_booking_from_wallet',
-    description: 'Place 30% safari deposit from wallet into escrow hold for a booking. Requires explicit traveler confirmation first.',
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        bookingId: { type: Type.STRING, description: 'Safari booking or lead ID' },
-        amount: { type: Type.NUMBER, description: '30% deposit amount in USD' },
-        confirmed: { type: Type.BOOLEAN, description: 'Set to true ONLY if traveler explicitly affirmed confirmation' },
-        userId: { type: Type.STRING },
-      },
-      required: ['bookingId', 'amount', 'confirmed'],
-    },
-  },
-  {
-    name: 'get_transaction_history',
-    description: 'Retrieve the traveler recent wallet ledger transactions (top-ups, holds, refunds, referral credits).',
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        limit: { type: Type.NUMBER, description: 'Max transactions to retrieve (default 5)' },
-        userId: { type: Type.STRING },
-      },
-    },
-  },
 ];
 
-// Execute tool logic
-async function executeSafariTool(name: string, args: Record<string, any>) {
-  switch (name) {
-    case 'search_itineraries': {
-      const country = args.country?.toLowerCase();
-      const results = ITINERARIES.filter((it) => {
-        if (!country) return true;
-        return it.countries.some((c) => c.toLowerCase().includes(country));
-      }).map((it) => ({
-        title: it.title,
-        slug: it.slug,
-        countries: it.countries,
-        days: it.durationDays,
-        startingPricePerDayUSD: it.startingPricePerDayUSD,
-        gorillaPermits: it.gorillaPermitRequired,
-      }));
-      return { count: results.length, itineraries: results.slice(0, 3) };
-    }
-    case 'get_permit_info': {
-      const park = args.park?.toLowerCase() || '';
-      const facts = PERMITS_DATA.filter((p) =>
-        p.parkName.toLowerCase().includes(park) || p.country.toLowerCase().includes(park)
-      );
-      return {
-        permits: facts.length > 0 ? facts : PERMITS_DATA,
-        guarantee: 'Official scanned government receipts delivered before final trip payment.',
-      };
-    }
-    case 'build_custom_quote': {
-      const days = args.days || 8;
-      const tier = args.budgetTier || 'Luxury';
-      const perDay = tier === 'Mid-Range' ? 550 : tier === 'Signature' ? 1400 : 850;
-      return {
-        estimatedPriceBand: `$${perDay * days} - $${(perDay + 250) * days} USD per person`,
-        depositRequired: '30%',
-        disclaimer: 'Draft price band only. All final quotes require human sign-off by founder Akim (QUOTES_NEED_APPROVAL=true).',
-      };
-    }
-    case 'create_lead': {
-      const lead: Lead = {
-        id: 'lead_' + Date.now(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        status: 'new',
-        source: 'assistant_tool',
-        name: args.name || 'Anonymous Traveler',
-        email: args.email || 'pending@gandasafaris.com',
-        phone: args.phone,
-        notes: args.notes || 'Created via Ganda Assistant',
-      };
-      inMemoryLeads.unshift(lead);
-      return { success: true, leadId: lead.id, message: 'Dispatched to Akim in Arusha' };
-    }
-    case 'check_availability': {
-      return {
-        status: 'pending_human_verification',
-        message: 'Lodge inventory and UWA/RDB permit quotas must be checked live. Akim’s team confirms within 12 hours.',
-      };
-    }
-    case 'handoff_to_human': {
-      return {
-        handoff: true,
-        contact: 'Akim Mmari (WhatsApp +255 784 123 456)',
-        reason: args.reason,
-      };
-    }
-    case 'get_wallet_balance': {
-      const userId = args.userId || 'current_user';
-      const wallet = getOrCreateWallet(userId);
-      return {
-        availableUSD: wallet.availableBalance,
-        holdUSD: wallet.holdBalance,
-        totalBalanceUSD: wallet.balance,
-        status: wallet.status,
-        message: `Your Ganda Safari Wallet balance is $${wallet.availableBalance} USD available ($${wallet.holdBalance} USD held in escrow for pending reservations).`,
-      };
-    }
-    case 'create_topup_link': {
-      const userId = args.userId || 'current_user';
-      const amount = parseFloat(args.amount);
-      const provider = args.provider || 'dpo';
-
-      if (isNaN(amount) || amount < 50 || amount > 10000) {
-        return { error: 'Top-up amount must be between $50 and $10,000 USD.' };
-      }
-
-      const checkoutUrl = `/wallet/topup?amount=${amount}&provider=${provider}`;
-      return {
-        checkoutUrl,
-        amount,
-        provider,
-        message: `I have generated your secure deposit link for $${amount} USD via ${provider.toUpperCase()}: ${checkoutUrl}`,
-      };
-    }
-    case 'pay_booking_from_wallet': {
-      const userId = args.userId || 'current_user';
-      const { bookingId, amount, confirmed } = args;
-      const parsedAmount = parseFloat(amount);
-
-      if (!confirmed) {
-        return {
-          requiresConfirmation: true,
-          message: `To place $${parsedAmount} USD into escrow hold from your wallet for booking #${bookingId}, please reply: "Yes, confirm safari payment".`,
-        };
-      }
-
-      const wallet = getOrCreateWallet(userId);
-      const available = Number((wallet.balance - wallet.holdBalance).toFixed(2));
-
-      if (available < parsedAmount) {
-        const shortfall = Number((parsedAmount - available).toFixed(2));
-        return {
-          error: 'Insufficient available balance',
-          availableBalance: available,
-          required: parsedAmount,
-          shortfall,
-          topupLink: `/wallet/topup?amount=${shortfall}&resume_booking=${bookingId}`,
-          message: `You have $${available} USD available, but $${parsedAmount} USD is required. You can top-up the remaining $${shortfall} USD here: /wallet/topup?amount=${shortfall}&resume_booking=${bookingId}`,
-        };
-      }
-
-      try {
-        const ref = `HOLD-AI-${Date.now().toString().slice(-6)}`;
-        const result = await applyWalletTransaction({
-          walletId: wallet.id,
-          type: 'payment',
-          direction: 'debit',
-          amount: parsedAmount,
-          currency: 'USD',
-          reference: ref,
-          idempotencyKey: `ai_hold_${bookingId}_${Date.now()}`,
-          paymentProvider: 'wallet',
-          bookingId,
-          narration: `Escrow hold for 30% deposit on safari #${bookingId}`,
-          meta: { action: 'hold', bookingId },
-        });
-
-        const lead = inMemoryLeads.find((l) => l.id === bookingId);
-        if (lead) {
-          lead.status = 'deposit_paid';
-          lead.depositAmountUSD = parsedAmount;
-        }
-
-        return {
-          success: true,
-          bookingId,
-          amount: parsedAmount,
-          status: 'deposit_held',
-          remainingAvailableUSD: result.availableBalance,
-          message: `Deposit of $${parsedAmount} USD successfully placed into escrow hold! Akim’s Arusha team will verify lodge inventory and secure government permits within 12 hours.`,
-        };
-      } catch (err: any) {
-        return { error: err.message };
-      }
-    }
-    case 'get_transaction_history': {
-      const userId = args.userId || 'current_user';
-      const wallet = getOrCreateWallet(userId);
-      const limit = args.limit || 5;
-      const txs = inMemoryTransactions
-        .filter((tx) => tx.walletId === wallet.id)
-        .slice(0, limit)
-        .map((t) => ({
-          reference: t.reference,
-          type: t.type,
-          direction: t.direction,
-          amount: t.amount,
-          narration: t.narration,
-          date: t.createdAt.split('T')[0],
-        }));
-
-      return {
-        walletId: wallet.id,
-        count: txs.length,
-        recentTransactions: txs,
-      };
-    }
-    default:
-      return { error: 'Unknown tool' };
-  }
-}
-
-// Chat API Route
 app.post('/api/chat', async (req, res) => {
-  const { sessionId, message, language = 'en', history = [] } = req.body;
+  const { sessionId, message = '', history = [] } = req.body;
+  const currentSessionId = sessionId || 'eng_sess_' + Date.now();
 
-  // Initialize or retrieve session
-  const currentSessionId = sessionId || 'sess_' + Date.now();
   if (!inMemorySessions[currentSessionId]) {
     inMemorySessions[currentSessionId] = {
       id: currentSessionId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      channel: 'web_widget',
-      language: language as any,
       messages: [],
     };
   }
@@ -1282,9 +635,11 @@ app.post('/api/chat', async (req, res) => {
 
   if (apiKey) {
     try {
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = new GoogleGenAI({
+        apiKey,
+        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } },
+      });
 
-      // Convert history
       const contents = history.map((m: any) => ({
         role: m.role === 'user' ? 'user' : 'model',
         parts: [{ text: m.content }],
@@ -1292,108 +647,101 @@ app.post('/api/chat', async (req, res) => {
       contents.push({ role: 'user', parts: [{ text: message }] });
 
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.8-flash',
         contents,
         config: {
-          systemInstruction: TINGA_ASSISTANT_SYSTEM_PROMPT,
-          tools: [{ functionDeclarations: safariTools }],
+          systemInstruction: ENGANDA_CONCIERGE_SYSTEM_PROMPT,
+          tools: [{ functionDeclarations: conciergeToolDeclarations }],
         },
       });
 
       let replyText = response.text || '';
-      const executedToolCalls: any[] = [];
+      const executedToolCalls: {
+        name: string;
+        arguments: Record<string, any>;
+        result: any;
+      }[] = [];
 
-      // Check if function calls exist
       const functionCalls = response.functionCalls;
       if (functionCalls && functionCalls.length > 0) {
         for (const call of functionCalls) {
-          const toolResult = await executeSafariTool(call.name, call.args as any);
-          executedToolCalls.push({ name: call.name, arguments: call.args, result: toolResult });
+          const toolName = call.name || 'match_guide';
+          const toolArgs = (call.args as Record<string, any>) || {};
+          const toolResult = executeConciergeTool(toolName, toolArgs, (lead) =>
+            inMemoryLeads.unshift(lead)
+          );
+          executedToolCalls.push({
+            name: toolName,
+            arguments: toolArgs,
+            result: toolResult,
+          });
         }
 
-        // Secondary resolution with tool result
-        const toolResolution = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
+        const followUp = await ai.models.generateContent({
+          model: 'gemini-3.8-flash',
           contents: [
             ...contents,
             {
               role: 'model',
-              parts: [{ text: replyText || 'Calling tools for accurate facts...' }],
+              parts: [{ text: replyText || 'Checking Enganda guide profiles and UWA tariffs...' }],
             },
             {
               role: 'user',
               parts: [
                 {
-                  text: `Tool results: ${JSON.stringify(executedToolCalls)}. Now synthesize a concise, warm, transparent answer for the guest adhering to price bands, official permit facts, and offering WhatsApp handoff.`,
+                  text: `Tool results: ${JSON.stringify(
+                    executedToolCalls
+                  )}. Synthesize a warm, concise response naming the matched Ugandan guides, quoting verified UWA permit tariffs, stating that availability is confirmed within 12 hours, and never mentioning vehicle ownership.`,
                 },
               ],
             },
           ],
           config: {
-            systemInstruction: TINGA_ASSISTANT_SYSTEM_PROMPT,
+            systemInstruction: ENGANDA_CONCIERGE_SYSTEM_PROMPT,
           },
         });
 
-        if (toolResolution.text) {
-          replyText = toolResolution.text;
+        if (followUp.text) {
+          replyText = followUp.text;
         }
       }
 
-      session.messages.push({
-        id: 'msg_asst_' + Date.now(),
-        role: 'assistant',
-        content: replyText,
-        toolCalls: executedToolCalls,
-        timestamp: new Date().toISOString(),
-      });
+      if (replyText) {
+        session.messages.push({
+          id: 'msg_asst_' + Date.now(),
+          role: 'assistant',
+          content: replyText,
+          toolCalls: executedToolCalls,
+          timestamp: new Date().toISOString(),
+        });
 
-      return res.json({
-        reply: replyText,
-        toolCalls: executedToolCalls,
-      });
+        return res.json({
+          reply: replyText,
+          toolCalls: executedToolCalls,
+        });
+      }
     } catch (err: any) {
-      console.error('[Gemini Error]', err?.message || err);
-      // Fall through to concierge rule engine
+      console.error('[Enganda Concierge Gemini Fallback]:', err?.message || err);
     }
   }
 
-  // Graceful rule-based fallback concierge if GEMINI_API_KEY is not configured or fails
-  let reply = 'Jambo! I am Ganda Assistant, Akim’s safari concierge in Arusha. ';
-  const lower = (message || '').toLowerCase();
-  const toolCalls: any[] = [];
-
-  if (lower.includes('permit') || lower.includes('gorilla')) {
-    const permitData = await executeSafariTool('get_permit_info', { park: 'Bwindi' });
-    toolCalls.push({ name: 'get_permit_info', arguments: { park: 'Bwindi' }, result: permitData });
-    reply += 'Official mountain gorilla permits are $800 USD in Uganda (Bwindi / Mgahinga) and $1,500 USD in Rwanda (Volcanoes NP). Ganda Safaris secures official permits immediately upon receipt of your 30% trip deposit, providing official government receipts before your final balance is due. Would you like to check permit availability with Akim on WhatsApp (+255 784 123 456)?';
-  } else if (lower.includes('wallet') || lower.includes('balance') || lower.includes('topup') || lower.includes('credit')) {
-    const walletData: any = await executeSafariTool('get_wallet_balance', { userId: 'current_user' });
-    toolCalls.push({ name: 'get_wallet_balance', arguments: { userId: 'current_user' }, result: walletData });
-    reply += `You currently have $${walletData.availableUSD} USD available in your Ganda Safari Wallet ($${walletData.holdUSD} USD held in escrow for pending reservations). You can manage credits, download monthly statements, or top-up anytime at /wallet.`;
-  } else if (lower.includes('partner') || lower.includes('who drives') || lower.includes('subcontract')) {
-    reply += 'We openly name our local ground partners! In Tanzania, we operate our own direct fleet from Arusha. In Uganda, our vetted partner is Gorilla Highlands Expeditions (AUTO Lic #AUTO-UG-2019-142), and in Kenya, Savannah Trackers Kenya (KATO Bonded #KATO-KE-2020-089). We never hide subcontracting, and our guides receive fair living daily salaries.';
-  } else if (lower.includes('price') || lower.includes('cost') || lower.includes('quote')) {
-    const quote = await executeSafariTool('build_custom_quote', { countries: ['Tanzania'], days: 8, budgetTier: 'Luxury' });
-    toolCalls.push({ name: 'build_custom_quote', arguments: { days: 8 }, result: quote });
-    reply += 'We quote in transparent price bands: Mid-Range (~$450–$650 pp/day), Luxury (~$750–$1,100 pp/day), and Ultra-Luxe (~$1,300+ pp/day). A 30% deposit secures private vehicles and permits. All formal quotes require human review by founder Akim (QUOTES_NEED_APPROVAL=true). Shall I connect you with Akim on WhatsApp?';
-  } else {
-    const itineraries = await executeSafariTool('search_itineraries', {});
-    toolCalls.push({ name: 'search_itineraries', arguments: {}, result: itineraries });
-    reply += 'We craft tailor-made circuits across Tanzania, Kenya, Rwanda, and Uganda—from the Serengeti Great Migration to Bwindi mountain gorillas. We customize every departure around your dates. You can also message founder Akim directly on WhatsApp at +255 784 123 456 anytime!';
-  }
+  // Deterministic rule-based fallback if GEMINI_API_KEY is unset or fails
+  const fallback = generateRuleBasedConciergeReply(message, (lead) =>
+    inMemoryLeads.unshift(lead)
+  );
 
   session.messages.push({
     id: 'msg_asst_' + Date.now(),
     role: 'assistant',
-    content: reply,
-    toolCalls,
+    content: fallback.reply,
+    toolCalls: fallback.toolCalls,
     timestamp: new Date().toISOString(),
   });
 
-  res.json({ reply, toolCalls });
+  return res.json(fallback);
 });
 
-// ================= VITE MIDDLEWARE OR STATIC SERVING =================
+// ================= VITE DEV SERVER OR PRODUCTION STATIC SERVING =================
 
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
@@ -1404,15 +752,19 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), 'dist');
+    const distPath = fs.existsSync(path.resolve(process.cwd(), 'dist', 'index.html'))
+      ? path.resolve(process.cwd(), 'dist')
+      : fs.existsSync(path.resolve(process.cwd(), 'index.html'))
+      ? process.cwd()
+      : path.resolve(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get('*', (req, res) => {
+    app.get('*', (_req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[Ganda Safaris] Server running on http://0.0.0.0:${PORT}`);
+    console.log(`[Enganda Safaris] Server running on http://0.0.0.0:${PORT}`);
   });
 }
 
