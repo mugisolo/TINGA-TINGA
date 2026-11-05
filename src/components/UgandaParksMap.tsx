@@ -702,31 +702,32 @@ export const UgandaParksMap: React.FC<UgandaParksMapProps> = ({
 
   return (
     <section
+      id="uganda-parks-map"
       aria-label="Interactive D3 Map of Major Uganda National Parks"
-      className="py-16 sm:py-20 bg-[#FAF7F2] border-y border-[#E4DCCF]"
+      className="py-14 sm:py-16 bg-[#FAF7F2] border-y border-[#E4DCCF]"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 space-y-6">
         {/* Section Header */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-          <div className="space-y-2 max-w-3xl">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+          <div className="space-y-1.5 max-w-3xl">
             <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-[#C85A28] font-semibold">
               <Compass className="w-4 h-4 text-[#226B3E]" />
               <span>Interactive D3 Field Atlas · 4 Flagship National Parks</span>
             </div>
             <h2
               className={`font-serif font-bold text-[#1A1612] tracking-tight ${
-                compactHeader ? 'text-2xl sm:text-4xl' : 'text-3xl sm:text-5xl'
+                compactHeader ? 'text-2xl sm:text-3xl' : 'text-2xl sm:text-4xl'
               }`}
             >
               Explore Uganda’s Major National Parks
             </h2>
-            <p className="text-sm sm:text-base text-[#5A5248] leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#5A5248] leading-relaxed">
               Click any custom park marker on the D3 topographic map — or select a park below — to inspect elevation, Entebbe routing, signature wildlife, and the named Ugandan guides who lead safaris in that ecosystem.
             </p>
           </div>
 
           {/* Interactive Park Selector Controls */}
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
             {MAJOR_UGANDA_PARKS.map((park, idx) => {
               const isCurrent = park.id === selectedParkId;
               return (
@@ -734,7 +735,7 @@ export const UgandaParksMap: React.FC<UgandaParksMapProps> = ({
                   key={park.id}
                   type="button"
                   onClick={() => handleParkSelect(park)}
-                  className={`px-3.5 py-2 rounded-md text-xs font-semibold border transition-colors cursor-pointer flex items-center gap-2 ${
+                  className={`px-3 py-1.5 rounded-md text-xs font-semibold border transition-colors cursor-pointer flex items-center gap-1.5 ${
                     isCurrent
                       ? 'bg-[#226B3E] text-[#FAF7F2] border-[#226B3E] shadow-sm'
                       : 'bg-white text-[#1A1612] border-[#E4DCCF] hover:bg-[#F3ECE1]'
@@ -755,11 +756,11 @@ export const UgandaParksMap: React.FC<UgandaParksMapProps> = ({
         </div>
 
         {/* Main 12-Column Interactive D3 Map & Park Dossier Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
           {/* Left 7 Columns: D3 SVG Geographic Visualization */}
           <div className="lg:col-span-7 bg-[#144225] border border-[#2E8550] rounded-lg overflow-hidden flex flex-col justify-between shadow-lg relative">
             {/* Map Top Toolbar */}
-            <div className="px-4 sm:px-5 py-3 bg-[#10351E] border-b border-[#2E8550] flex flex-wrap items-center justify-between gap-3">
+            <div className="px-4 py-2.5 bg-[#10351E] border-b border-[#2E8550] flex flex-wrap items-center justify-between gap-2">
               <div className="font-mono text-[11px] text-[#D6CEC2] flex items-center gap-2">
                 <Navigation className="w-3.5 h-3.5 text-[#D99B26]" />
                 <span>D3 GeoMercator Projection · Uganda (1°S to 4°N)</span>
@@ -811,43 +812,45 @@ export const UgandaParksMap: React.FC<UgandaParksMapProps> = ({
             </div>
 
             {/* Interactive SVG Container */}
-            <div className="relative flex-1 flex items-center justify-center p-2 sm:p-4 min-h-[420px] sm:min-h-[500px]">
+            <div className="relative flex-1 flex items-center justify-center p-2 sm:p-3 min-h-[320px] sm:min-h-[380px]">
               <svg
                 ref={svgRef}
                 viewBox="0 0 680 640"
-                className="w-full h-auto max-h-[540px] select-none"
+                className="w-full h-auto max-h-[420px] select-none"
                 aria-label="Uganda National Parks D3 Map"
               />
-
-              {/* Subtle Bottom-Left Map Legend */}
-              <div className="absolute bottom-4 left-4 bg-[#10351E]/90 backdrop-blur-sm border border-[#2E8550] rounded-md px-3.5 py-2.5 text-[11px] font-mono text-[#E4DCCF] space-y-1.5 pointer-events-none">
-                <div className="text-[#D99B26] uppercase tracking-wider font-semibold text-[10px]">
-                  Map Key · Zoom {zoomLevel}x
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#C85A28] inline-block border border-white" />
-                  <span>Selected National Park</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#144225] inline-block border border-[#D99B26]" />
-                  <span>Major Park Marker (Click to Inspect)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#FAF7F2] inline-block border border-[#C85A28]" />
-                  <span>Entebbe Coordination HQ</span>
-                </div>
-              </div>
             </div>
 
-            {/* Map Footer Quick-Click Strip */}
-            <div className="px-4 sm:px-5 py-3 bg-[#10351E] border-t border-[#2E8550] flex flex-wrap items-center justify-between gap-2 text-xs text-[#D6CEC2]">
-              <span>
-                Active Marker:{' '}
-                <strong className="text-white">{selectedPark.name}</strong>
-              </span>
-              <span className="font-mono text-[#D99B26] tabular-nums">
-                {selectedPark.coordinatesDisplay} · Elev. {selectedPark.elevation}
-              </span>
+            {/* Non-Overlapping Map Key & Active Marker Footer Strip */}
+            <div className="px-4 py-2.5 bg-[#10351E] border-t border-[#2E8550] space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-[#E4DCCF]">
+                <span className="text-[#D99B26] uppercase tracking-wider font-semibold">
+                  Map Key ({zoomLevel}x)
+                </span>
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#C85A28] inline-block border border-white" />
+                    <span>Selected Park</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#144225] inline-block border border-[#D99B26]" />
+                    <span>Park Marker</span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#FAF7F2] inline-block border border-[#C85A28]" />
+                    <span>Entebbe HQ</span>
+                  </span>
+                </div>
+              </div>
+              <div className="pt-1.5 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs text-[#D6CEC2]">
+                <span>
+                  Active Marker:{' '}
+                  <strong className="text-white">{selectedPark.name}</strong>
+                </span>
+                <span className="font-mono text-[#D99B26] tabular-nums">
+                  {selectedPark.coordinatesDisplay} · Elev. {selectedPark.elevation}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -855,7 +858,7 @@ export const UgandaParksMap: React.FC<UgandaParksMapProps> = ({
           <div className="lg:col-span-5 bg-white border border-[#E4DCCF] rounded-lg overflow-hidden flex flex-col justify-between shadow-sm">
             <div>
               {/* Park Hero Visual */}
-              <div className="relative h-52 sm:h-56 bg-[#226B3E] overflow-hidden">
+              <div className="relative h-40 sm:h-44 bg-[#226B3E] overflow-hidden">
                 <SmartImage
                   src={selectedPark.heroImage}
                   alt={selectedPark.name}
@@ -863,7 +866,7 @@ export const UgandaParksMap: React.FC<UgandaParksMapProps> = ({
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#1A1612]/90 via-[#1A1612]/35 to-transparent" />
 
-                <div className="absolute top-3.5 left-4 right-4 flex items-center justify-between text-xs font-mono text-[#FAF7F2]">
+                <div className="absolute top-3 left-4 right-4 flex items-center justify-between text-xs font-mono text-[#FAF7F2]">
                   <span className="text-[#D99B26] font-semibold uppercase tracking-wider">
                     {selectedPark.regionLabel}
                   </span>
@@ -872,25 +875,25 @@ export const UgandaParksMap: React.FC<UgandaParksMapProps> = ({
                   </span>
                 </div>
 
-                <div className="absolute bottom-3.5 left-4 right-4 text-white">
-                  <h3 className="font-serif text-2xl sm:text-3xl font-bold leading-tight">
+                <div className="absolute bottom-3 left-4 right-4 text-white">
+                  <h3 className="font-serif text-xl sm:text-2xl font-bold leading-tight">
                     {selectedPark.name}
                   </h3>
                 </div>
               </div>
 
               {/* Park Description & Telemetry */}
-              <div className="p-5 sm:p-6 space-y-5">
-                <p className="text-sm text-[#1A1612] leading-relaxed">
+              <div className="p-4 sm:p-5 space-y-3.5">
+                <p className="text-xs sm:text-sm text-[#1A1612] leading-relaxed">
                   {selectedPark.shortDescription}
                 </p>
 
-                <div className="border-l-2 border-[#226B3E] pl-3.5 py-0.5 text-xs italic text-[#5A5248] font-serif">
+                <div className="border-l-2 border-[#226B3E] pl-3 py-0.5 text-xs italic text-[#5A5248] font-serif">
                   “{selectedPark.fieldNote}”
                 </div>
 
                 {/* Clean Inline Metadata Grid (Zero-Pill compliant) */}
-                <div className="bg-[#FAF7F2] border border-[#E4DCCF] rounded-md p-3.5 space-y-2.5 text-xs">
+                <div className="bg-[#FAF7F2] border border-[#E4DCCF] rounded-md p-3 space-y-2 text-xs">
                   <div className="flex items-start gap-2.5">
                     <Clock className="w-4 h-4 text-[#226B3E] shrink-0 mt-0.5" />
                     <div>

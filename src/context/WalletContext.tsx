@@ -1,5 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { doc, setDoc, deleteDoc } from 'firebase/firestore';
+import {
+  doc,
+  setDoc,
+  deleteDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 import {
   WalletTransaction,
   WalletPaymentRail,
@@ -8,6 +17,7 @@ import {
   NewsletterSubscription,
   ComfortTier,
   GeneratedSafariItinerary,
+  SavedSafariChecklist,
 } from '../types';
 import {
   PERMIT_FACTS,
@@ -25,6 +35,7 @@ interface WalletState {
   partnerBookings: PartnerBookingRecord[];
   newsletterSubscriptions: NewsletterSubscription[];
   savedItineraries: GeneratedSafariItinerary[];
+  savedChecklists: SavedSafariChecklist[];
 }
 
 interface WalletContextValue extends WalletState {
@@ -85,6 +96,15 @@ interface WalletContextValue extends WalletState {
     transaction?: WalletTransaction;
   };
   removeSavedItinerary: (itineraryId: string) => void;
+  saveChecklistToWallet: (
+    checklist: SavedSafariChecklist
+  ) => {
+    ok: boolean;
+    updatedExisting: boolean;
+    message: string;
+    savedChecklist: SavedSafariChecklist;
+  };
+  removeSavedChecklist: (checklistId: string) => void;
   resetWalletToDefault: () => void;
 }
 
@@ -159,6 +179,7 @@ const INITIAL_WALLET_STATE: WalletState = {
   partnerBookings: [],
   newsletterSubscriptions: [],
   savedItineraries: [],
+  savedChecklists: [],
 };
 
 const WalletContext = createContext<WalletContextValue | undefined>(undefined);
@@ -178,6 +199,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
             savedItineraries: Array.isArray(parsed.savedItineraries)
               ? parsed.savedItineraries
               : [],
+            savedChecklists: Array.isArray(parsed.savedChecklists)
+              ? parsed.savedChecklists
+              : [],
           };
         }
       }
@@ -194,6 +218,130 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       // ignore storage write errors
     }
   }, [state]);
+
+  // Sync per-user saved_itineraries & saved_checklists from Firestore under active security rules
+  useEffect(() => {
+    let isMounted = true;
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (!currentUser) return;
+
+      // 1. Load user's saved checklists from Firestore
+      try {
+        const chkQuery = query(
+          collection(db, 'saved_checklists'),
+          where('userId', '==', currentUser.uid)
+        );
+        const chkSnap = await getDocs(chkQuery);
+        if (!chkSnap.empty && isMounted) {
+          const remoteChecklists: SavedSafariChecklist[] = [];
+          chkSnap.forEach((docSnap) => {
+            const d = docSnap.data();
+            if (d && d.id && d.title) {
+              remoteChecklists.push({
+                id: String(d.id),
+                referenceCode: String(d.referenceCode || 'ENG-CHK'),
+                title: String(d.title),
+                selectedActivities: ['gorilla-trekking', 'savannah-game-drive', 'cultural-visits'],
+                checkedItemIds: [],
+                customItems: [],
+                totalItems: Number(d.totalItems) || 0,
+                checkedCount: Number(d.checkedCount) || 0,
+                notes: String(d.notes || ''),
+                updatedAt: String(d.updatedAt || new Date().toISOString()),
+              });
+            }
+          });
+          if (remoteChecklists.length > 0) {
+            setState((prev) => {
+              const existingIds = new Set(prev.savedChecklists.map((c) => c.id));
+              const merged = [
+                ...prev.savedChecklists,
+                ...remoteChecklists.filter((rc) => !existingIds.has(rc.id)),
+              ];
+              return { ...prev, savedChecklists: merged };
+            });
+          }
+        }
+      } catch (err) {
+        try {
+          handleFirestoreError(err, OperationType.LIST, 'saved_checklists');
+        } catch {
+          // Logged by handleFirestoreError
+        }
+      }
+
+      // 2. Load user's saved itineraries from Firestore
+      try {
+        const itinQuery = query(
+          collection(db, 'saved_itineraries'),
+          where('userId', '==', currentUser.uid)
+        );
+        const itinSnap = await getDocs(itinQuery);
+        if (!itinSnap.empty && isMounted) {
+          const remoteItineraries: GeneratedSafariItinerary[] = [];
+          itinSnap.forEach((docSnap) => {
+            const d = docSnap.data();
+            if (d && d.id && d.title) {
+              remoteItineraries.push({
+                id: String(d.id),
+                referenceCode: String(d.referenceCode || 'ENG-ITN'),
+                title: String(d.title),
+                subtitle: `${d.region} • ${d.durationDays} Days (${d.budgetTier})`,
+                region: String(d.region || 'Bwindi & Southwestern Circuit'),
+                budgetTier:
+                  d.budgetTier === 'luxury' || d.budgetTier === 'signature'
+                    ? d.budgetTier
+                    : 'mid-range',
+                activityFocus: String(d.activityFocus || 'Gorilla & Primate Trekking'),
+                durationDays: Number(d.durationDays) || 5,
+                partySize: 2,
+                estimatedPerPersonUSD: Number(d.estimatedPerPersonUSD) || 2400,
+                totalPackageUSD: (Number(d.estimatedPerPersonUSD) || 2400) * 2,
+                depositAmountUSD:
+                  Number(d.depositAmountUSD) ||
+                  Math.round((Number(d.estimatedPerPersonUSD) || 2400) * 0.6),
+                matchedGuideSlug: String(d.matchedGuideSlug || 'samuel-kato'),
+                matchedGuideName: String(d.matchedGuideName || 'Samuel Kato'),
+                matchedGuideReason: 'Matched by regional primate and savannah field expertise.',
+                permitBreakdown: [
+                  {
+                    permitName: 'UWA Mountain Gorilla Trekking Permit',
+                    costUSD: 800,
+                  },
+                ],
+                recommendedPartnerStays: ['Mahogany Springs Bwindi', 'Ishasha Wilderness Camp'],
+                days: [],
+                conservationNote: '20% of UWA park entrance revenue supports frontline host communities.',
+                createdAt: String(d.createdAt || new Date().toISOString()),
+                depositPaid: Boolean(d.depositPaid),
+              });
+            }
+          });
+          if (remoteItineraries.length > 0) {
+            setState((prev) => {
+              const existingIds = new Set(prev.savedItineraries.map((i) => i.id));
+              const merged = [
+                ...prev.savedItineraries,
+                ...remoteItineraries.filter((ri) => !existingIds.has(ri.id)),
+              ];
+              return { ...prev, savedItineraries: merged };
+            });
+          }
+        }
+      } catch (err) {
+        try {
+          handleFirestoreError(err, OperationType.LIST, 'saved_itineraries');
+        } catch {
+          // Logged by handleFirestoreError
+        }
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
 
   const topUpWallet: WalletContextValue['topUpWallet'] = (
     amountUSD,
@@ -652,6 +800,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         depositAmountUSD: savedItem.depositAmountUSD,
         matchedGuideName: savedItem.matchedGuideName.slice(0, 128),
         matchedGuideSlug: savedItem.matchedGuideSlug.slice(0, 128),
+        depositPaid: Boolean(savedItem.depositPaid),
         referenceCode: savedItem.referenceCode.slice(0, 64),
         createdAt: savedItem.createdAt.slice(0, 64),
       }).catch((err) => {
@@ -696,7 +845,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
     const tx: WalletTransaction = {
       id: 'tx_' + Date.now(),
       type: 'safari_deposit',
-      title: `30% AI Custom Safari Deposit: ${target.title}`,
+      title: `30% Custom Safari Deposit: ${target.title}`,
       subtitle: `${target.durationDays} Days • ${target.partySize} ${
         target.partySize === 1 ? 'Guest' : 'Guests'
       } • Led by ${target.matchedGuideName} (${target.referenceCode})`,
@@ -720,6 +869,32 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       ),
       transactions: [tx, ...prev.transactions],
     }));
+
+    if (auth.currentUser) {
+      const docPath = `saved_itineraries/${target.id}`;
+      setDoc(doc(db, 'saved_itineraries', target.id), {
+        id: target.id.slice(0, 128),
+        userId: auth.currentUser.uid.slice(0, 128),
+        title: target.title.slice(0, 200),
+        region: target.region.slice(0, 200),
+        budgetTier: target.budgetTier,
+        activityFocus: target.activityFocus.slice(0, 200),
+        durationDays: target.durationDays,
+        estimatedPerPersonUSD: target.estimatedPerPersonUSD,
+        depositAmountUSD: target.depositAmountUSD,
+        matchedGuideName: target.matchedGuideName.slice(0, 128),
+        matchedGuideSlug: target.matchedGuideSlug.slice(0, 128),
+        depositPaid: true,
+        referenceCode: target.referenceCode.slice(0, 64),
+        createdAt: target.createdAt.slice(0, 64),
+      }).catch((err) => {
+        try {
+          handleFirestoreError(err, OperationType.UPDATE, docPath);
+        } catch {
+          // Logged by handleFirestoreError
+        }
+      });
+    }
 
     return {
       ok: true,
@@ -748,6 +923,87 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const saveChecklistToWallet: WalletContextValue['saveChecklistToWallet'] = (
+    checklist
+  ) => {
+    const sanitizedId = (checklist.id || `chk_${Date.now()}`).replace(
+      /[^a-zA-Z0-9_-]/g,
+      '_'
+    );
+    const existing = state.savedChecklists.find(
+      (item) =>
+        item.id === sanitizedId ||
+        item.referenceCode === checklist.referenceCode
+    );
+
+    const savedItem: SavedSafariChecklist = {
+      ...checklist,
+      id: existing ? existing.id : sanitizedId,
+      referenceCode:
+        checklist.referenceCode ||
+        (existing ? existing.referenceCode : makeCode('ENG-CHK')),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setState((prev) => ({
+      ...prev,
+      savedChecklists: existing
+        ? prev.savedChecklists.map((item) =>
+            item.id === existing.id ? savedItem : item
+          )
+        : [savedItem, ...prev.savedChecklists],
+    }));
+
+    if (auth.currentUser) {
+      const docPath = `saved_checklists/${savedItem.id}`;
+      setDoc(doc(db, 'saved_checklists', savedItem.id), {
+        id: savedItem.id.slice(0, 128),
+        userId: auth.currentUser.uid.slice(0, 128),
+        referenceCode: savedItem.referenceCode.slice(0, 64),
+        title: savedItem.title.slice(0, 200),
+        totalItems: Number(savedItem.totalItems) || 0,
+        checkedCount: Number(savedItem.checkedCount) || 0,
+        notes: (savedItem.notes || '').slice(0, 1000),
+        updatedAt: savedItem.updatedAt.slice(0, 64),
+      }).catch((err) => {
+        try {
+          handleFirestoreError(err, OperationType.CREATE, docPath);
+        } catch {
+          // Logged by handleFirestoreError
+        }
+      });
+    }
+
+    return {
+      ok: true,
+      updatedExisting: Boolean(existing),
+      message: existing
+        ? `Updated "${savedItem.title}" (${savedItem.referenceCode}) in your Safari Wallet.`
+        : `Saved "${savedItem.title}" (${savedItem.referenceCode}) to your Safari Wallet.`,
+      savedChecklist: savedItem,
+    };
+  };
+
+  const removeSavedChecklist: WalletContextValue['removeSavedChecklist'] = (
+    checklistId
+  ) => {
+    setState((prev) => ({
+      ...prev,
+      savedChecklists: prev.savedChecklists.filter((c) => c.id !== checklistId),
+    }));
+
+    if (auth.currentUser) {
+      const docPath = `saved_checklists/${checklistId}`;
+      deleteDoc(doc(db, 'saved_checklists', checklistId)).catch((err) => {
+        try {
+          handleFirestoreError(err, OperationType.DELETE, docPath);
+        } catch {
+          // Logged by handleFirestoreError
+        }
+      });
+    }
+  };
+
   const resetWalletToDefault = () => {
     setState(INITIAL_WALLET_STATE);
   };
@@ -766,6 +1022,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         saveCustomItineraryToWallet,
         paySavedItineraryDeposit,
         removeSavedItinerary,
+        saveChecklistToWallet,
+        removeSavedChecklist,
         resetWalletToDefault,
       }}
     >

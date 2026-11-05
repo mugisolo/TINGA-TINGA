@@ -347,5 +347,59 @@ export interface NewsletterSubscription {
   rewardClaimed: boolean;
 }
 
+export type SafariEssentialCategory =
+  | 'gorilla-trekking'
+  | 'savannah-game-drive'
+  | 'cultural-visits'
+  | 'chimpanzee-primate'
+  | 'documents-health';
 
+export interface SafariChecklistItem {
+  id: string;
+  category: SafariEssentialCategory;
+  title: string;
+  description: string;
+  priority: 'essential' | 'recommended' | 'optional';
+  weightOrSpec?: string;
+  guideTip?: string;
+  checked: boolean;
+  isCustom?: boolean;
+}
+
+export interface SavedSafariChecklist {
+  id: string;
+  referenceCode: string;
+  title: string;
+  selectedActivities: SafariEssentialCategory[];
+  totalItems: number;
+  checkedCount: number;
+  checkedItemIds: string[];
+  customItems: SafariChecklistItem[];
+  notes?: string;
+  updatedAt: string;
+}
+
+export interface LiveCurrencyRatesPayload {
+  base: 'USD';
+  rates: Record<Currency, number>;
+  updatedAt: string;
+  source: 'live_api' | 'entebbe_desk_reference';
+}
+
+export type PortalRole = 'client' | 'admin' | 'partner' | 'specialist' | 'staff';
+
+export interface PortalDispatch {
+  id: string;
+  userId: string;
+  authorName: string;
+  portalRole: PortalRole;
+  category: string;
+  title: string;
+  region: string;
+  status: 'open' | 'in_progress' | 'verified' | 'resolved';
+  priority: 'normal' | 'high' | 'urgent';
+  notes?: string;
+  referenceCode: string;
+  createdAt: string;
+}
 

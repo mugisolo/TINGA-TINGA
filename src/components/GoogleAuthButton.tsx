@@ -8,7 +8,7 @@ interface GoogleAuthButtonProps {
 }
 
 export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({ className = '', compact = false }) => {
-  const { user, accessToken, loading, signInWithGoogle, signOut, error } = useAuth();
+  const { user, loading, signInWithGoogle, signOut, error } = useAuth();
 
   if (loading) {
     return (
@@ -40,32 +40,22 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({ className = 
             <span className="text-xs font-semibold text-stone-200 truncate max-w-[110px]">
               {user.displayName || user.email?.split('@')[0]}
             </span>
-            <CheckCircle2 className="w-3 h-3 text-emerald-400 flex-shrink-0" title="Google Drive Connected" />
+            <CheckCircle2 className="w-3 h-3 text-emerald-400 flex-shrink-0" title="Signed In" />
           </div>
           {!compact && (
             <span className="text-[10px] text-amber-400/90 font-mono">
-              {accessToken ? 'Drive Ready' : 'Token Expired'}
+              Authenticated
             </span>
           )}
         </div>
 
-        {!accessToken ? (
-          <button
-            onClick={() => signInWithGoogle()}
-            className="text-[11px] px-2 py-0.5 rounded bg-amber-600/80 hover:bg-amber-600 text-stone-950 font-bold transition-colors"
-            title="Reconnect Google Drive"
-          >
-            Connect
-          </button>
-        ) : (
-          <button
-            onClick={() => signOut()}
-            className="p-1 rounded text-stone-400 hover:text-rose-400 hover:bg-stone-800 transition-colors"
-            title="Sign out of Google"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-          </button>
-        )}
+        <button
+          onClick={() => signOut()}
+          className="p-1 rounded text-stone-400 hover:text-rose-400 hover:bg-stone-800 transition-colors"
+          title="Sign out of Google"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+        </button>
       </div>
     );
   }

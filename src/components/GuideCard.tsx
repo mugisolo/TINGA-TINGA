@@ -4,6 +4,7 @@ import { MapPin, Star, Languages, Award, ArrowRight } from 'lucide-react';
 import { Guide } from '../types';
 import { SPECIALTY_LABELS } from '../data/seedData';
 import { SmartImage } from './SmartImage';
+import { useLanguage } from '../context/LanguageContext';
 
 interface GuideCardProps {
   guide: Guide;
@@ -11,6 +12,8 @@ interface GuideCardProps {
 }
 
 export const GuideCard: React.FC<GuideCardProps> = ({ guide, onRequestGuide }) => {
+  const { t } = useLanguage();
+
   return (
     <article className="bg-[#FAF7F2] border border-[#E4DCCF] rounded-lg overflow-hidden flex flex-col justify-between transition-all hover:border-[#C85A28]/60 shadow-xs">
       <div>
@@ -34,7 +37,7 @@ export const GuideCard: React.FC<GuideCardProps> = ({ guide, onRequestGuide }) =
           <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between text-[#FAF7F2]">
             <div>
               <span className="font-mono text-xs uppercase tracking-wider text-[#D99B26] block">
-                {guide.yearsExperience} Years Guiding Uganda
+                {guide.yearsExperience} {t.common.yearsExperience}
               </span>
               <h3 className="font-serif text-2xl font-bold leading-tight text-white">
                 {guide.name}
@@ -89,23 +92,23 @@ export const GuideCard: React.FC<GuideCardProps> = ({ guide, onRequestGuide }) =
           to={`/guides/${guide.slug}`}
           className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-md border border-[#226B3E] text-[#226B3E] hover:bg-[#226B3E] hover:text-[#FAF7F2] text-xs font-semibold transition-colors"
         >
-          <span>Full Dossier</span>
+          <span>{t.generator.viewProfile}</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </Link>
         {onRequestGuide ? (
           <button
             type="button"
             onClick={() => onRequestGuide(guide)}
-            className="flex-1 inline-flex items-center justify-center px-3 py-2.5 rounded-md bg-[#C85A28] hover:bg-[#B04B1D] text-white text-xs font-semibold transition-colors"
+            className="flex-1 inline-flex items-center justify-center px-3 py-2.5 rounded-md bg-[#C85A28] hover:bg-[#B04B1D] text-white text-xs font-semibold transition-colors cursor-pointer"
           >
-            Request {guide.name.split(' ')[0]}
+            {t.common.requestGuide}
           </button>
         ) : (
           <Link
             to={`/trip-planner?guide=${guide.slug}`}
             className="flex-1 inline-flex items-center justify-center px-3 py-2.5 rounded-md bg-[#C85A28] hover:bg-[#B04B1D] text-white text-xs font-semibold transition-colors"
           >
-            Request {guide.name.split(' ')[0]}
+            {t.common.requestGuide}
           </Link>
         )}
       </div>

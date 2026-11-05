@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Sparkles,
   X,
@@ -11,15 +12,14 @@ import {
 import { ChatMessage } from '../types';
 import { generateRuleBasedConciergeReply } from '../concierge/conciergeEngine';
 import { getWhatsAppUrl, WHATSAPP_NUMBER } from '../data/seedData';
-
-const QUICK_PROMPTS = [
-  'Match me with a guide',
-  'Gorilla permit prices',
-  'Plan a 7-day safari',
-  'Talk to a human on WhatsApp',
-];
+import { useLanguage } from '../context/LanguageContext';
 
 export const ConciergeWidget: React.FC = () => {
+  const { language, t } = useLanguage();
+  const location = useLocation();
+  const hasStickyBookBar = /^\/(guides|experiences)\/[^/]+$/.test(
+    location.pathname
+  );
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -27,13 +27,21 @@ export const ConciergeWidget: React.FC = () => {
     {
       id: 'welcome-1',
       role: 'assistant',
-      content:
-        'Oli otya! I am the Enganda AI Concierge ("Guide Matcher"). At Enganda Safaris, the guide is the product — tell me what you want to see in Uganda (mountain gorillas, Kibale chimpanzees, the Shoebill at Mabamba, or Kidepo lions) and I will match you with a named Ugandan guide and verified UWA permit tariffs.',
+      content: t.concierge.welcomeMessage,
       timestamp: new Date().toISOString(),
     },
   ]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Sync welcome message when active language changes
+  useEffect(() => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === 'welcome-1' ? { ...m, content: t.concierge.welcomeMessage } : m
+      )
+    );
+  }, [language, t.concierge.welcomeMessage]);
 
   useEffect(() => {
     if (isOpen) {
@@ -73,6 +81,7 @@ export const ConciergeWidget: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: trimmed,
+          language,
           history: messages.map((m) => ({ role: m.role, content: m.content })),
         }),
       });
@@ -120,19 +129,25 @@ export const ConciergeWidget: React.FC = () => {
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        aria-label="Open Enganda Guide Matcher AI Concierge"
-        className="fixed bottom-4 right-4 sm:right-6 z-40 inline-flex items-center gap-2 bg-[#226B3E] hover:bg-[#194E2D] text-[#FAF7F2] px-4 py-3 rounded-md shadow-xl border border-[#D99B26]/50 text-xs sm:text-sm font-semibold transition-all cursor-pointer"
+        aria-label={t.concierge.headerTitle}
+        className={`fixed right-4 sm:right-6 z-40 inline-flex items-center gap-2 bg-[#226B3E] hover:bg-[#194E2D] text-[#FAF7F2] px-3.5 py-2.5 rounded-md shadow-xl border border-[#D99B26]/50 text-xs font-semibold transition-all cursor-pointer print:hidden ${
+          hasStickyBookBar ? 'bottom-24 sm:bottom-20' : 'bottom-4'
+        }`}
       >
-        <Sparkles className="w-4 h-4 text-[#D99B26]" />
-        <span>{isOpen ? 'Close Guide Matcher' : 'Ask Guide Matcher AI'}</span>
+        <Sparkles className="w-3.5 h-3.5 text-[#D99B26]" />
+        <span>
+          {isOpen ? t.concierge.launcherClose : t.concierge.launcherOpen}
+        </span>
       </button>
 
       {/* Concierge Drawer / Panel */}
       {isOpen && (
         <div
-          className="fixed bottom-20 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[420px] max-h-[78vh] bg-[#FAF7F2] border border-[#E4DCCF] rounded-lg shadow-2xl flex flex-col overflow-hidden"
+          className={`fixed right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[400px] max-h-[72vh] bg-[#FAF7F2] border border-[#E4DCCF] rounded-lg shadow-2xl flex flex-col overflow-hidden print:hidden ${
+            hasStickyBookBar ? 'bottom-36 sm:bottom-32' : 'bottom-16'
+          }`}
           role="dialog"
-          aria-label="Enganda Guide Matcher AI Concierge"
+          aria-label={t.concierge.headerTitle}
         >
           {/* Header */}
           <div className="bg-[#226B3E] text-[#FAF7F2] p-4 flex items-center justify-between border-b border-[#2E8550]">
@@ -143,14 +158,14 @@ export const ConciergeWidget: React.FC = () => {
               <div>
                 <div className="flex items-center gap-1.5">
                   <h3 className="font-serif text-lg font-bold leading-none text-white">
-                    Enganda Guide Matcher
+                    {t.concierge.headerTitle}
                   </h3>
                   <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-[#D99B26]/20 text-[#D99B26]">
-                    AI Concierge
+                    {t.concierge.headerBadge}
                   </span>
                 </div>
                 <p className="text-[11px] text-[#D6CEC2] mt-0.5">
-                  Matches Ugandan guides & verified UWA permit tariffs
+                  {t.concierge.headerSubtitle}
                 </p>
               </div>
             </div>
@@ -202,7 +217,7 @@ export const ConciergeWidget: React.FC = () => {
             {isLoading && (
               <div className="bg-white border border-[#E4DCCF] rounded-lg px-3.5 py-2.5 text-xs text-[#5A5248] inline-flex items-center gap-2">
                 <Sparkles className="w-3.5 h-3.5 text-[#C85A28] animate-spin" />
-                <span>Consulting Enganda guide profiles & UWA permit schedule...</span>
+                <span>{t.concierge.loadingMessage}</span>
               </div>
             )}
             <div ref={messagesEndRef} />
@@ -210,7 +225,7 @@ export const ConciergeWidget: React.FC = () => {
 
           {/* Quick Prompt Chips */}
           <div className="px-3 py-2 bg-[#F3ECE1] border-t border-[#E4DCCF] flex items-center gap-1.5 overflow-x-auto">
-            {QUICK_PROMPTS.map((chip) => (
+            {t.concierge.quickPrompts.map((chip) => (
               <button
                 key={chip}
                 type="button"
@@ -231,7 +246,7 @@ export const ConciergeWidget: React.FC = () => {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about guides, Bwindi permits, or a 7-day plan..."
+              placeholder={t.concierge.inputPlaceholder}
               className="flex-1 bg-[#FAF7F2] border border-[#E4DCCF] rounded-md px-3 py-2 text-xs sm:text-sm text-[#1A1612] focus:outline-none focus:border-[#226B3E]"
             />
             <button
@@ -248,7 +263,7 @@ export const ConciergeWidget: React.FC = () => {
           <div className="px-3 py-2 bg-[#1B5632] text-[#D6CEC2] text-[11px] flex items-center justify-between">
             <span className="flex items-center gap-1">
               <ShieldCheck className="w-3.5 h-3.5 text-[#D99B26]" />
-              <span>12-hr Entebbe human confirmation</span>
+              <span>{t.concierge.footerGuarantee}</span>
             </span>
             <a
               href={getWhatsAppUrl('Oli otya! I was chatting with the Enganda Guide Matcher and would like to speak with a coordinator.')}

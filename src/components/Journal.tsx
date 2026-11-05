@@ -36,7 +36,7 @@ export const Journal: React.FC = () => {
 
   const handleScroll = (direction: 'left' | 'right') => {
     if (!scrollContainerRef.current) return;
-    const scrollAmount = 420;
+    const scrollAmount = 520;
     scrollContainerRef.current.scrollBy({
       left: direction === 'left' ? -scrollAmount : scrollAmount,
       behavior: 'smooth',
@@ -49,7 +49,7 @@ export const Journal: React.FC = () => {
       className="py-20 bg-[#FAF7F2] border-t border-[#E4DCCF]"
       aria-labelledby="home-journal-heading"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10">
         {/* Header Row */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8">
           <div className="space-y-2 max-w-2xl">
@@ -139,11 +139,11 @@ export const Journal: React.FC = () => {
             return (
               <article
                 key={article.slug}
-                className="min-w-[310px] sm:min-w-[370px] max-w-[390px] flex-shrink-0 snap-start bg-white border border-[#E4DCCF] hover:border-[#226B3E] rounded-lg overflow-hidden flex flex-col justify-between transition-all shadow-xs"
+                className="min-w-[360px] sm:min-w-[460px] max-w-[490px] min-h-[490px] flex-shrink-0 snap-start bg-white border border-[#E4DCCF] hover:border-[#226B3E] rounded-lg overflow-hidden flex flex-col justify-between transition-all shadow-xs"
               >
                 <div>
-                  {/* Article Thumbnail */}
-                  <div className="relative h-52 overflow-hidden bg-[#226B3E]">
+                  {/* Article Thumbnail (25% Taller Vertically) */}
+                  <div className="relative h-64 overflow-hidden bg-[#226B3E]">
                     <SmartImage
                       src={article.heroImage}
                       alt={article.title}

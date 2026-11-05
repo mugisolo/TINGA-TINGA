@@ -731,7 +731,7 @@ export const TripPlannerPage: React.FC = () => {
         )}
       </div>
 
-      {/* AI-Powered Custom Safari Itinerary Generator (Gemini + Save to Wallet) */}
+      {/* Bespoke Custom Safari Itinerary Generator (Save to Wallet) */}
       <div className="mt-16">
         <SafariItineraryGenerator />
       </div>

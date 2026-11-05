@@ -21,6 +21,11 @@ import { Lead, ChatSession } from './src/types';
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
+// Ensure process.env.API_KEY is populated when GEMINI_API_KEY is provided
+if (!process.env.API_KEY && process.env.GEMINI_API_KEY) {
+  process.env.API_KEY = process.env.GEMINI_API_KEY;
+}
+
 app.use(express.json());
 
 // In-memory store for submitted leads and chat sessions
@@ -124,7 +129,7 @@ app.post('/api/leads', (req, res) => {
   res.status(201).json(newLead);
 });
 
-// ================= AI SAFARI ITINERARY GENERATOR (GEMINI 3.8 FLASH) =================
+// ================= BESPOKE SAFARI ITINERARY GENERATOR =================
 
 function buildDeterministicUgandaItinerary(params: {
   region: string;
@@ -268,7 +273,7 @@ function buildDeterministicUgandaItinerary(params: {
   const randCode = Math.floor(100000 + Math.random() * 900000);
   return {
     id: `itin_${Date.now()}`,
-    referenceCode: `ENG-AI-${randCode}`,
+    referenceCode: `ENG-EXP-${randCode}`,
     title: `${cleanDays}-Day Custom ${region} & ${activities[0] || 'Uganda'} Expedition`,
     subtitle: `Private ${budgetTier} Uganda safari tailored for ${cleanParty} ${
       cleanParty === 1 ? 'traveler' : 'travelers'
@@ -301,6 +306,7 @@ app.post('/api/itinerary/generate', async (req, res) => {
     durationDays = 5,
     partySize = 2,
     specialRequests = '',
+    language = 'en',
   } = req.body || {};
 
   const cleanDays = Math.max(2, Math.min(12, Number(durationDays) || 5));
@@ -312,18 +318,11 @@ app.post('/api/itinerary/generate', async (req, res) => {
     ? activities
     : [String(activities || 'Gorilla Trekking & Wildlife')];
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.API_KEY;
 
   if (apiKey) {
     try {
-      const ai = new GoogleGenAI({
-        apiKey,
-        httpOptions: {
-          headers: {
-            'User-Agent': 'aistudio-build',
-          },
-        },
-      });
+      const client = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
       const guideRosterSummary = GUIDES.map(
         (g) =>
@@ -332,7 +331,7 @@ app.post('/api/itinerary/generate', async (req, res) => {
           )}], yearsExperience: ${g.yearsExperience})`
       ).join('\n');
 
-      const prompt = `Design a custom ${cleanDays}-day private Uganda safari itinerary for ${cleanParty} guests.
+      const prompt = `Design a custom ${cleanDays}-day private Uganda safari itinerary for ${cleanParty} guests in language code "${language}".
 User Preferences:
 - Target Uganda Region(s): ${region}
 - Comfort / Budget Tier: ${cleanTier} (mid-range ~$390/day + permits, luxury ~$590/day + permits, signature ~$890/day + permits)
@@ -344,14 +343,15 @@ Strict Enganda Safaris Rules:
 2. Match the itinerary to the best guide from this exact Enganda roster:
 ${guideRosterSummary}
 3. Use accurate UWA permit tariffs (Mountain Gorilla Trekking Permit = US$800, Gorilla Habituation = US$1500, Kibale Chimpanzee Permit = US$250, Kyambura Gorge Chimp Permit = US$100).
-4. Provide exactly ${cleanDays} day objects in the "days" array.`;
+4. Provide exactly ${cleanDays} day objects in the "days" array.
+5. Never use the word "AI", "IA", "KI", or "artificial intelligence" anywhere in the output.`;
 
-      const response = await ai.models.generateContent({
+      const response = await client.models.generateContent({
         model: 'gemini-3.8-flash',
         contents: prompt,
         config: {
           systemInstruction:
-            'You are the Chief Expedition Architect at Enganda Safaris in Entebbe, Uganda. Build accurate, inspiring, logistically realistic multi-day Uganda safari itineraries led by a named Ugandan guide from our collective. Always return valid JSON matching the schema.',
+            'You are the Chief Expedition Architect at Enganda Safaris in Entebbe, Uganda. Build accurate, inspiring, logistically realistic multi-day Uganda safari itineraries led by a named Ugandan guide from our collective. Never mention the word AI or artificial intelligence. Always return valid JSON matching the schema.',
           responseMimeType: 'application/json',
           responseSchema: {
             type: Type.OBJECT,
@@ -457,7 +457,7 @@ ${guideRosterSummary}
 
         return res.json({
           id: `itin_${Date.now()}`,
-          referenceCode: `ENG-AI-${randCode}`,
+          referenceCode: `ENG-EXP-${randCode}`,
           title: parsed.title,
           subtitle: parsed.subtitle,
           region,
@@ -483,11 +483,11 @@ ${guideRosterSummary}
         });
       }
     } catch (err: any) {
-      console.error('[Gemini Itinerary Generator Error]:', err?.message || err);
+      console.error('[Itinerary Generator Error]:', err?.message || err);
     }
   }
 
-  // Fallback itinerary if GEMINI_API_KEY is not present or call fails
+  // Fallback itinerary if API key is not present or call fails
   const fallbackItinerary = buildDeterministicUgandaItinerary({
     region,
     budgetTier: cleanTier,
@@ -500,7 +500,7 @@ ${guideRosterSummary}
   return res.json(fallbackItinerary);
 });
 
-// ================= GEMINI AI CONCIERGE ("GUIDE MATCHER") =================
+// ================= ENGANDA CONCIERGE ("GUIDE MATCHER") =================
 
 const conciergeToolDeclarations: FunctionDeclaration[] = [
   {
@@ -611,7 +611,7 @@ const conciergeToolDeclarations: FunctionDeclaration[] = [
 ];
 
 app.post('/api/chat', async (req, res) => {
-  const { sessionId, message = '', history = [] } = req.body;
+  const { sessionId, message = '', language = 'en', history = [] } = req.body;
   const currentSessionId = sessionId || 'eng_sess_' + Date.now();
 
   if (!inMemorySessions[currentSessionId]) {
@@ -631,22 +631,22 @@ app.post('/api/chat', async (req, res) => {
     timestamp: new Date().toISOString(),
   });
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.API_KEY;
 
   if (apiKey) {
     try {
-      const ai = new GoogleGenAI({
-        apiKey,
-        httpOptions: { headers: { 'User-Agent': 'aistudio-build' } },
-      });
+      const client = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
       const contents = history.map((m: any) => ({
         role: m.role === 'user' ? 'user' : 'model',
         parts: [{ text: m.content }],
       }));
-      contents.push({ role: 'user', parts: [{ text: message }] });
+      contents.push({
+        role: 'user',
+        parts: [{ text: `[Guest preferred language code: ${language}] ${message}` }],
+      });
 
-      const response = await ai.models.generateContent({
+      const response = await client.models.generateContent({
         model: 'gemini-3.8-flash',
         contents,
         config: {
@@ -677,7 +677,7 @@ app.post('/api/chat', async (req, res) => {
           });
         }
 
-        const followUp = await ai.models.generateContent({
+        const followUp = await client.models.generateContent({
           model: 'gemini-3.8-flash',
           contents: [
             ...contents,
@@ -691,7 +691,7 @@ app.post('/api/chat', async (req, res) => {
                 {
                   text: `Tool results: ${JSON.stringify(
                     executedToolCalls
-                  )}. Synthesize a warm, concise response naming the matched Ugandan guides, quoting verified UWA permit tariffs, stating that availability is confirmed within 12 hours, and never mentioning vehicle ownership.`,
+                  )}. Synthesize a warm, concise response in language "${language}" naming the matched Ugandan guides, quoting verified UWA permit tariffs, stating that availability is confirmed within 12 hours, never mentioning vehicle ownership, and NEVER mentioning the word AI.`,
                 },
               ],
             },
@@ -721,7 +721,7 @@ app.post('/api/chat', async (req, res) => {
         });
       }
     } catch (err: any) {
-      console.error('[Enganda Concierge Gemini Fallback]:', err?.message || err);
+      console.error('[Enganda Concierge Fallback]:', err?.message || err);
     }
   }
 

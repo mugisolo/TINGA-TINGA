@@ -85,31 +85,34 @@ export const ClientTestimonialsCarousel: React.FC = () => {
         // Fallback to seed data if API unreachable
       }
 
-      // 2. Pull published testimonials from Firestore database
-      try {
-        const q = query(
-          collection(db, 'testimonials'),
-          where('status', '==', 'published')
-        );
-        const snap = await getDocs(q);
-        if (!snap.empty) {
-          snap.forEach((docSnap) => {
-            const d = docSnap.data() as Review;
-            if (d && d.id && d.guestName) {
-              mergedMap.set(d.id, d);
-            }
-          });
-          if (isMounted) {
-            setDataSourceLabel(
-              `Live Firestore Database (${mergedMap.size} Verified Reviews)`
-            );
-          }
-        }
-      } catch (err) {
+      // 2. Pull user's published testimonials from Firestore database when authenticated
+      if (auth.currentUser?.uid) {
         try {
-          handleFirestoreError(err, OperationType.LIST, 'testimonials');
-        } catch {
-          // Handled and logged
+          const q = query(
+            collection(db, 'testimonials'),
+            where('authorId', '==', auth.currentUser.uid),
+            where('status', '==', 'published')
+          );
+          const snap = await getDocs(q);
+          if (!snap.empty) {
+            snap.forEach((docSnap) => {
+              const d = docSnap.data() as Review;
+              if (d && d.id && d.guestName) {
+                mergedMap.set(d.id, d);
+              }
+            });
+            if (isMounted) {
+              setDataSourceLabel(
+                `Live Firestore Database (${mergedMap.size} Verified Reviews)`
+              );
+            }
+          }
+        } catch (err) {
+          try {
+            handleFirestoreError(err, OperationType.LIST, 'testimonials');
+          } catch {
+            // Handled and logged
+          }
         }
       }
 
@@ -250,7 +253,7 @@ export const ClientTestimonialsCarousel: React.FC = () => {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 space-y-10">
         {/* Header Bar */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
@@ -316,12 +319,12 @@ export const ClientTestimonialsCarousel: React.FC = () => {
           </div>
         </div>
 
-        {/* Spotlight Featured Carousel Slide */}
+        {/* Spotlight Featured Carousel Slide (25% Taller Vertically) */}
         {currentReview && (
-          <div className="bg-[#1B5632] border border-[#D99B26]/40 rounded-xl p-6 sm:p-10 shadow-xl">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="bg-[#1B5632] border border-[#D99B26]/40 rounded-xl p-8 sm:p-12 shadow-xl min-h-[370px] lg:min-h-[430px] flex items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch w-full">
               {/* Left 8 Columns: Star Rating, Destination Badge, Quote, Client Name */}
-              <div className="lg:col-span-8 space-y-5">
+              <div className="lg:col-span-8 flex flex-col justify-between space-y-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   {/* Star Rating */}
                   <div className="flex items-center gap-2">
@@ -451,7 +454,7 @@ export const ClientTestimonialsCarousel: React.FC = () => {
                 onClick={() => {
                   if (idxInFiltered >= 0) setActiveIndex(idxInFiltered);
                 }}
-                className={`text-left p-5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-4 ${
+                className={`text-left p-6 sm:p-7 min-h-[220px] rounded-xl border transition-all cursor-pointer flex flex-col justify-between gap-5 ${
                   isCurrent
                     ? 'bg-[#FAF7F2] text-[#1A1612] border-[#D99B26] shadow-md'
                     : 'bg-[#1B5632]/70 text-[#FAF7F2] border-white/15 hover:bg-[#1B5632]'

@@ -102,9 +102,9 @@ export const NewsletterSignup: React.FC = () => {
   return (
     <section
       id="join-the-expedition"
-      className="bg-[#144225] text-[#FAF7F2] border-y border-[#2E8550] py-20"
+      className="bg-[#144225] text-[#FAF7F2] border-y border-[#2E8550] py-16"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
           {/* Left Column: Editorial Pitch & Field Benefits */}
           <div className="lg:col-span-6 space-y-6">

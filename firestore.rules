@@ -2,13 +2,35 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Global Helpers
+    // =========================================================================
+    // Global Authentication & Role-Based Access Control (RBAC) Helpers
+    // =========================================================================
     function isSignedIn() {
       return request.auth != null;
     }
 
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function hasUserDoc() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function currentUserRole() {
+      return hasUserDoc() ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role : 'client';
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        (request.auth.token.email == 'mugisolo@gmail.com' && request.auth.token.email_verified == true) ||
+        (hasUserDoc() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+
+    function isStaffOrAdmin() {
+      return isAdmin() || (hasUserDoc() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'staff');
     }
 
     function isValidId(id) {
@@ -23,13 +45,36 @@ service cloud.firestore {
       return resource.data;
     }
 
+    // =========================================================================
+    // Entity Schema Validators (Enforcing request.auth.uid Ownership & Roles)
+    // =========================================================================
     function isValidUser(data) {
       return data.keys().hasAll(['uid', 'email', 'createdAt']) &&
              data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'role', 'createdAt']) &&
              data.uid is string && data.uid.size() > 0 && data.uid.size() <= 128 &&
              data.email is string && data.email.size() > 0 && data.email.size() <= 256 &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 128)) &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 512)) &&
+             (!('role' in data) || data.role in ['client', 'admin', 'partner', 'specialist', 'staff', 'traveler', 'agent']) &&
              data.createdAt is string && data.createdAt.size() <= 64 &&
              data.uid == request.auth.uid;
+    }
+
+    function isValidPortalDispatch(data) {
+      return data.keys().hasAll(['id', 'userId', 'authorName', 'portalRole', 'category', 'title', 'region', 'status', 'priority', 'referenceCode', 'createdAt']) &&
+             data.keys().hasOnly(['id', 'userId', 'authorName', 'portalRole', 'category', 'title', 'region', 'status', 'priority', 'notes', 'referenceCode', 'createdAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid &&
+             data.authorName is string && data.authorName.size() > 0 && data.authorName.size() <= 128 &&
+             data.portalRole in ['client', 'admin', 'partner', 'specialist', 'staff'] &&
+             data.category is string && data.category.size() > 0 && data.category.size() <= 64 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.region is string && data.region.size() > 0 && data.region.size() <= 160 &&
+             data.status in ['open', 'in_progress', 'verified', 'resolved'] &&
+             data.priority in ['normal', 'high', 'urgent'] &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 1500)) &&
+             data.referenceCode is string && data.referenceCode.size() <= 64 &&
+             data.createdAt is string && data.createdAt.size() <= 64;
     }
 
     function isValidSafariDocument(data) {
@@ -61,16 +106,34 @@ service cloud.firestore {
 
     function isValidSavedItinerary(data) {
       return data.keys().hasAll(['id', 'userId', 'title', 'region', 'budgetTier', 'durationDays', 'estimatedPerPersonUSD', 'referenceCode', 'createdAt']) &&
-             data.keys().hasOnly(['id', 'userId', 'title', 'region', 'budgetTier', 'activityFocus', 'durationDays', 'estimatedPerPersonUSD', 'depositAmountUSD', 'matchedGuideName', 'matchedGuideSlug', 'referenceCode', 'createdAt']) &&
+             data.keys().hasOnly(['id', 'userId', 'title', 'region', 'budgetTier', 'activityFocus', 'durationDays', 'estimatedPerPersonUSD', 'depositAmountUSD', 'matchedGuideName', 'matchedGuideSlug', 'depositPaid', 'referenceCode', 'createdAt']) &&
              data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
              data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid &&
              data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
              data.region is string && data.region.size() > 0 && data.region.size() <= 200 &&
              data.budgetTier in ['mid-range', 'luxury', 'signature'] &&
+             (!('activityFocus' in data) || (data.activityFocus is string && data.activityFocus.size() <= 200)) &&
              data.durationDays is number && data.durationDays >= 1 && data.durationDays <= 30 &&
              data.estimatedPerPersonUSD is number && data.estimatedPerPersonUSD >= 0 &&
+             (!('depositAmountUSD' in data) || (data.depositAmountUSD is number && data.depositAmountUSD >= 0)) &&
+             (!('matchedGuideName' in data) || (data.matchedGuideName is string && data.matchedGuideName.size() <= 128)) &&
+             (!('matchedGuideSlug' in data) || (data.matchedGuideSlug is string && data.matchedGuideSlug.size() <= 128)) &&
+             (!('depositPaid' in data) || data.depositPaid is bool) &&
              data.referenceCode is string && data.referenceCode.size() <= 64 &&
              data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    function isValidSavedChecklist(data) {
+      return data.keys().hasAll(['id', 'userId', 'referenceCode', 'title', 'totalItems', 'checkedCount', 'updatedAt']) &&
+             data.keys().hasOnly(['id', 'userId', 'referenceCode', 'title', 'totalItems', 'checkedCount', 'notes', 'updatedAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid &&
+             data.referenceCode is string && data.referenceCode.size() <= 64 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.totalItems is number && data.totalItems >= 0 && data.totalItems <= 500 &&
+             data.checkedCount is number && data.checkedCount >= 0 && data.checkedCount <= 500 &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000)) &&
+             data.updatedAt is string && data.updatedAt.size() <= 64;
     }
 
     // Default deny catch-all
@@ -78,47 +141,96 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Users collection
-    match /users/{userId} {
-      allow get: if isValidId(userId) && isOwner(userId);
-      allow list: if false;
-      allow create: if isValidId(userId) && isOwner(userId) && isValidUser(incoming());
-      allow update: if isValidId(userId) && isOwner(userId) && isValidUser(incoming()) &&
-                    incoming().uid == existing().uid &&
-                    incoming().createdAt == existing().createdAt &&
-                    incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL']);
-      allow delete: if false;
+    // Admins lookup collection (read-only for self/admin, no client writes)
+    match /admins/{adminUid} {
+      allow get: if isSignedIn() && (request.auth.uid == adminUid || isAdmin());
+      allow list, write: if false;
     }
 
-    // Safari Documents collection (Google Drive tracking)
+    // Users collection (Scoped to request.auth.uid; Staff/Admin can read directory; Admin role protected)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isStaffOrAdmin());
+      allow list: if isStaffOrAdmin();
+      allow create: if isValidId(userId) && isOwner(userId) && isValidUser(incoming()) &&
+                    (!('role' in incoming()) || incoming().role in ['client', 'partner', 'specialist', 'staff', 'traveler'] || isAdmin());
+      allow update: if isValidId(userId) && (
+                      (isOwner(userId) && isValidUser(incoming()) &&
+                       incoming().uid == existing().uid &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'role']) &&
+                       (!('role' in incoming()) || incoming().role in ['client', 'partner', 'specialist', 'staff', 'traveler'] || isAdmin())) ||
+                      isAdmin()
+                    );
+      allow delete: if isValidId(userId) && (isOwner(userId) || isAdmin());
+    }
+
+    // Portal Dispatches collection (Scoped by userId == request.auth.uid, matching portalRole, or Staff/Admin oversight)
+    match /portal_dispatches/{dispatchId} {
+      allow get: if isSignedIn() && isValidId(dispatchId) && (
+                   existing().userId == request.auth.uid ||
+                   existing().portalRole == currentUserRole() ||
+                   isStaffOrAdmin()
+                 );
+      allow list: if isSignedIn() && (
+                    existing().userId == request.auth.uid ||
+                    existing().portalRole == currentUserRole() ||
+                    isStaffOrAdmin()
+                  );
+      allow create: if isSignedIn() && isValidId(dispatchId) && isValidPortalDispatch(incoming());
+      allow update: if isSignedIn() && isValidId(dispatchId) && (
+                      (existing().userId == request.auth.uid &&
+                       isValidPortalDispatch(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt) ||
+                      isStaffOrAdmin()
+                    );
+      allow delete: if isSignedIn() && isValidId(dispatchId) && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // Safari Documents collection (Owner CRUD; Staff/Admin read for UWA permit & voucher verification)
     match /safari_documents/{docId} {
-      allow get: if isSignedIn() && isValidId(docId) && existing().userId == request.auth.uid;
-      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow get: if isSignedIn() && isValidId(docId) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+      allow list: if isSignedIn() && (existing().userId == request.auth.uid || isStaffOrAdmin());
       allow create: if isSignedIn() && isValidId(docId) && isValidSafariDocument(incoming());
       allow update: if isSignedIn() && isValidId(docId) && existing().userId == request.auth.uid &&
                     isValidSafariDocument(incoming()) &&
                     incoming().userId == existing().userId &&
                     incoming().createdAt == existing().createdAt &&
                     incoming().diff(existing()).affectedKeys().hasOnly(['name', 'category', 'webViewLink']);
-      allow delete: if isSignedIn() && isValidId(docId) && existing().userId == request.auth.uid;
+      allow delete: if isSignedIn() && isValidId(docId) && (existing().userId == request.auth.uid || isAdmin());
     }
 
-    // Client Testimonials collection (Public read for published testimonials, authenticated write)
+    // Client Testimonials collection (Authenticated read/create for published reviews; Owner/Admin edit & delete)
     match /testimonials/{testimonialId} {
-      allow get: if isValidId(testimonialId) && existing().status == 'published';
-      allow list: if existing().status == 'published';
+      allow get: if isSignedIn() && isValidId(testimonialId) && (existing().status == 'published' || existing().authorId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().status == 'published' || existing().authorId == request.auth.uid || isAdmin());
       allow create: if isSignedIn() && isValidId(testimonialId) && isValidTestimonial(incoming());
-      allow update: if false;
-      allow delete: if false;
+      allow update: if isSignedIn() && isValidId(testimonialId) && existing().authorId == request.auth.uid &&
+                    isValidTestimonial(incoming()) &&
+                    incoming().authorId == existing().authorId;
+      allow delete: if isSignedIn() && isValidId(testimonialId) && (existing().authorId == request.auth.uid || isAdmin());
     }
 
-    // Saved AI Safari Itineraries collection (Private per user wallet)
+    // Saved Custom Safari Itineraries collection (Owner CRUD; Staff/Admin read for Entebbe dispatch)
     match /saved_itineraries/{itineraryId} {
-      allow get: if isSignedIn() && isValidId(itineraryId) && existing().userId == request.auth.uid;
-      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow get: if isSignedIn() && isValidId(itineraryId) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+      allow list: if isSignedIn() && (existing().userId == request.auth.uid || isStaffOrAdmin());
       allow create: if isSignedIn() && isValidId(itineraryId) && isValidSavedItinerary(incoming());
-      allow update: if false;
-      allow delete: if isSignedIn() && isValidId(itineraryId) && existing().userId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(itineraryId) && (existing().userId == request.auth.uid || isStaffOrAdmin()) &&
+                    incoming().userId == existing().userId &&
+                    incoming().createdAt == existing().createdAt;
+      allow delete: if isSignedIn() && isValidId(itineraryId) && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // Saved Safari Essentials Checklists collection (Owner CRUD; Specialist/Staff/Admin read for briefing)
+    match /saved_checklists/{checklistId} {
+      allow get: if isSignedIn() && isValidId(checklistId) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+      allow list: if isSignedIn() && (existing().userId == request.auth.uid || isStaffOrAdmin());
+      allow create: if isSignedIn() && isValidId(checklistId) && isValidSavedChecklist(incoming());
+      allow update: if isSignedIn() && isValidId(checklistId) && existing().userId == request.auth.uid &&
+                    isValidSavedChecklist(incoming()) &&
+                    incoming().userId == existing().userId;
+      allow delete: if isSignedIn() && isValidId(checklistId) && (existing().userId == request.auth.uid || isAdmin());
     }
   }
 }

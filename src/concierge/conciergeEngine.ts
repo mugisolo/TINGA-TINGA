@@ -197,7 +197,16 @@ export function generateRuleBasedConciergeReply(
   const lower = (message || '').toLowerCase();
   const toolCalls: { name: string; arguments: Record<string, any>; result: any }[] = [];
 
-  if (lower.includes('permit') || lower.includes('2027') || lower.includes('tariff') || lower.includes('habituation')) {
+  if (
+    lower.includes('permit') ||
+    lower.includes('permis') ||
+    lower.includes('تصاريح') ||
+    lower.includes('许可证') ||
+    lower.includes('vergunning') ||
+    lower.includes('2027') ||
+    lower.includes('tariff') ||
+    lower.includes('habituation')
+  ) {
     const res = executeConciergeTool('get_permit_info', { parkOrSpecies: '' });
     toolCalls.push({ name: 'get_permit_info', arguments: {}, result: res });
     return {
@@ -216,6 +225,11 @@ export function generateRuleBasedConciergeReply(
   if (
     lower.includes('match') ||
     lower.includes('guide') ||
+    lower.includes('gids') ||
+    lower.includes('مرشد') ||
+    lower.includes('向导') ||
+    lower.includes('francophone') ||
+    lower.includes('deutsch') ||
     lower.includes('who') ||
     lower.includes('bird') ||
     lower.includes('shoebill') ||
@@ -224,16 +238,30 @@ export function generateRuleBasedConciergeReply(
     lower.includes('rwenzori')
   ) {
     let interest = '';
+    let languageFilter = '';
+    if (lower.includes('francophone') || lower.includes('français') || lower.includes('french')) {
+      languageFilter = 'French';
+    } else if (lower.includes('deutsch') || lower.includes('german')) {
+      languageFilter = 'German';
+    }
+
     if (lower.includes('bird') || lower.includes('shoebill')) interest = 'birding';
     else if (lower.includes('chimp')) interest = 'chimps';
     else if (lower.includes('photo')) interest = 'photography';
     else if (lower.includes('hike') || lower.includes('rwenzori')) interest = 'hiking';
     else if (lower.includes('culture') || lower.includes('community')) interest = 'culture';
     else if (lower.includes('kidepo') || lower.includes('murchison') || lower.includes('lion')) interest = 'big-game';
-    else interest = 'gorillas';
+    else if (!languageFilter) interest = 'gorillas';
 
-    const res = executeConciergeTool('match_guide', { interest });
-    toolCalls.push({ name: 'match_guide', arguments: { interest }, result: res });
+    const res = executeConciergeTool('match_guide', {
+      interest,
+      language: languageFilter,
+    });
+    toolCalls.push({
+      name: 'match_guide',
+      arguments: { interest, language: languageFilter },
+      result: res,
+    });
 
     const topGuides = res.guides
       .map(
@@ -244,13 +272,24 @@ export function generateRuleBasedConciergeReply(
 
     return {
       reply:
-        `As the Enganda AI Concierge, I would love to introduce you to our Ugandan guides best matched to your interests:\n\n${topGuides}\n\n` +
+        `From the Enganda Guide Matcher desk, here are our Ugandan guides best matched to your interests:\n\n${topGuides}\n\n` +
         `Your safari includes a private 4x4 Land Cruiser with pop-up roof, driven by your professional guide from arrival in Entebbe to departure. Would you like to request one of these guides for your dates?`,
       toolCalls,
     };
   }
 
-  if (lower.includes('whatsapp') || lower.includes('human') || lower.includes('coordinator') || lower.includes('office') || lower.includes('entebbe')) {
+  if (
+    lower.includes('whatsapp') ||
+    lower.includes('human') ||
+    lower.includes('coordinator') ||
+    lower.includes('coordinateur') ||
+    lower.includes('koordinator') ||
+    lower.includes('coördinator') ||
+    lower.includes('واتساب') ||
+    lower.includes('人工') ||
+    lower.includes('office') ||
+    lower.includes('entebbe')
+  ) {
     const res = executeConciergeTool('handoff_to_human', { reason: 'Guest requested human coordinator' }, onCreateLead);
     toolCalls.push({ name: 'handoff_to_human', arguments: { reason: 'Guest requested human coordinator' }, result: res });
     return {
@@ -272,7 +311,19 @@ export function generateRuleBasedConciergeReply(
     };
   }
 
-  if (lower.includes('7-day') || lower.includes('7 day') || lower.includes('plan') || lower.includes('quote') || lower.includes('price') || lower.includes('cost')) {
+  if (
+    lower.includes('7-day') ||
+    lower.includes('7 day') ||
+    lower.includes('7 jours') ||
+    lower.includes('7 أيام') ||
+    lower.includes('7 天') ||
+    lower.includes('7-daagse') ||
+    lower.includes('7-tägige') ||
+    lower.includes('plan') ||
+    lower.includes('quote') ||
+    lower.includes('price') ||
+    lower.includes('cost')
+  ) {
     const expRes = executeConciergeTool('search_experiences', { maxDays: 7 });
     const quoteRes = executeConciergeTool('build_custom_quote', {
       days: 7,
@@ -307,7 +358,7 @@ export function generateRuleBasedConciergeReply(
 
   return {
     reply:
-      `Oli otya! I am the Enganda AI Concierge. At Enganda Safaris, **the guide is the product** — you travel with a named, licensed Ugandan guide who calls these landscapes home.\n\n` +
+      `Oli otya! Welcome to the Enganda Guide Matcher. At Enganda Safaris, **the guide is the product** — you travel with a named, licensed Ugandan guide who calls these landscapes home.\n\n` +
       `Here are three ways I can help right now:\n` +
       `1. **Match you with a Ugandan guide** — such as **Samuel Kato** (Bwindi gorillas), **Grace Namukasa** (Kibale chimpanzees), **David Ssekandi** (Mabamba Shoebill & birding), or **Moses Okello** (Kidepo Valley).\n` +
       `2. **Explore our Uganda experiences** — from the *1-Day Mabamba Shoebill Excursion* and *3-Day Bwindi Gorilla Trek* to the *10-Day Uganda Grand Circuit incl. Kidepo*.\n` +

@@ -1,6 +1,6 @@
 {
   "name": "Tinga Tinga Safari",
   "description": "Enganda Safaris — Uganda safaris designed and led by a curated collective of licensed local Ugandan safari guides, coordinated from our head office in Entebbe, Uganda.",
-  "requestFramePermissions": [],
+  "requestFramePermissions": ["geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

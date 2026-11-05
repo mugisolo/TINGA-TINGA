@@ -59,3 +59,56 @@ All brand constants, guides, experiences, UWA permit tariffs, and sample reviews
   Update `WHATSAPP_NUMBER`, `WHATSAPP_CLEAN`, `CONTACT_EMAIL`, and `HQ_ADDRESS` at the top of `src/data/seedData.ts`.
 - **Replace Sample Reviews with Real Guest Data:**
   Locate the `SAMPLE_REVIEWS` constant in `src/data/seedData.ts` and replace the array items with your verified guest reviews (each review links `guideSlug` and `experienceSlug`).
+
+---
+
+## 5. Production Deployment Guide (Firebase & Google Cloud Run)
+
+### 5.1 Required Environment Variables
+Copy `.env.example` to `.env` for local development or configure the following variables in Google Cloud Run:
+
+| Variable | Description |
+| :--- | :--- |
+| `API_KEY` / `GEMINI_API_KEY` | Server-side Gemini API key initialized via `new GoogleGenAI({ apiKey: process.env.API_KEY })` in `server.ts` |
+| `PORT` | HTTP server port (defaults to `3000`) |
+| `VITE_FIREBASE_API_KEY` | Firebase Web App API Key |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Firebase Auth domain (`gen-lang-client-0760457427.firebaseapp.com`) |
+| `VITE_FIREBASE_PROJECT_ID` | GCP / Firebase Project ID (`gen-lang-client-0760457427`) |
+| `VITE_FIREBASE_STORAGE_BUCKET` | Firebase Storage Bucket (`gen-lang-client-0760457427.firebasestorage.app`) |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase Messaging Sender ID |
+| `VITE_FIREBASE_APP_ID` | Firebase Web App ID |
+| `VITE_FIREBASE_FIRESTORE_DATABASE_ID` | Named Firestore database ID (`ai-studio-tingatingasafari-977ea282-9f6e-4517-99b9-1d8a012db444`) |
+
+### 5.2 Enabling Firestore & Authentication in the Firebase Console
+1. Open the [Firebase Console](https://console.firebase.google.com/) and select project **`gen-lang-client-0760457427`**.
+2. **Authentication**: Navigate to **Build → Authentication → Sign-in method** and enable the **Google** provider. Under **Authentication → Settings → Authorized domains**, add your Cloud Run service domain (`*.run.app`) and custom production domain.
+3. **Firestore Database**: Navigate to **Build → Firestore Database** and ensure the database instance (`ai-studio-tingatingasafari-977ea282-9f6e-4517-99b9-1d8a012db444`) is provisioned in Standard mode.
+
+### 5.3 Deploying Firestore Security Rules & Composite Indexes
+Deploy `firestore.rules` and `firestore.indexes.json` using the Firebase CLI:
+
+```bash
+# Authenticate and select project alias defined in .firebaserc
+firebase login
+firebase use default
+
+# Deploy production security rules and composite indexes
+firebase deploy --only firestore:rules,firestore:indexes
+```
+
+### 5.4 Deploying to Google Cloud Run
+This repository includes a multi-stage `Dockerfile` that builds the Vite SPA (`dist/`) and bundles `server.ts` (`dist/server.cjs`) to serve both the API and static frontend on port `3000`:
+
+```bash
+# Build and deploy directly from source to Google Cloud Run
+gcloud run deploy tingatingasafari \
+  --source . \
+  --project gen-lang-client-0760457427 \
+  --region europe-west2 \
+  --platform managed \
+  --allow-unauthenticated \
+  --port 3000 \
+  --set-env-vars="NODE_ENV=production,VITE_FIREBASE_PROJECT_ID=gen-lang-client-0760457427,VITE_FIREBASE_FIRESTORE_DATABASE_ID=ai-studio-tingatingasafari-977ea282-9f6e-4517-99b9-1d8a012db444" \
+  --set-secrets="API_KEY=GEMINI_API_KEY:latest"
+```
+
