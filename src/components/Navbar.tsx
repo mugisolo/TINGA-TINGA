@@ -14,6 +14,7 @@ import {
   RefreshCw,
   ShieldCheck,
   Lock,
+  Search,
 } from 'lucide-react';
 import { Currency, PortalRole } from '../types';
 import { useInquiry } from '../context/InquiryContext';
@@ -28,6 +29,7 @@ import {
 } from '../lib/currency';
 import { SocialStrip } from './SocialLinks';
 import { GeoLanguageBanner } from './GeoLanguageBanner';
+import { GlobalSearchModal } from './GlobalSearchModal';
 
 const CURRENCIES: Currency[] = ['USD', 'EUR', 'GBP', 'UGX'];
 
@@ -110,6 +112,7 @@ export const Navbar: React.FC = () => {
   } = useLanguage();
 
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const [currencyMenuOpen, setCurrencyMenuOpen] = useState(false);
   const [portalMenuOpen, setPortalMenuOpen] = useState(false);
@@ -138,7 +141,10 @@ export const Navbar: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchModalOpen((prev) => !prev);
+      } else if (e.key === 'Escape') {
         setMobileOpen(false);
         setLangMenuOpen(false);
         setCurrencyMenuOpen(false);
@@ -183,16 +189,20 @@ export const Navbar: React.FC = () => {
       {/* Automatic Geolocation & Language Proposal Strip */}
       <GeoLanguageBanner />
 
-      <div className="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-10 h-14 sm:h-16 flex items-center justify-between gap-2 min-w-0">
-        {/* Clean Brand Wordmark */}
+      <div className="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-10 h-16 sm:h-[70px] flex items-center justify-between gap-2 min-w-0">
+        {/* Cropped & Resized Enganda Safaris Official Logo Lockup */}
         <Link
           to="/"
-          className="flex items-center gap-2 text-[#1A1612] hover:opacity-90 transition-opacity shrink-0"
+          aria-label="Enganda Safaris — Your Gateway to the Wild (Home)"
+          className="flex items-center gap-2 hover:opacity-95 transition-opacity shrink-0 group"
         >
-          <Compass className="w-5 h-5 sm:w-6 sm:h-6 text-[#226B3E] shrink-0" />
-          <span className="font-serif text-lg sm:text-xl xl:text-2xl font-bold tracking-tight text-[#1A1612] whitespace-nowrap">
-            Enganda Safaris
-          </span>
+          <div className="bg-[#1B191A] px-2.5 py-1 rounded-lg border border-[#D99B26]/50 group-hover:border-[#D99B26] shadow-xs flex items-center justify-center transition-colors">
+            <img
+              src="/assets/aistudio/enganda-logo-header.png"
+              alt="Enganda Safaris — Your Gateway to the Wild"
+              className="h-9 sm:h-11 xl:h-12 w-auto object-contain select-none"
+            />
+          </div>
         </Link>
 
         {/* Primary Desktop Navigation (Fits cleanly within lg+ viewport boundary) */}
@@ -218,6 +228,24 @@ export const Navbar: React.FC = () => {
 
         {/* Desktop Right Controls (lg+ only: never collides with mobile menu button) */}
         <div className="hidden lg:flex items-center gap-1.5 xl:gap-2 shrink-0">
+          {/* Global Search Trigger Button */}
+          <button
+            type="button"
+            onClick={() => setSearchModalOpen(true)}
+            aria-label="Search safari experiences and guide profiles"
+            title="Search Safari Experiences & Guide Profiles (Ctrl+K)"
+            className="inline-flex items-center gap-1.5 bg-white hover:bg-[#F3ECE1] border border-[#E4DCCF] hover:border-[#226B3E] text-[#1A1612] text-xs font-medium rounded-md px-2.5 py-1.5 transition-colors cursor-pointer whitespace-nowrap"
+          >
+            <Search className="w-3.5 h-3.5 text-[#226B3E] shrink-0" />
+            <span className="hidden xl:inline text-[#5A5248]">
+              Search Safaris &amp; Guides
+            </span>
+            <span className="xl:hidden text-[#5A5248]">Search</span>
+            <kbd className="hidden 2xl:inline-block font-mono text-[10px] px-1 py-0.5 rounded bg-[#F3ECE1] text-[#5A5248] border border-[#E4DCCF]">
+              ⌘K
+            </kbd>
+          </button>
+
           {/* 5-Role Portals Popover Menu (Aligned with Firestore RBAC Rules) */}
           <div className="relative" ref={portalMenuRef}>
             <button
@@ -586,6 +614,16 @@ export const Navbar: React.FC = () => {
 
         {/* Mobile & Tablet Bar (< lg): Fits strictly inside screen boundaries */}
         <div className="flex items-center gap-1.5 lg:hidden shrink-0">
+          <button
+            type="button"
+            onClick={() => setSearchModalOpen(true)}
+            aria-label="Search safari experiences and guides"
+            className="inline-flex items-center gap-1 bg-white hover:bg-[#F3ECE1] border border-[#E4DCCF] text-[#1A1612] text-xs font-medium rounded-md px-2.5 py-1.5 whitespace-nowrap cursor-pointer"
+          >
+            <Search className="w-3.5 h-3.5 text-[#226B3E] shrink-0" />
+            <span className="hidden sm:inline">Search</span>
+          </button>
+
           <Link
             to="/portals"
             className="inline-flex items-center gap-1 bg-[#226B3E] text-white text-xs font-mono font-semibold rounded-md px-2.5 py-1.5 whitespace-nowrap"
@@ -616,6 +654,24 @@ export const Navbar: React.FC = () => {
       {/* Mobile & Tablet Navigation Drawer */}
       {mobileOpen && (
         <div className="lg:hidden border-t border-[#E4DCCF] bg-[#FAF7F2] px-4 pt-4 pb-6 space-y-4 shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto">
+          {/* Mobile Search Bar Trigger */}
+          <button
+            type="button"
+            onClick={() => {
+              setMobileOpen(false);
+              setSearchModalOpen(true);
+            }}
+            className="w-full flex items-center justify-between gap-2 bg-white border border-[#D6CEC2] rounded-md px-3 py-2.5 text-xs text-[#5A5248] cursor-pointer"
+          >
+            <span className="inline-flex items-center gap-2">
+              <Search className="w-4 h-4 text-[#226B3E]" />
+              <span>Search safari experiences, guides, gorillas, birding...</span>
+            </span>
+            <span className="font-mono text-[10px] text-[#226B3E] font-semibold">
+              Search
+            </span>
+          </button>
+
           {/* Mobile 5-Portal Quick Strip with RBAC Status */}
           <div className="pb-3 border-b border-[#E4DCCF] space-y-2">
             <div className="flex items-center justify-between">
@@ -775,6 +831,12 @@ export const Navbar: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Global Search Modal for Safari Experiences, Guides & Scheduled Trips */}
+      <GlobalSearchModal
+        isOpen={searchModalOpen}
+        onClose={() => setSearchModalOpen(false)}
+      />
     </header>
   );
 };

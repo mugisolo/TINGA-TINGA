@@ -33,8 +33,8 @@ interface LanguageContextValue {
   simulateGeoLocation: (targetLang: SupportedLanguage) => void;
 }
 
-const LANGUAGE_STORAGE_KEY = 'enganda_language_v1';
-const GEO_DISMISSED_KEY = 'enganda_geo_banner_dismissed_v1';
+const LANGUAGE_STORAGE_KEY = 'wildlife_language_v1';
+const GEO_DISMISSED_KEY = 'wildlife_geo_banner_dismissed_v1';
 
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
 

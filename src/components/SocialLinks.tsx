@@ -77,7 +77,7 @@ export const SocialLinks: React.FC<SocialLinksProps> = ({
             href={item.url}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={`Connect with Enganda Safaris on ${item.label} (${item.handle})`}
+            aria-label={`Connect with WildLife Safaris on ${item.label} (${item.handle})`}
             title={`${item.label} • ${item.handle}`}
             className="text-[#D6CEC2] hover:text-[#D99B26] transition-colors p-1 rounded"
           >
@@ -97,7 +97,7 @@ export const SocialLinks: React.FC<SocialLinksProps> = ({
             href={item.url}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={`Connect with Enganda Safaris on ${item.label} (${item.handle})`}
+            aria-label={`Connect with WildLife Safaris on ${item.label} (${item.handle})`}
             className="group bg-white border border-[#E4DCCF] hover:border-[#226B3E] rounded-lg p-5 flex flex-col justify-between transition-all shadow-xs hover:shadow-sm"
           >
             <div>
@@ -141,7 +141,7 @@ export const SocialLinks: React.FC<SocialLinksProps> = ({
           href={item.url}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={`Connect with Enganda Safaris on ${item.label} (${item.handle})`}
+          aria-label={`Connect with WildLife Safaris on ${item.label} (${item.handle})`}
           className={`inline-flex items-center gap-2 px-3 py-2 rounded-md border text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${baseItemStyle}`}
         >
           <SocialIcon

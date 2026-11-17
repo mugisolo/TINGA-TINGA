@@ -30,7 +30,7 @@ export const ReviewsPage: React.FC = () => {
   return (
     <div className="bg-[#FAF7F2] min-h-screen py-12 sm:py-16">
       <SEO
-        title="Guest Stories & Guide Reviews | Enganda Safaris"
+        title="Guest Stories & Guide Reviews | WildLife Safaris"
         description="Read guest stories from Uganda safaris led by our named Ugandan guides across Bwindi Impenetrable Forest, Kibale, Mabamba Swamp, Murchison Falls, and Kidepo Valley."
       />
 
@@ -51,7 +51,7 @@ export const ReviewsPage: React.FC = () => {
         <div className="bg-[#F3ECE1] border border-[#E4DCCF] rounded-lg p-4 flex items-start gap-3 text-xs text-[#5A5248]">
           <Info className="w-4 h-4 text-[#C85A28] flex-shrink-0 mt-0.5" />
           <div>
-            <strong className="text-[#1A1612]">Transparency Note:</strong> These representative sample guest reviews (<code className="font-mono">SAMPLE_REVIEWS</code>) illustrate how guest feedback links directly to each named Enganda guide and Uganda experience. Ask our Entebbe desk for direct references for your chosen guide.
+            <strong className="text-[#1A1612]">Transparency Note:</strong> These representative sample guest reviews (<code className="font-mono">SAMPLE_REVIEWS</code>) illustrate how guest feedback links directly to each named WildLife guide and Uganda experience. Ask our Entebbe desk for direct references for your chosen guide.
           </div>
         </div>
 
@@ -60,7 +60,7 @@ export const ReviewsPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#226B3E] font-semibold">
               <Filter className="w-4 h-4 text-[#C85A28]" />
-              <span>Filter by Enganda Guide, Experience, or Rating</span>
+              <span>Filter by WildLife Guide, Experience, or Rating</span>
             </div>
             {(selectedGuideSlug !== 'all' || selectedExpSlug !== 'all' || minRating > 0) && (
               <button
@@ -84,7 +84,7 @@ export const ReviewsPage: React.FC = () => {
                 onChange={(e) => setSelectedGuideSlug(e.target.value)}
                 className="w-full bg-[#FAF7F2] border border-[#E4DCCF] rounded-md px-3 py-2 text-sm text-[#1A1612]"
               >
-                <option value="all">All 8 Enganda Guides</option>
+                <option value="all">All 8 WildLife Guides</option>
                 {GUIDES.map((g) => (
                   <option key={g.slug} value={g.slug}>
                     {g.name} ({g.homeRegion})

@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
+import { drivePhotoUrl } from '../data/seedData';
 
-const DEFAULT_OG_IMAGE =
-  'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1600&q=85';
+const DEFAULT_OG_IMAGE = drivePhotoUrl('1LwS0m-x4TsmxpgBaeByqmJkI-e_UPjiE');
 const DEFAULT_OG_IMAGE_ALT =
-  'Mountain Gorilla in Bwindi Impenetrable National Park, Uganda — Enganda Safaris';
-const SITE_NAME = 'Enganda Safaris';
+  'Mountain Gorilla in Bwindi Impenetrable National Park, Uganda — WildLife Safaris';
+const SITE_NAME = 'WildLife Safaris';
 
 export interface SEOProps {
   title: string;
@@ -38,16 +38,16 @@ export const SEO: React.FC<SEOProps> = ({
   jsonLd,
 }) => {
   useEffect(() => {
-    const fullTitle = title.includes('Enganda Safaris')
+    const fullTitle = title.includes('WildLife Safaris')
       ? title
-      : `${title} | Enganda Safaris Uganda`;
+      : `${title} | WildLife Safaris Uganda`;
     const resolvedOgTitle = ogTitle || fullTitle;
     const resolvedOgDescription = ogDescription || description;
 
     const origin =
       typeof window !== 'undefined' && window.location?.origin
         ? window.location.origin
-        : 'https://engandasafaris.com';
+        : 'https://wildlifesafaris.com';
     const pathname =
       canonicalPath ||
       (typeof window !== 'undefined' ? window.location.pathname : '/');
@@ -119,7 +119,7 @@ export const SEO: React.FC<SEOProps> = ({
 
     // Twitter / X Card Meta Tags
     upsertMetaByName('twitter:card', 'summary_large_image');
-    upsertMetaByName('twitter:site', '@engandasafaris');
+    upsertMetaByName('twitter:site', '@wildlifesafaris');
     upsertMetaByName('twitter:title', resolvedOgTitle);
     upsertMetaByName('twitter:description', resolvedOgDescription);
     upsertMetaByName('twitter:image', ogImage);
@@ -137,7 +137,7 @@ export const SEO: React.FC<SEOProps> = ({
     canonicalEl.setAttribute('href', canonicalUrl);
 
     // Dynamic JSON-LD script in <head>
-    const scriptId = 'enganda-dynamic-jsonld';
+    const scriptId = 'wildlife-dynamic-jsonld';
     let scriptEl = document.head.querySelector(
       `script#${scriptId}`
     ) as HTMLScriptElement | null;

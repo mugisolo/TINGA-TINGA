@@ -14,6 +14,7 @@ import {
   HQ_ADDRESS,
   HQ_AIRPORT_NOTE,
   GUIDES,
+  TOUR_OPERATORS,
 } from '../data/seedData';
 import { SmartImage } from '../components/SmartImage';
 import { SEO } from '../components/SEO';
@@ -24,8 +25,8 @@ export const AboutPage: React.FC = () => {
   return (
     <div className="bg-[#FAF7F2] min-h-screen py-12 sm:py-16">
       <SEO
-        title="About Enganda Safaris | Our Ugandan Guide Collective, FAQ & Entebbe Head Office"
-        description="Learn the story behind Enganda Safaris — a curated collective of 8 licensed local Ugandan safari guides in Entebbe, plus visa, vaccination, and packing FAQs."
+        title="About WildLife Safaris | Our Ugandan Guide Collective, FAQ & Entebbe Head Office"
+        description="Learn the story behind WildLife Safaris — a curated collective of 8 licensed local Ugandan safari guides in Entebbe, plus visa, vaccination, and packing FAQs."
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
@@ -34,16 +35,16 @@ export const AboutPage: React.FC = () => {
           <div className="lg:col-span-8 space-y-4">
             <div className="text-xs font-mono uppercase tracking-wider text-[#D99B26] font-semibold flex items-center gap-2">
               <Compass className="w-3.5 h-3.5" />
-              <span>Why We Built Enganda Safaris in Entebbe</span>
+              <span>Why We Built WildLife Safaris in Entebbe</span>
             </div>
             <h1 className="font-serif text-4xl sm:text-5xl font-bold text-white leading-tight">
               “{BRAND_TAGLINE}”
             </h1>
             <p className="text-sm sm:text-base text-[#D6CEC2] leading-relaxed">
-              In Luganda and Runyankole, <em className="text-white">Enganda</em> speaks to kinship, family, and the people who welcome you home. We founded Enganda Safaris around a simple truth that every seasoned traveler eventually discovers: <strong className="text-white">the guide is the product</strong>.
+              In Luganda and Runyankole, <em className="text-white">WildLife</em> speaks to kinship, family, and the people who welcome you home. We founded WildLife Safaris around a simple truth that every seasoned traveler eventually discovers: <strong className="text-white">the guide is the product</strong>.
             </p>
             <p className="text-sm sm:text-base text-[#D6CEC2] leading-relaxed">
-              You can sleep in the most expensive lodge in Africa, but if your guide does not know the alarm call of a red-tailed monkey in Kibale or the family history of the Rushegura silverback in Bwindi, you only see the surface of Uganda. Enganda brings together eight of Uganda’s finest licensed regional guides under one accountable coordination desk in Entebbe.
+              You can sleep in the most expensive lodge in Africa, but if your guide does not know the alarm call of a red-tailed monkey in Kibale or the family history of the Rushegura silverback in Bwindi, you only see the surface of Uganda. WildLife brings together eight of Uganda’s finest licensed regional guides under one accountable coordination desk in Entebbe.
             </p>
             <div className="pt-2 flex flex-wrap items-center gap-3">
               <a
@@ -130,6 +131,45 @@ export const AboutPage: React.FC = () => {
           </div>
         </section>
 
+        {/* Official Tour Operators Collective */}
+        <section className="bg-white border border-[#E4DCCF] rounded-lg p-8 space-y-5">
+          <div>
+            <span className="font-mono text-xs uppercase text-[#C85A28] font-semibold">
+              Official Tour Operator Collective
+            </span>
+            <h2 className="font-serif text-3xl font-bold text-[#1A1612] mt-1">
+              Enganda / WildLife Safaris • Tingatinga Safaris • Shuma Africa Safaris
+            </h2>
+            <p className="text-xs sm:text-sm text-[#5A5248] mt-1 max-w-3xl">
+              Our platform unites Uganda’s specialist tour operators so travelers can book private primate treks, savannah expeditions, and multi-country East African grand safaris with unified UWA permit escrow and Safari Wallet support.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {TOUR_OPERATORS.map((op) => (
+              <div
+                key={op.id}
+                className="bg-[#FAF7F2] border border-[#E4DCCF] rounded-lg p-5 space-y-2.5"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-[10px] uppercase px-2 py-0.5 rounded bg-[#226B3E] text-white font-semibold">
+                    {op.roleLabel}
+                  </span>
+                  <span className="font-mono text-[10px] text-[#C85A28] font-semibold">
+                    {op.accreditations[0] || 'UTB Accredited'}
+                  </span>
+                </div>
+                <h3 className="font-serif text-xl font-bold text-[#1A1612]">
+                  {op.name}
+                </h3>
+                <p className="text-xs italic text-[#226B3E]">“{op.tagline}”</p>
+                <p className="text-xs text-[#5A5248] leading-relaxed">
+                  {op.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* Meet the Collective Strip */}
         <section className="bg-[#F3ECE1] border border-[#E4DCCF] rounded-lg p-8 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -138,7 +178,7 @@ export const AboutPage: React.FC = () => {
                 8 Specialists Across 9 Regions
               </span>
               <h2 className="font-serif text-3xl font-bold text-[#1A1612] mt-1">
-                The Faces of Enganda Safaris
+                The Faces of WildLife Safaris
               </h2>
             </div>
             <Link
@@ -195,7 +235,7 @@ export const AboutPage: React.FC = () => {
             </p>
             <div className="flex items-center gap-2 text-xs text-[#2D6A4F] font-semibold">
               <Plane className="w-4 h-4" />
-              <span>Complimentary airport meet & greet on every Enganda safari</span>
+              <span>Complimentary airport meet & greet on every WildLife safari</span>
             </div>
             <div className="pt-2">
               <Link
@@ -210,7 +250,7 @@ export const AboutPage: React.FC = () => {
 
           <div className="lg:col-span-6 min-h-[320px] bg-[#F3ECE1]">
             <iframe
-              title="Enganda Safaris Head Office — Mugwanya Road, Bugonga, Entebbe, Uganda"
+              title="WildLife Safaris Head Office — Mugwanya Road, Bugonga, Entebbe, Uganda"
               src="https://www.openstreetmap.org/export/embed.html?bbox=32.445%2C0.038%2C32.482%2C0.065&layer=mapnik&marker=0.0512%2C32.4637"
               className="w-full h-full min-h-[320px] border-0"
               loading="lazy"
@@ -218,7 +258,7 @@ export const AboutPage: React.FC = () => {
           </div>
         </section>
 
-        {/* Connect With Enganda Safaris On Social Media */}
+        {/* Connect With WildLife Safaris On Social Media */}
         <section className="bg-[#F3ECE1] border border-[#E4DCCF] rounded-lg p-8 space-y-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>

@@ -11,6 +11,7 @@ import {
   Plane,
   ArrowUpRight,
   Globe,
+  Settings,
 } from 'lucide-react';
 import {
   BRAND_NAME,
@@ -21,16 +22,18 @@ import {
 } from '../data/seedData';
 import { SocialLinks } from './SocialLinks';
 import { useLanguage } from '../context/LanguageContext';
+import { useInquiry } from '../context/InquiryContext';
 import { SUPPORTED_LANGUAGES } from '../lib/i18n';
 
 export const Footer: React.FC = () => {
   const { language, setLanguage, t } = useLanguage();
+  const { activeFooterLogos, poweredByText } = useInquiry();
 
   return (
     <footer className="bg-[#226B3E] text-[#FAF7F2] border-t border-[#2E8550] print:hidden">
       {/* Accreditation & Trust Strip */}
       <div className="border-b border-[#2E8550] bg-[#1B5632]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-5 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-md bg-[#226B3E] border border-[#34945A] text-[#D99B26] flex-shrink-0">
               <ShieldCheck className="w-4 h-4" />
@@ -76,15 +79,22 @@ export const Footer: React.FC = () => {
       </div>
 
       {/* Main Footer Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-8 sm:py-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 sm:gap-8">
           {/* Column 1-2: Brand & Entebbe Head Office */}
           <div className="lg:col-span-2 space-y-3">
-            <Link to="/" className="inline-flex items-center gap-2">
-              <Compass className="w-5 h-5 text-[#D99B26]" />
-              <span className="font-serif text-xl font-bold tracking-tight text-[#FAF7F2]">
-                {BRAND_NAME}
-              </span>
+            <Link
+              to="/"
+              className="inline-flex items-center gap-3 group"
+              aria-label="Enganda Safaris — Your Gateway to the Wild"
+            >
+              <div className="bg-[#1B191A] px-3 py-1.5 rounded-lg border border-[#D99B26]/50 group-hover:border-[#D99B26] shadow-sm inline-flex items-center">
+                <img
+                  src="/assets/aistudio/enganda-logo-header.png"
+                  alt="Enganda Safaris — Your Gateway to the Wild"
+                  className="h-11 sm:h-12 w-auto object-contain"
+                />
+              </div>
             </Link>
             <p className="font-serif italic text-base text-[#E4DCCF]">
               “{t.home.heroTitle}”
@@ -179,18 +189,42 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <Link
-                  to="/experiences/3-day-bwindi-gorilla-trek"
-                  className="hover:text-white transition-colors"
+                  to="/experiences/8-day-tingatinga-signature-primate-lions-nile"
+                  className="hover:text-white transition-colors text-[#D99B26] font-semibold"
                 >
-                  3-Day Bwindi Gorilla Trek
+                  8-Day Tingatinga Safaris Signature (Gorillas, Chimps &amp; Lions)
                 </Link>
               </li>
               <li>
                 <Link
-                  to="/experiences/5-day-gorillas-and-kibale-chimps"
+                  to="/experiences/32-day-east-african-grand-safari-2027"
+                  className="hover:text-white transition-colors text-[#D99B26] font-semibold"
+                >
+                  32-Day East African Grand Safari 2027 (Shuma Safaris)
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/experiences/15-day-shuma-uganda-grand-sector"
                   className="hover:text-white transition-colors"
                 >
-                  5-Day Gorillas & Kibale Chimps
+                  15-Day Shuma Uganda &amp; Kidepo Charter
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/experiences/7-day-shuma-uganda-rwanda-primate-akagera"
+                  className="hover:text-white transition-colors"
+                >
+                  7-Day Uganda &amp; Rwanda Primate Odyssey
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/experiences/3-day-bwindi-gorilla-trek"
+                  className="hover:text-white transition-colors"
+                >
+                  3-Day Bwindi Gorilla Trek
                 </Link>
               </li>
               <li>
@@ -206,7 +240,7 @@ export const Footer: React.FC = () => {
                   to="/experiences/10-day-uganda-grand-circuit-kidepo"
                   className="hover:text-white transition-colors"
                 >
-                  10-Day Grand Circuit & Kidepo
+                  10-Day Grand Circuit &amp; Kidepo
                 </Link>
               </li>
             </ul>
@@ -335,9 +369,9 @@ export const Footer: React.FC = () => {
               <li>
                 <Link
                   to="/portals/admin"
-                  className="hover:text-white transition-colors"
+                  className="hover:text-white transition-colors font-semibold text-[#D99B26]"
                 >
-                  Admin Governance Portal
+                  Admin Dashboard & Governance Portal
                 </Link>
               </li>
               <li>
@@ -361,15 +395,95 @@ export const Footer: React.FC = () => {
         </div>
       </div>
 
-      {/* Bottom Legal & Language Bar */}
-      <div className="border-t border-[#2E8550] bg-[#144225] pb-14 sm:pb-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col lg:flex-row items-center justify-between gap-3 text-xs text-[#9E9385]">
-          <div>
-            © {new Date().getFullYear()} {BRAND_NAME} — Mugwanya Road, Bugonga,
-            Entebbe, Uganda. {t.footer.rightsReserved}
+      {/* Official Partner, Conservation & Banking Logos Strip (Resized to fit accurately + Admin Editable) */}
+      <div className="border-t border-[#2E8550] bg-[#184D2B]">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-5 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-mono tracking-wide text-[#FAF7F2]">
+              <span className="inline-block w-2 h-2 rounded-full bg-[#D99B26] shrink-0" />
+              <span className="font-semibold text-[#D99B26]">
+                {poweredByText || 'Powered by WildLife, RONSOL, RELWORX, FINCA & ECO Bank, SPYDA MC'}
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-[11px] font-mono text-[#D6CEC2] hidden md:inline">
+                Official Conservation, Banking &amp; Strategic Infrastructure Partners
+              </span>
+              <Link
+                to="/portals/admin?section=footer-logos"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#226B3E] hover:bg-[#2E8550] text-[#FAF7F2] border border-[#34945A] font-mono text-[10px] font-semibold transition-colors shrink-0"
+              >
+                <Settings className="w-3 h-3 text-[#D99B26]" />
+                <span>Admin: Update Footer Logos</span>
+              </Link>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          {/* Partner Logos Grid — Uniformly Sized White Badge Frames for Accurate Fit */}
+          {activeFooterLogos.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
+              {activeFooterLogos.map((partner) => {
+                const badgeContent = (
+                  <div className="bg-white rounded-md px-2.5 py-2 h-14 sm:h-16 flex items-center gap-2.5 border border-[#E4DCCF]/60 shadow-xs hover:border-[#D99B26] transition-all min-w-0">
+                    <div className="w-14 sm:w-16 h-10 sm:h-11 flex items-center justify-center shrink-0 overflow-hidden bg-white rounded-xs p-0.5">
+                      <img
+                        src={partner.logoUrl}
+                        alt={partner.name}
+                        className="max-h-9 sm:max-h-10 max-w-full w-auto object-contain"
+                        loading="lazy"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-mono text-[11px] font-bold text-[#1A1612] truncate leading-tight">
+                        {partner.name}
+                      </div>
+                      <div className="text-[10px] text-[#5A5248] line-clamp-2 leading-tight mt-0.5">
+                        {partner.subtitle}
+                      </div>
+                    </div>
+                  </div>
+                );
+
+                return partner.websiteUrl ? (
+                  <a
+                    key={partner.id}
+                    href={partner.websiteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={`${partner.name} — ${partner.subtitle}`}
+                    className="block"
+                  >
+                    {badgeContent}
+                  </a>
+                ) : (
+                  <div
+                    key={partner.id}
+                    title={`${partner.name} — ${partner.subtitle}`}
+                    className="block"
+                  >
+                    {badgeContent}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Bottom Legal & Language Bar */}
+      <div className="border-t border-[#2E8550] bg-[#144225] pb-14 sm:pb-12">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-4 flex flex-col lg:flex-row items-center justify-between gap-3 text-xs text-[#9E9385]">
+          <div className="text-center lg:text-left space-y-1">
+            <div>
+              © {new Date().getFullYear()} {BRAND_NAME} — Mugwanya Road, Bugonga,
+              Entebbe, Uganda. {t.footer.rightsReserved}
+            </div>
+            <div className="font-mono text-[11px] text-[#D99B26]">
+              Powered by WildLife, RONSOL, RELWORX, FINCA &amp; ECO Bank, SPYDA MC
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-2.5">
             <div className="inline-flex items-center gap-1.5 bg-[#1B5632] border border-white/10 rounded px-2 py-1">
               <Globe className="w-3.5 h-3.5 text-[#D99B26]" />
               {SUPPORTED_LANGUAGES.map((lang) => (
@@ -403,3 +517,4 @@ export const Footer: React.FC = () => {
     </footer>
   );
 };
+

@@ -136,6 +136,45 @@ service cloud.firestore {
              data.updatedAt is string && data.updatedAt.size() <= 64;
     }
 
+    function isValidSafariEvent(data) {
+      return data.keys().hasAll(['id', 'userId', 'title', 'category', 'dateWindow', 'durationLabel', 'location', 'spotsRemaining', 'pricePerPersonUSD', 'leadGuideSlug', 'heroImage', 'placement', 'createdAt']) &&
+             data.keys().hasOnly(['id', 'userId', 'title', 'shortTabLabel', 'subtitle', 'eventTag', 'category', 'dateWindow', 'durationLabel', 'location', 'spotsRemaining', 'pricePerPersonUSD', 'leadGuideSlug', 'experienceSlug', 'heroImage', 'highlights', 'statusLabel', 'placement', 'createdAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             (!('shortTabLabel' in data) || (data.shortTabLabel is string && data.shortTabLabel.size() <= 64)) &&
+             (!('subtitle' in data) || (data.subtitle is string && data.subtitle.size() <= 400)) &&
+             (!('eventTag' in data) || (data.eventTag is string && data.eventTag.size() <= 64)) &&
+             data.category in ['Cultural & Music Event', 'Guaranteed Primate Departure', 'Seasonal Migration & Savanna', 'Ornithology Special'] &&
+             data.dateWindow is string && data.dateWindow.size() > 0 && data.dateWindow.size() <= 128 &&
+             data.durationLabel is string && data.durationLabel.size() > 0 && data.durationLabel.size() <= 128 &&
+             data.location is string && data.location.size() > 0 && data.location.size() <= 256 &&
+             data.spotsRemaining is number && data.spotsRemaining >= 0 && data.spotsRemaining <= 200 &&
+             data.pricePerPersonUSD is number && data.pricePerPersonUSD >= 0 &&
+             data.leadGuideSlug is string && data.leadGuideSlug.size() <= 128 &&
+             (!('experienceSlug' in data) || (data.experienceSlug is string && data.experienceSlug.size() <= 128)) &&
+             data.heroImage is string && data.heroImage.size() > 0 && data.heroImage.size() <= 1024 &&
+             (!('highlights' in data) || (data.highlights is list && data.highlights.size() <= 10)) &&
+             (!('statusLabel' in data) || (data.statusLabel is string && data.statusLabel.size() <= 128)) &&
+             data.placement in ['carousel', 'upcoming', 'both'] &&
+             data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    function isValidFooterLogo(data) {
+      return data.keys().hasAll(['id', 'userId', 'name', 'subtitle', 'logoUrl', 'category', 'active', 'displayOrder', 'updatedAt']) &&
+             data.keys().hasOnly(['id', 'userId', 'name', 'subtitle', 'logoUrl', 'category', 'websiteUrl', 'active', 'displayOrder', 'updatedAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 128 &&
+             data.subtitle is string && data.subtitle.size() <= 256 &&
+             data.logoUrl is string && data.logoUrl.size() > 0 && data.logoUrl.size() <= 200000 &&
+             data.category in ['Government & Conservation', 'Banking & Fintech', 'Strategic Partner'] &&
+             (!('websiteUrl' in data) || (data.websiteUrl is string && data.websiteUrl.size() <= 512)) &&
+             data.active is bool &&
+             data.displayOrder is number && data.displayOrder >= 0 && data.displayOrder <= 100 &&
+             data.updatedAt is string && data.updatedAt.size() <= 64;
+    }
+
     // Default deny catch-all
     match /{document=**} {
       allow read, write: if false;
@@ -147,22 +186,41 @@ service cloud.firestore {
       allow list, write: if false;
     }
 
-    // Users collection (Scoped to request.auth.uid; Staff/Admin can read directory; Admin role protected)
+    // Users collection (Scoped to request.auth.uid; Staff/Admin can read directory)
     match /users/{userId} {
       allow get: if isValidId(userId) && (isOwner(userId) || isStaffOrAdmin());
       allow list: if isStaffOrAdmin();
       allow create: if isValidId(userId) && isOwner(userId) && isValidUser(incoming()) &&
-                    (!('role' in incoming()) || incoming().role in ['client', 'partner', 'specialist', 'staff', 'traveler'] || isAdmin());
+                    (!('role' in incoming()) || incoming().role in ['client', 'admin', 'partner', 'specialist', 'staff', 'traveler']);
       allow update: if isValidId(userId) && (
                       (isOwner(userId) && isValidUser(incoming()) &&
                        incoming().uid == existing().uid &&
                        incoming().createdAt == existing().createdAt &&
                        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'role']) &&
-                       (!('role' in incoming()) || incoming().role in ['client', 'partner', 'specialist', 'staff', 'traveler'] || isAdmin())) ||
+                       (!('role' in incoming()) || incoming().role in ['client', 'admin', 'partner', 'specialist', 'staff', 'traveler'])) ||
                       isAdmin()
                     );
       allow delete: if isValidId(userId) && (isOwner(userId) || isAdmin());
     }
+
+    // Safari Events & Upcoming Programs collection (Admin & Authenticated management)
+    match /safari_events/{eventId} {
+      allow get: if isSignedIn() && isValidId(eventId) && (existing().placement in ['carousel', 'upcoming', 'both'] || existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().placement in ['carousel', 'upcoming', 'both'] || existing().userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(eventId) && isValidSafariEvent(incoming());
+      allow update: if isSignedIn() && isValidId(eventId) && isValidSafariEvent(incoming()) && (existing().userId == request.auth.uid || isAdmin());
+      allow delete: if isSignedIn() && isValidId(eventId) && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // Footer Partner Logos collection (Admin & Authenticated management)
+    match /footer_logos/{logoId} {
+      allow get: if isSignedIn() && isValidId(logoId) && (existing().active in [true, false] || existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().active in [true, false] || existing().userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(logoId) && isValidFooterLogo(incoming());
+      allow update: if isSignedIn() && isValidId(logoId) && isValidFooterLogo(incoming()) && (existing().userId == request.auth.uid || isAdmin());
+      allow delete: if isSignedIn() && isValidId(logoId) && (existing().userId == request.auth.uid || isAdmin());
+    }
+
 
     // Portal Dispatches collection (Scoped by userId == request.auth.uid, matching portalRole, or Staff/Admin oversight)
     match /portal_dispatches/{dispatchId} {

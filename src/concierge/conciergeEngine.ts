@@ -130,9 +130,9 @@ export function executeConciergeTool(
         comfortTier: tier,
         indicativePerPersonBandUSD: `US$${lowEstimate.toLocaleString()} – US$${highEstimate.toLocaleString()} per person`,
         inclusionsSummary:
-          'Your safari includes a private 4x4 Land Cruiser with pop-up roof, driven by your professional Enganda guide, full-board lodges, park entrance fees, and specified UWA permits.',
+          'Your safari includes a private 4x4 Land Cruiser with pop-up roof, driven by your professional WildLife guide, full-board lodges, park entrance fees, and specified UWA permits.',
         approvalNote:
-          'Indicative price band only. Every final quote is confirmed by an Enganda coordinator in Entebbe within 12 hours.',
+          'Indicative price band only. Every final quote is confirmed by an WildLife coordinator in Entebbe within 12 hours.',
       };
     }
 
@@ -148,7 +148,7 @@ export function executeConciergeTool(
         interests: Array.isArray(args.interests) ? args.interests : ['gorillas'],
         preferredGuideSlug: args.preferredGuideSlug,
         experienceSlug: args.experienceSlug,
-        notes: args.notes || 'Submitted via Enganda Guide Matcher Concierge',
+        notes: args.notes || 'Submitted via WildLife Guide Matcher Concierge',
         status: 'new',
         createdAt: new Date().toISOString(),
       };
@@ -178,7 +178,7 @@ export function executeConciergeTool(
         whatsapp: WHATSAPP_NUMBER,
         email: CONTACT_EMAIL,
         reason: args.reason || 'Direct coordinator & guide consultation',
-        promise: 'A real Enganda coordinator in Entebbe replies within 12 hours (often immediately on WhatsApp during East Africa Time hours).',
+        promise: 'A real WildLife coordinator in Entebbe replies within 12 hours (often immediately on WhatsApp during East Africa Time hours).',
       };
     }
 
@@ -272,7 +272,7 @@ export function generateRuleBasedConciergeReply(
 
     return {
       reply:
-        `From the Enganda Guide Matcher desk, here are our Ugandan guides best matched to your interests:\n\n${topGuides}\n\n` +
+        `From the WildLife Guide Matcher desk, here are our Ugandan guides best matched to your interests:\n\n${topGuides}\n\n` +
         `Your safari includes a private 4x4 Land Cruiser with pop-up roof, driven by your professional guide from arrival in Entebbe to departure. Would you like to request one of these guides for your dates?`,
       toolCalls,
     };
@@ -358,7 +358,7 @@ export function generateRuleBasedConciergeReply(
 
   return {
     reply:
-      `Oli otya! Welcome to the Enganda Guide Matcher. At Enganda Safaris, **the guide is the product** — you travel with a named, licensed Ugandan guide who calls these landscapes home.\n\n` +
+      `Oli otya! Welcome to the WildLife Guide Matcher. At WildLife Safaris, **the guide is the product** — you travel with a named, licensed Ugandan guide who calls these landscapes home.\n\n` +
       `Here are three ways I can help right now:\n` +
       `1. **Match you with a Ugandan guide** — such as **Samuel Kato** (Bwindi gorillas), **Grace Namukasa** (Kibale chimpanzees), **David Ssekandi** (Mabamba Shoebill & birding), or **Moses Okello** (Kidepo Valley).\n` +
       `2. **Explore our Uganda experiences** — from the *1-Day Mabamba Shoebill Excursion* and *3-Day Bwindi Gorilla Trek* to the *10-Day Uganda Grand Circuit incl. Kidepo*.\n` +

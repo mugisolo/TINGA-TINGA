@@ -9,7 +9,20 @@ import {
   SocialLink,
   ConfirmedPackageEvent,
   AccommodationPartner,
+  FooterPartnerLogo,
+  TourOperatorPartner,
+  DriveMediaPhoto,
+  EngandaAgentLocation,
 } from '../types';
+
+// ================= OFFICIAL GOOGLE DRIVE MEDIA VAULT =================
+export const SHARED_GOOGLE_DRIVE_FOLDER_ID = '1zvNrE4Vf8ZDPnXb95X4H7JMgXAUKRQY3';
+export const SHARED_GOOGLE_DRIVE_FOLDER_URL =
+  'https://drive.google.com/drive/u/0/folders/1zvNrE4Vf8ZDPnXb95X4H7JMgXAUKRQY3';
+
+export function drivePhotoUrl(fileId: string, width = 1600): string {
+  return `https://lh3.googleusercontent.com/d/${fileId}=w${width}`;
+}
 
 // ================= BRAND & CONTACT CONSTANTS =================
 export const BRAND_NAME = 'Enganda Safaris';
@@ -27,7 +40,7 @@ export const AVAILABILITY_PROMISE =
 export function getWhatsAppUrl(prefilledMessage?: string): string {
   const defaultMsg =
     prefilledMessage ||
-    'Oli otya! I would like to plan a Uganda safari with an Enganda guide.';
+    'Oli otya! I would like to plan a Uganda safari with an Enganda / Tingatinga Safaris guide.';
   return `https://wa.me/${WHATSAPP_CLEAN}?text=${encodeURIComponent(defaultMsg)}`;
 }
 
@@ -41,13 +54,13 @@ export const SPECIALTY_LABELS: Record<Specialty, string> = {
   photography: 'Wildlife Photography',
 };
 
-// ================= 8 VERIFIED UGANDAN GUIDES =================
+// ================= 8 VERIFIED UGANDAN GUIDES (PHOTOS FROM SHARED GOOGLE DRIVE) =================
 export const GUIDES: Guide[] = [
   {
     id: 'guide-samuel-kato',
     slug: 'samuel-kato',
     name: 'Samuel Kato',
-    photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=900&q=80',
+    photo: drivePhotoUrl('1IfA_q2rzuJVAGUJfcm_a0tJbY5W0iCsQ', 1000), // HighRes/POATE 2026/Poate26_001.jpg
     homeRegion: 'Bwindi & Mgahinga',
     tagline: 'Senior Mountain Gorilla & Habituation Specialist raised on the edge of Buhoma.',
     bio: 'I grew up in Kanungu District looking up at the mist rising from Bwindi Impenetrable Forest. Before becoming a full-time safari guide, I spent four years working alongside Uganda Wildlife Authority trackers monitoring the Mubare and Rushegura gorilla families. When you trek with me, I help you pace the steep Kigezi ridges, read fresh knuckle-prints in the humus, and understand the vocalizations of the silverback before you even step into the clearing.',
@@ -69,10 +82,10 @@ export const GUIDES: Guide[] = [
     id: 'guide-grace-namukasa',
     slug: 'grace-namukasa',
     name: 'Grace Namukasa',
-    photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=900&q=80',
+    photo: drivePhotoUrl('1hudPmu4JJZKsrHTxIeGg586WR_ARjcGl', 1000), // HighRes/POATE 2026/Poate26_003.jpg
     homeRegion: 'Kibale Forest',
     tagline: 'Primate Ethologist & Chimpanzee Habituation Guide based in Fort Portal.',
-    bio: 'Fort Portal and the Crater Lakes are my home. I studied primate behavior at Makerere University Field Station in Kanyanchu before joining the Enganda guide collective. Kibale Forest holds thirteen primate species, and I love teaching travelers how to tell the pant-hoot of an alpha male chimpanzee from the alarm call of a red-tailed monkey high in the fig canopy.',
+    bio: 'Fort Portal and the Crater Lakes are my home. I studied primate behavior at Makerere University Field Station in Kanyanchu before joining the Enganda & Tingatinga guide collective. Kibale Forest holds thirteen primate species, and I love teaching travelers how to tell the pant-hoot of an alpha male chimpanzee from the alarm call of a red-tailed monkey high in the fig canopy.',
     fieldStory:
       'At 6:15 AM on the Kanyanchu trail, we heard drumming on ironwood buttress roots half a kilometer away. Because we knew the community’s favorite fruiting fig tree by the Bigodi boundary, we positioned quietly along the ridge and watched twenty-six chimpanzees descend right past us to groom in the morning sun.',
     languages: ['English', 'Rutooro', 'Luganda', 'French'],
@@ -91,7 +104,7 @@ export const GUIDES: Guide[] = [
     id: 'guide-david-ssekandi',
     slug: 'david-ssekandi',
     name: 'David Ssekandi',
-    photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=900&q=80',
+    photo: drivePhotoUrl('1j43VbTwvcMH_Fawumw_TNzHtlSsXZbVb', 1000), // HighRes/POATE 2026/Poate26_007.jpg
     homeRegion: 'Entebbe & Mabamba Swamp',
     tagline: 'Master Ornithologist & Albertine Rift Endemic Birding Specialist.',
     bio: 'Uganda packs over 1,090 bird species into a country the size of Great Britain, and I have spent sixteen years cataloging them by sight and call. Living fifteen minutes from our Entebbe office and the Mabamba papyrus channels, I lead everything from dawn Shoebill canoe excursions on Lake Victoria to multi-week Albertine Rift birding expeditions in Ruhija and Semuliki.',
@@ -113,7 +126,7 @@ export const GUIDES: Guide[] = [
     id: 'guide-moses-okello',
     slug: 'moses-okello',
     name: 'Moses Okello',
-    photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=80',
+    photo: drivePhotoUrl('1abjR3x5zebZisEmBpr62rs4xMnbOPLul', 1000), // HighRes/POATE 2026/Poate26_009.jpg
     homeRegion: 'Kidepo Valley NP',
     tagline: 'Northern Frontier & Karamoja Specialist for remote savanna expeditions.',
     bio: 'Born in Kitgum and fluent in Acholi and Ngakarimojong dialects, I specialize in Uganda’s wild north — Kidepo Valley National Park, the Narus and Kidepo seasonal rivers, and respectful cultural encounters with Karamojong pastoralist communities. Kidepo feels like Africa fifty years ago: you can watch a pride of lions on a kopje without another vehicle on the horizon.',
@@ -135,7 +148,7 @@ export const GUIDES: Guide[] = [
     id: 'guide-patrick-bwambale',
     slug: 'patrick-bwambale',
     name: 'Patrick Bwambale',
-    photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=900&q=80',
+    photo: drivePhotoUrl('15Q122VqAeJEw2cSCuk6g2rqRD-2K9mbP', 1000), // HighRes/POATE 2026/Poate26_010.jpg
     homeRegion: 'Rwenzori Mountains',
     tagline: 'High-Altitude Alpine Mountaineer & Bakonzo Naturalist in the Mountains of the Moon.',
     bio: 'I grew up in Kasese in the shadow of the Rwenzori glaciers. For twelve years I have led hikers through the giant lobelia and groundsel heather zones of the Rwenzori Mountains and the Virunga volcanoes of Mgahinga. Whether you want a one-day montane forest walk or a multi-day trek toward Weismann’s Peak, I set a steady, safe rhythm.',
@@ -157,7 +170,7 @@ export const GUIDES: Guide[] = [
     id: 'guide-sarah-kemigisha',
     slug: 'sarah-kemigisha',
     name: 'Sarah Kemigisha',
-    photo: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=900&q=80',
+    photo: drivePhotoUrl('1yREZYmEIBCOYMmUp6IUv5Q6R0uifwZCf', 1000), // HighRes/POATE 2026/Poate26_0862.jpg
     homeRegion: 'Lake Bunyonyi',
     tagline: 'Cultural Heritage, Culinary & Community Conservation Guide across Western Uganda.',
     bio: 'To understand Uganda’s wildlife, you must meet the communities living alongside the parks. Based between Mbarara and Lake Bunyonyi, I combine classic primate and savanna safaris with authentic, dignified connections — from morning milking rituals with Ankole long-horned cattle keepers to dugout canoe crossings on Lake Bunyonyi and women-led coffee cooperatives.',
@@ -179,7 +192,7 @@ export const GUIDES: Guide[] = [
     id: 'guide-robert-mugisha',
     slug: 'robert-mugisha',
     name: 'Robert Mugisha',
-    photo: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=900&q=80',
+    photo: drivePhotoUrl('1x2uSznA35_lb2wQrVU7oCF_C1ex82Hmj', 1000), // HighRes/POATE 2026/Poate26_0864.jpg
     homeRegion: 'Murchison Falls NP',
     tagline: 'Victoria Nile, Ziwa Rhinos & Northern Savanna Big-Game Specialist.',
     bio: 'The Victoria Nile is the lifeline of Uganda. For fifteen years I have guided guests from the Source of the Nile in Jinja to the thunderous seven-meter cleft at the top of Murchison Falls and the Borassus palm plains of Paraa. I know every hippo pod along the delta and the best morning tracks for Rothschild’s giraffes and leopards.',
@@ -201,10 +214,10 @@ export const GUIDES: Guide[] = [
     id: 'guide-daniel-tumusiime',
     slug: 'daniel-tumusiime',
     name: 'Daniel Tumusiime',
-    photo: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=900&q=80',
+    photo: drivePhotoUrl('1BubhMQZVUa5jDJj9t-ND4Ci7m-bpWdtf', 1000), // HighRes/POATE 2026/Poate26_0867.jpg
     homeRegion: 'Queen Elizabeth NP',
     tagline: 'Wildlife Photographer & Tree-Climbing Lion Tracker in Ishasha and Kazinga Channel.',
-    bio: 'As a published wildlife photographer and licensed guide, I understand light angles, focal lengths, and vehicle positioning. Whether we are waiting for a fig-tree lion pride in the Ishasha sector to yawn in golden-hour light or drifting along the Kazinga Channel beside elephant herds, I position our pop-up roof 4x4 so you get eye-level, steady frames.',
+    bio: 'As a published wildlife photographer and licensed guide for Tingatinga & Enganda Safaris, I understand light angles, focal lengths, and vehicle positioning. Whether we are waiting for a fig-tree lion pride in the Ishasha sector to yawn in golden-hour light or drifting along the Kazinga Channel beside elephant herds, I position our pop-up roof 4x4 so you get eye-level, steady frames.',
     fieldStory:
       'In the southern Ishasha sector of Queen Elizabeth National Park, we tracked three lionesses and a black-maned male resting twenty feet up a sprawling sycamore fig. When a sudden afternoon shower passed over the rift valley, a double rainbow framed the entire tree.',
     languages: ['English', 'Runyankole', 'Luganda', 'German'],
@@ -252,11 +265,11 @@ export const EXPERIENCES: Experience[] = [
     durationDays: 3,
     summary:
       'Designed for travelers seeking an intimate encounter with Uganda’s mountain gorillas in Bwindi Impenetrable National Park. Travel with your dedicated Ugandan guide from Entebbe across the Equator and Ankole highlands, or opt for a scheduled domestic bush flight to Kihihi/Kisoro where your guide meets you on the airstrip.',
-    heroImage: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1600&q=80',
+    heroImage: drivePhotoUrl('1LwS0m-x4TsmxpgBaeByqmJkI-e_UPjiE', 1600), // NP/Bwindi/bwindi_baby_gorrilla.jpg
     galleryImages: [
-      'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=900&q=80',
-      'https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=900&q=80',
-      'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=900&q=80',
+      drivePhotoUrl('11fUkelkgVA56fyzUPqqVGfbNgAPhn127', 1200), // NP/Gorillas/DSC_6871.jpg
+      drivePhotoUrl('1QhLR6gqgNpPZNVM6hNU5TPWxX5LPBFkp', 1200), // Landscapes/Bwindi NP.jpg
+      drivePhotoUrl('1nWx99iFoWewVC5jsiYslmKcjkVPCgtT9', 1200), // NP/Gorillas/DSC_6878.jpg
     ],
     interests: ['gorillas', 'hiking', 'culture'],
     comfortTiers: ['mid-range', 'luxury', 'signature'],
@@ -366,11 +379,11 @@ export const EXPERIENCES: Experience[] = [
     durationDays: 5,
     summary:
       'Experience the two greatest primate encounters on Earth within a single 5-day Uganda itinerary. Walk beneath towering fig trees in Kibale National Park — home to 1,500 wild chimpanzees — then traverse the scenic Crater Lakes and Queen Elizabeth’s Ishasha plains down to Bwindi Impenetrable Forest for your mountain gorilla trek.',
-    heroImage: 'https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?auto=format&fit=crop&w=1600&q=80',
+    heroImage: drivePhotoUrl('1PFPHh53G9jb4Yd-jyM-U7wP199J8qRNA', 1600), // NP/Chimpanzees/DSC_0955.jpg
     galleryImages: [
-      'https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?auto=format&fit=crop&w=900&q=80',
-      'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=900&q=80',
-      'https://images.unsplash.com/photo-1534567153574-2b12153a87f0?auto=format&fit=crop&w=900&q=80',
+      drivePhotoUrl('1yfZtMnrb9Zr9WVWJKGDRZgCjGBxJh73o', 1200), // NP/Chimpanzees/DSC_0970.jpg
+      drivePhotoUrl('1Ehlo_U9YdBPyDSv5nB1Ef3_qzdPYfcI0', 1200), // NP/Gorillas/DSC_6889.jpg
+      drivePhotoUrl('1ikdEDLch3JyGjMe-jZwvbO83kiCT4z0n', 1200), // NP/Kibale/DSC_0936.jpg
     ],
     interests: ['gorillas', 'chimps', 'birding', 'photography'],
     comfortTiers: ['mid-range', 'luxury', 'signature'],
@@ -512,11 +525,11 @@ export const EXPERIENCES: Experience[] = [
     durationDays: 7,
     summary:
       'Our signature one-week Uganda safari uniting the Big Five, the Nile, and the Great Apes. Track white rhinos on foot at Ziwa, cruise to the base of Murchison Falls, track chimpanzees in Kibale, sail past hippos and elephants on the Kazinga Channel in Queen Elizabeth National Park, and finish with mountain gorillas in Bwindi.',
-    heroImage: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1600&q=80',
+    heroImage: drivePhotoUrl('1X1JCK_IRS-_ziQ2Uc3NllWHcH20IZxER', 1600), // NP/Wildlife/Afrikanischer Elefant_Murchison Falls Nationalpark.jpg
     galleryImages: [
-      'https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=900&q=80',
-      'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=900&q=80',
-      'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=900&q=80',
+      drivePhotoUrl('1w2fnNcGUBeeNT4hdkSjeUQL7jIW26EZg', 1200), // Landscapes/Murchison Falls NP.jpg
+      drivePhotoUrl('1AbzGKpFsW-Ac-y9zX__91WppEfWr4VWV', 1200), // NP/Wildlife/Baumlöwen in Ishasha_Queen Elizabeth Nationalpark.jpg
+      drivePhotoUrl('1RLYoo4PDkSYFi3yluD0_ZVM23CDJvjdz', 1200), // NP/Gorillas/DSC_6897.jpg
     ],
     interests: ['gorillas', 'chimps', 'big-game', 'photography', 'birding'],
     comfortTiers: ['mid-range', 'luxury', 'signature'],
@@ -684,11 +697,11 @@ export const EXPERIENCES: Experience[] = [
     durationDays: 10,
     summary:
       'For travelers who want to experience the full ecological breadth of Uganda — from the rugged mountains and cheetah plains of Kidepo Valley on the northern frontier to the thunder of Murchison Falls and the misty primate rainforests of the southwest.',
-    heroImage: 'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1600&q=80',
+    heroImage: drivePhotoUrl('1K6wguyRvDvLZIhVR_8ewmPu7VCEWBaqD', 1600), // NP/Wildlife/Cats/Kidepo NP2.JPG
     galleryImages: [
-      'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=900&q=80',
-      'https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=900&q=80',
-      'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=900&q=80',
+      drivePhotoUrl('1sMzL5F0WL3n7YCSPpzGehAMfB9ivgCDP', 1200), // NP/Kidepo 1/PA9_0226.jpg
+      drivePhotoUrl('1LUI0lRV0dCY9WbzdFIsgTtsi9keR9bn1', 1200), // NP/Wildlife/Cats/Gepard 1.jpg
+      drivePhotoUrl('1VCblZTqrQkomeqwGsdoaRNg0xsJ2Atl2', 1200), // Culture/Karamojong/2M6A6811.JPG
     ],
     interests: ['big-game', 'gorillas', 'chimps', 'culture', 'photography'],
     comfortTiers: ['mid-range', 'luxury', 'signature'],
@@ -853,10 +866,10 @@ export const EXPERIENCES: Experience[] = [
     durationDays: 2,
     summary:
       'An ideal weekend or pre/post-gorilla safari extension from Entebbe or Kampala. Walk beneath ancient hardwoods in Mabira Central Forest Reserve for mangabey monkeys and forest birds, visit the cultural heritage site of Ssezibwa Falls, and sail out to the exact point where Lake Victoria gives birth to the Victoria Nile in Jinja.',
-    heroImage: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1600&q=80',
+    heroImage: drivePhotoUrl('1jJsBbw6rq9s_jTZF9G-09Xw4yRDnp8MX', 1600), // Cities/JINJA/1 hour horse safari - Nile Horseback Safaris.jpg
     galleryImages: [
-      'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=900&q=80',
-      'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=900&q=80',
+      drivePhotoUrl('19IClK_S-rxz6HSMITxGq1R40fBrYCvDx', 1200), // Cities/JINJA/Nat riding Arrogant by the Nile.jpg
+      drivePhotoUrl('154vfyf7sldcaOJYpWPhLtK0erdiVz72r', 1200), // Landscapes/Sonnenuntergang am Nil.jpg
     ],
     interests: ['culture', 'birding', 'hiking', 'photography'],
     comfortTiers: ['mid-range', 'luxury', 'signature'],
@@ -943,10 +956,10 @@ export const EXPERIENCES: Experience[] = [
     durationDays: 1,
     summary:
       'Beginning just 5 minutes from Entebbe International Airport at our Bugonga head office or your lakeside hotel, this full-day birding and nature experience pairs a dawn canoe expedition in the Mabamba Bay Ramsar Wetland with an afternoon walk in the historic Entebbe Botanical Gardens.',
-    heroImage: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?auto=format&fit=crop&w=1600&q=80',
+    heroImage: drivePhotoUrl('1GtJsMOQudny0lXpRN44zHg_cHN7NZwnu', 1600), // NP/Birding/_DSC0571.jpg
     galleryImages: [
-      'https://images.unsplash.com/photo-1552728089-57bdde30beb3?auto=format&fit=crop&w=900&q=80',
-      'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=900&q=80',
+      drivePhotoUrl('1y2VzKGL-2gGHF9IaDZvf_fLdta82IBHU', 1200), // NP/Birding/_DSC0592.jpg
+      drivePhotoUrl('1Tz6SxOj20JnRRf1yIGP4SSrcWVT-xkdX', 1200), // Landscapes/Viktoriasee.jpg
     ],
     interests: ['birding', 'photography'],
     comfortTiers: ['mid-range', 'luxury', 'signature'],
@@ -1007,6 +1020,1390 @@ export const EXPERIENCES: Experience[] = [
           'Mabamba Bay is the most reliable place in East Africa to observe wild Shoebills because local fishermen and community spotters protect the bird as a shared heritage. Launching early at 7:00 AM with our birding specialist gives you a very high likelihood of close, unhurried views.',
       },
     ],
+  },
+  {
+    id: 'exp-32-day-shuma-east-african-grand-safari-2027',
+    slug: '32-day-east-african-grand-safari-2027',
+    title: '32-Day East African Grand Safari 2027: Tanzania, Kenya, Uganda & Rwanda (Shuma Africa Safaris)',
+    subtitle: '32 Days / 31 Nights • 4 Countries • June–September 2027 • 7 Paying Guests + 1 Complimentary Tour Leader ($126,550 USD Group / $18,078.57 Per Person)',
+    region: 'East Africa Multi-Country (TZ • KE • UG • RW)',
+    regions: [
+      'Bwindi & Mgahinga',
+      'Kibale Forest',
+      'Queen Elizabeth NP',
+      'Murchison Falls NP',
+      'Kidepo Valley NP',
+      'Jinja & Source of the Nile',
+      'Entebbe & Mabamba Swamp',
+    ],
+    durationDays: 32,
+    summary:
+      'Curated by Shuma Africa Safaris ("Wild Tales Awaits You"), The East African Grand Safari is a 32-day, 31-night trans-boundary expedition across Tanzania, Kenya, Uganda, and Rwanda designed for June–September 2027. Combining Tanzania’s Tarangire, Ngorongoro Crater & Central Serengeti with Kenya’s Maasai Mara & Lake Nakuru, a comprehensive 14-day Uganda traverse (Mabamba Shoebill, Jinja Source of the Nile, Sipi Falls, Pian Upe, Karamoja, Kidepo Valley with private charter flight to Murchison Falls, Kibale chimpanzees, Queen Elizabeth & Bwindi mountain gorillas), and Rwanda’s Volcanoes golden monkeys, Lake Kivu, Nyungwe canopy & Akagera National Park.',
+    heroImage: drivePhotoUrl('1zhQdtJnHOcHSL57vaDZDbZVdpwu9CfbB', 1600), // NP/Wildlife/Elefanten beim Bad im Nil.jpg
+    galleryImages: [
+      drivePhotoUrl('1LwS0m-x4TsmxpgBaeByqmJkI-e_UPjiE', 1200), // NP/Bwindi/bwindi_baby_gorrilla.jpg
+      drivePhotoUrl('1K6wguyRvDvLZIhVR_8ewmPu7VCEWBaqD', 1200), // NP/Wildlife/Cats/Kidepo NP2.JPG
+      drivePhotoUrl('1AbzGKpFsW-Ac-y9zX__91WppEfWr4VWV', 1200), // NP/Wildlife/Cats/Baumlöwen in Ishasha.jpg
+      drivePhotoUrl('1PFPHh53G9jb4Yd-jyM-U7wP199J8qRNA', 1200), // NP/Chimpanzees/DSC_0955.jpg
+    ],
+    interests: ['gorillas', 'chimps', 'big-game', 'birding', 'culture', 'hiking', 'photography'],
+    comfortTiers: ['mid-range', 'luxury', 'signature'],
+    priceBands: [
+      {
+        tier: 'mid-range',
+        label: 'Shuma Official 2027 4-Star Group Package (7 Guests + 1 Free Tour Leader)',
+        perPersonUSD: 18079,
+        perPersonPerDayUSD: 565,
+        lodgeExamples: [
+          '4 Twin Rooms + 1 Single Room across Tanzania, Kenya, Uganda & Rwanda',
+          'Comfortable Mid-Range / 4-Star Safari Lodges & Tented Camps',
+        ],
+        description:
+          'Official Shuma Africa Safaris 2027 Dossier Rate: $18,078.57 USD exact per paying guest ($126,550 USD total for 7 paying guests + 1 complimentary tour leader). Includes Serengeti–Arusha flight, Arusha–Nairobi & Kisumu–Entebbe regional flights, private charter flight Kidepo–Murchison Falls, and all Uganda/Rwanda gorilla, chimp & golden monkey permits.',
+      },
+      {
+        tier: 'luxury',
+        label: 'Upgraded 5-Star Luxury Multi-Country Sanctuary Tier',
+        perPersonUSD: 23450,
+        perPersonPerDayUSD: 733,
+        lodgeExamples: [
+          'Four Seasons Serengeti / Angama Mara / Apoka Safari Lodge / Buhoma Lodge / One&Only Nyungwe Border',
+        ],
+        description:
+          'Upgrades key savannas and primate forests to premier luxury lodges and private wing villas while retaining all regional and private charter flights and permits.',
+      },
+      {
+        tier: 'signature',
+        label: 'Signature All-Charter Private Wing Grand Expedition',
+        perPersonUSD: 29800,
+        perPersonPerDayUSD: 931,
+        lodgeExamples: [
+          'Singita / Sanctuary Gorilla Forest Camp / Bisate / Magashi Exclusive Tented Suites',
+        ],
+        description:
+          'Replaces long overland sectors with private executive turbine charters throughout Tanzania, Kenya, Uganda, and Rwanda alongside flagship signature lodges.',
+      },
+    ],
+    shumaGroupOffer: {
+      companyName: 'Shuma Africa Safaris',
+      tagline: 'WILD TALES AWAITS YOU',
+      seasonWindow: 'June – September 2027 (32 Days / 31 Nights)',
+      countries: ['Tanzania (Days 1–7)', 'Kenya (Days 8–12)', 'Uganda (Days 13–26)', 'Rwanda (Days 27–32)'],
+      payingGuests: 7,
+      freeTourLeaders: 1,
+      totalTravellers: 8,
+      totalGroupCostUSD: 126550,
+      perPersonExactUSD: 18078.57,
+      roomingPlan: '4 Twin Rooms + 1 Single Room (8 Travellers Total)',
+      accommodationStyle: 'Comfortable Mid-Range / 4-Star Safari Lodges & Tented Camps',
+      flightsAndTransport: [
+        {
+          sector: 'Overland Safari Vehicles',
+          mode: 'Private 4x4 Land Cruisers',
+          details: 'Dedicated private 4x4 safari vehicles with pop-up roofs and professional driver-guides in Tanzania, Kenya, Uganda, and Rwanda.',
+        },
+        {
+          sector: 'Day 7: Central Serengeti → Arusha',
+          mode: 'Scheduled Bush Flight',
+          details: 'Morning scheduled light-aircraft flight from Seronera Airstrip across the Great Rift to Arusha.',
+        },
+        {
+          sector: 'Day 7: Arusha → Nairobi, Kenya',
+          mode: 'Regional Scheduled Flight',
+          details: 'Afternoon regional flight connecting Arusha/Kilimanjaro to Nairobi for dinner at Carnivore Restaurant.',
+        },
+        {
+          sector: 'Day 12: Kisumu → Entebbe, Uganda',
+          mode: 'Regional Scheduled Flight',
+          details: 'Scheduled regional flight from Kisumu across Lake Victoria to Entebbe International Airport, Uganda.',
+        },
+        {
+          sector: 'Day 20: Kidepo Valley → Murchison Falls',
+          mode: 'Private Charter Flight',
+          details: 'Exclusive private charter aircraft for your group flying directly from Kidepo Valley to Murchison Falls National Park.',
+        },
+      ],
+      planningNotes: [
+        'Gorilla and chimpanzee permits are subject to availability at the time of booking and should be secured well in advance with full passport details and deposit.',
+        'Regional and bush flights carry strict luggage limits (typically 15 kg in soft-sided duffel bags).',
+        'A Single East African Tourist Visa (Kenya, Uganda & Rwanda) plus a Tanzania entry visa and valid Yellow Fever vaccination certificate are required.',
+      ],
+      pdfBrochureUrl:
+        '/assets/aistudio/32_Day_East_African_Grand_Safari_2027___7_Guests___1_complementary_Tour_leader_78a354d7.pdf',
+    },
+    dayByDay: [
+      {
+        day: 1,
+        title: 'Arrival in Arusha, Tanzania',
+        location: 'Arusha, Tanzania',
+        summary:
+          'Arrive at Kilimanjaro International Airport (JRO) where your Shuma Africa Safaris Tanzania team welcomes you and transfers you to your Arusha lodge to rest and prepare for your 4-country grand expedition.',
+        activities: ['VIP airport meet & greet at Kilimanjaro International Airport', 'Private transfer to Arusha lodge & expedition briefing'],
+        accommodationTier: 'Comfortable 4-Star Arusha Lodge (4 Twin + 1 Single)',
+        meals: 'Bed & Breakfast',
+        driveTime: '45 mins – 1 hour from airport',
+        wildlifeHighlights: ['Mount Meru Foothills Birdlife'],
+      },
+      {
+        day: 2,
+        title: 'Arusha to Tarangire National Park',
+        location: 'Tarangire National Park, Tanzania',
+        summary:
+          'Drive across the Maasai Steppe into Tarangire National Park, famed for its ancient baobab trees and some of the largest elephant herds in East Africa gathering along the Tarangire River.',
+        activities: ['Morning transfer from Arusha to Tarangire NP', 'Full afternoon game drive among giant baobabs and elephant herds'],
+        accommodationTier: 'Mid-Range / 4-Star Tarangire Safari Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '2.5 hours + game drives',
+        wildlifeHighlights: ['African Bush Elephant', 'Fringe-Eared Oryx', 'Lion', 'Baobab Savanna'],
+      },
+      {
+        day: 3,
+        title: 'Tarangire Morning Game Drive & Transfer to Karatu',
+        location: 'Tarangire to Karatu Highlands, Tanzania',
+        summary:
+          'Enjoy a sunrise game drive in Tarangire searching for leopards, pythons, and kori bustards before ascending the Great Rift Valley escarpment to the cool coffee-growing highlands of Karatu.',
+        activities: ['Morning wildlife drive in Tarangire National Park', 'Scenic drive up the Rift Valley escarpment to Karatu'],
+        accommodationTier: '4-Star Karatu Highland Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '2.5 – 3 hours',
+        wildlifeHighlights: ['Leopard', 'Masai Giraffe', 'Superb Starling'],
+      },
+      {
+        day: 4,
+        title: 'Ngorongoro Crater Floor Safari',
+        location: 'Ngorongoro Conservation Area, Tanzania',
+        summary:
+          'Descend 600 meters into the unbroken volcanic caldera of the Ngorongoro Crater for a full day tracking black rhinos, black-maned lions, spotted hyenas, and flamingo-rimmed soda lakes.',
+        activities: ['Early descent onto the Ngorongoro Crater floor', 'Picnic lunch by the Hippo Pool & full caldera wildlife exploration'],
+        accommodationTier: '4-Star Karatu Highland Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: 'Full-day crater game viewing',
+        wildlifeHighlights: ['Eastern Black Rhino', 'Black-Maned Lion', 'Lesser Flamingo', 'Cape Buffalo'],
+      },
+      {
+        day: 5,
+        title: 'Karatu Across the Ngorongoro Highlands to Central Serengeti',
+        location: 'Central Serengeti (Seronera), Tanzania',
+        summary:
+          'Travel across the Ngorongoro highlands onto the endless plains of the Serengeti, game driving en route into the wildlife-rich Seronera River valley.',
+        activities: ['Overland transit through Ngorongoro Conservation Area', 'En-route game drive into Central Serengeti'],
+        accommodationTier: '4-Star Central Serengeti Tented Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '4 – 5 hours with game drives',
+        wildlifeHighlights: ['Cheetah', 'Leopard in Sausage Trees', 'Wildebeest & Zebra Herds'],
+      },
+      {
+        day: 6,
+        title: 'Full-Day Central Serengeti Safari',
+        location: 'Serengeti National Park, Tanzania',
+        summary:
+          'Spend a complete day from dawn to dusk exploring the granite kopjes and river valleys of the Central Serengeti, tracking big cats and plains game.',
+        activities: ['Morning and afternoon game drives across Seronera kopjes', 'Bush picnic lunch in the heart of the Serengeti'],
+        accommodationTier: '4-Star Central Serengeti Tented Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: 'Full-day game drives',
+        wildlifeHighlights: ['Lion Prides on Kopjes', 'Leopard', 'Cheetah', 'Spotted Hyena'],
+      },
+      {
+        day: 7,
+        title: 'Serengeti Bush Flight to Arusha, Regional Flight to Nairobi & Carnivore Dinner',
+        location: 'Serengeti → Arusha → Nairobi, Kenya',
+        summary:
+          'Board your morning scheduled bush flight from the Serengeti to Arusha, connect on your regional flight to Nairobi, Kenya, and celebrate your arrival with a famous nyama choma dinner at the Carnivore Restaurant.',
+        activities: ['Scheduled light-aircraft flight Serengeti to Arusha', 'Regional flight Arusha to Nairobi', 'Welcome dinner at Nairobi’s iconic Carnivore Restaurant'],
+        accommodationTier: '4-Star Nairobi Hotel',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: 'Scheduled bush flight + regional flight',
+        wildlifeHighlights: ['Aerial Views of the Great Rift Valley'],
+      },
+      {
+        day: 8,
+        title: 'Nairobi Across the Great Rift Valley to Maasai Mara',
+        location: 'Maasai Mara National Reserve, Kenya',
+        summary:
+          'Depart Nairobi in private 4x4 safari vehicles, descending the Great Rift Valley viewpoint before arriving in the Maasai Mara in time for an afternoon game drive.',
+        activities: ['Scenic Great Rift Valley escarpment stop', 'Afternoon game drive in Maasai Mara National Reserve'],
+        accommodationTier: '4-Star Maasai Mara Safari Lodge / Camp',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '5 – 5.5 hours',
+        wildlifeHighlights: ['Great Wildebeest Migration Herds (June–Sept Season)', 'Topi', 'Lion'],
+      },
+      {
+        day: 9,
+        title: 'Full-Day Maasai Mara Migration & Predator Safari',
+        location: 'Maasai Mara National Reserve, Kenya',
+        summary:
+          'Timed for the June–September migration window, spend a full day exploring the Mara River crossings, open savanna plains, and optional Maasai village visit.',
+        activities: ['Full-day game drive to the Mara River crossing points', 'Picnic lunch on the Mara plains'],
+        accommodationTier: '4-Star Maasai Mara Safari Lodge / Camp',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: 'Full-day game drives',
+        wildlifeHighlights: ['Wildebeest & Zebra Crossings', 'Nile Crocodile', 'Cheetah', 'Black-Backed Jackal'],
+      },
+      {
+        day: 10,
+        title: 'Maasai Mara to Lake Nakuru National Park',
+        location: 'Lake Nakuru National Park, Kenya',
+        summary:
+          'Travel northeast into the Rift Valley to Lake Nakuru National Park, a sanctuary for both southern white and black rhinos, Rothschild’s giraffes, and acacia woodland leopards.',
+        activities: ['Overland transfer from Maasai Mara to Lake Nakuru', 'Afternoon game drive along the lakeshore and Baboon Cliff'],
+        accommodationTier: '4-Star Lake Nakuru Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '5 hours',
+        wildlifeHighlights: ['White & Black Rhino', 'Rothschild’s Giraffe', 'Flamingos & Pelicans'],
+      },
+      {
+        day: 11,
+        title: 'Lake Nakuru Morning Game Drive & Transfer to Kisumu on Lake Victoria',
+        location: 'Lake Nakuru to Kisumu, Kenya',
+        summary:
+          'Enjoy a morning game drive in Lake Nakuru before descending through western Kenya’s tea highlands to the port city of Kisumu on the shores of Lake Victoria.',
+        activities: ['Early game drive in Lake Nakuru NP', 'Scenic drive via Kericho tea estates to Kisumu'],
+        accommodationTier: '4-Star Kisumu Lakeside Hotel',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '4 hours',
+        wildlifeHighlights: ['Waterbuck', 'Fish Eagle on Lake Victoria'],
+      },
+      {
+        day: 12,
+        title: 'Kisumu Regional Flight to Entebbe, Uganda',
+        location: 'Kisumu → Entebbe, Uganda',
+        summary:
+          'Transfer to Kisumu Airport for your scheduled regional flight across Lake Victoria to Entebbe International Airport, where our Uganda guide team welcomes you to the Pearl of Africa.',
+        activities: ['Regional scheduled flight from Kisumu to Entebbe', 'Meet & greet with your Ugandan 4x4 safari team & lakeside relaxation'],
+        accommodationTier: '4-Star Entebbe Boutique Hotel',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: 'Short regional flight + 10-min hotel transfer',
+        wildlifeHighlights: ['Lake Victoria Shoreline Birds'],
+      },
+      {
+        day: 13,
+        title: 'Mabamba Bay Wetland Shoebill Canoe Excursion',
+        location: 'Entebbe & Mabamba Wetland, Uganda',
+        summary:
+          'Set out early by wooden boat into the papyrus channels of the Mabamba Bay Ramsar Wetland in search of the prehistoric Shoebill stork, followed by a relaxed afternoon in Entebbe.',
+        activities: ['Guided motorized canoe excursion in Mabamba Swamp for the Shoebill stork', 'Afternoon visit to Entebbe Botanical Gardens or lakeside rest'],
+        accommodationTier: '4-Star Entebbe Boutique Hotel',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '1 hour each way / boat transfer',
+        wildlifeHighlights: ['Shoebill Stork', 'Papyrus Gonolek', 'Malachite Kingfisher'],
+      },
+      {
+        day: 14,
+        title: 'Entebbe to Jinja — Source of the River Nile Boat Cruise',
+        location: 'Jinja & Source of the Nile, Uganda',
+        summary:
+          'Drive east across central Uganda to Jinja, where Lake Victoria gives birth to the Victoria Nile, and embark on a private boat cruise to the historic Source of the Nile.',
+        activities: ['Transfer east to Jinja with stops along the Mabira corridor', 'Private boat excursion to the Source of the River Nile'],
+        accommodationTier: '4-Star Jinja Nile Riverfront Lodge / Hotel',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '3 – 3.5 hours',
+        wildlifeHighlights: ['Giant Kingfisher', 'African Openbill Stork', 'Nile Monitor Lizard'],
+      },
+      {
+        day: 15,
+        title: 'Jinja to Sipi Falls on the Slopes of Mount Elgon',
+        location: 'Sipi Falls (Mount Elgon Foothills), Uganda',
+        summary:
+          'Ascend into Eastern Uganda’s Mount Elgon highlands to Sipi Falls, hiking lush trails past three cascading waterfalls and visiting local Bugisu Arabica coffee farmers.',
+        activities: ['Guided hike to the three Sipi waterfalls on Mount Elgon’s foothills', 'Traditional farm-to-cup Bugisu Arabica coffee tour'],
+        accommodationTier: 'Mid-Range / 4-Star Sipi Falls Cliffside Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '3.5 – 4 hours',
+        wildlifeHighlights: ['Jackson’s Chameleon', 'Tacazze Sunbird', 'Highland Waterfalls'],
+      },
+      {
+        day: 16,
+        title: 'Sipi Falls to Pian Upe Wildlife Reserve',
+        location: 'Pian Upe Wildlife Reserve, Uganda',
+        summary:
+          'Descend from the Mount Elgon escarpment into the vast, untamed acacia savannas of Pian Upe Wildlife Reserve for an afternoon game drive tracking roan antelope and cheetahs.',
+        activities: ['Scenic descent into the Karamoja plains', 'Afternoon game drive in Pian Upe Wildlife Reserve'],
+        accommodationTier: 'Comfortable Safari Camp / Lodge at Pian Upe',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '2.5 – 3 hours',
+        wildlifeHighlights: ['Roan Antelope', 'Cheetah', 'Ostrich', 'Patas Monkey'],
+      },
+      {
+        day: 17,
+        title: 'Pian Upe to Moroto & Authentic Karamoja Cultural Experience',
+        location: 'Moroto (Mount Moroto Foothills), Karamoja, Uganda',
+        summary:
+          'Continue north through the dramatic volcanic landscapes of Karamoja to Moroto at the base of Mount Moroto for an immersive cultural afternoon in a traditional Karamojong manyatta.',
+        activities: ['Morning game drive exiting Pian Upe', 'Guided Karamojong manyatta cultural visit & pastoral heritage exchange in Moroto'],
+        accommodationTier: 'Kara-Tunga / Mount Moroto Boutique Safari Camp',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '3 – 3.5 hours',
+        wildlifeHighlights: ['Karamojong Long-Horned Cattle', 'Dry-Country Hornbills'],
+      },
+      {
+        day: 18,
+        title: 'Moroto North Across Karamoja to Kidepo Valley National Park',
+        location: 'Kidepo Valley National Park, Uganda',
+        summary:
+          'Journey through the heart of Karamoja into Kidepo Valley National Park — widely celebrated as one of Africa’s most dramatic and unspoiled wildernesses — arriving for a sunset game drive.',
+        activities: ['Scenic drive through Kotido and Kaabong escarpments', 'Late afternoon game drive in Kidepo’s Narus Valley'],
+        accommodationTier: '4-Star Kidepo Savannah / Apoka Ridge Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '4.5 – 5 hours',
+        wildlifeHighlights: ['Cape Buffalo Herds', 'Lion', 'Hartebeest', 'Rothschild’s Giraffe'],
+      },
+      {
+        day: 19,
+        title: 'Full-Day Kidepo Valley National Park Expedition',
+        location: 'Kidepo Valley National Park, Uganda',
+        summary:
+          'Explore both the perennial waterholes of the Narus Valley and the palm-lined dry sand river of the Kidepo Valley toward Kanangorok Hot Springs, searching for lions on granite kopjes, cheetahs, and ostriches.',
+        activities: ['Sunrise predator drive in Narus Valley', 'Excursion to Kidepo River sand-bed & Kanangorok Hot Springs'],
+        accommodationTier: '4-Star Kidepo Savannah / Apoka Ridge Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: 'Full-day game drives',
+        wildlifeHighlights: ['Lion on Kopjes', 'Cheetah', 'Herd of 1,000+ Cape Buffalo', 'Common Ostrich'],
+      },
+      {
+        day: 20,
+        title: 'Private Charter Flight: Kidepo Valley to Murchison Falls National Park',
+        location: 'Kidepo Valley → Murchison Falls NP, Uganda',
+        summary:
+          'Skip the long northern overland drive and board your exclusive group private charter flight directly from Kidepo Valley to Murchison Falls National Park, followed by an afternoon game drive.',
+        activities: ['Private group charter flight from Kidepo Airstrip to Murchison Falls', 'Afternoon game drive along the northern Nile tracks'],
+        accommodationTier: '4-Star Murchison Falls River / Escarpment Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '1 hr 15 min private charter flight',
+        wildlifeHighlights: ['Rothschild’s Giraffe', 'African Elephant', 'Uganda Kob'],
+      },
+      {
+        day: 21,
+        title: 'Murchison Falls Game Drive & Victoria Nile Boat Cruise',
+        location: 'Murchison Falls National Park, Uganda',
+        summary:
+          'Track lions, leopards, giraffes, and elephants across the Buligi Peninsula at dawn, then cruise upstream on the Victoria Nile to the thunderous base of Murchison Falls.',
+        activities: ['Morning savanna game drive in Murchison Falls NP', 'Afternoon boat cruise to the base of Murchison Falls & view of the 7-meter gorge'],
+        accommodationTier: '4-Star Murchison Falls River / Escarpment Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: 'Game drive + 3-hour boat cruise',
+        wildlifeHighlights: ['Nile Crocodile', 'Hippopotamus', 'Lion', 'Red-Throated Bee-Eater'],
+      },
+      {
+        day: 22,
+        title: 'Murchison Falls South Along the Albertine Rift to Kibale Forest',
+        location: 'Kibale Forest National Park, Uganda',
+        summary:
+          'Travel southwest along the Albertine Rift escarpment past rural homesteads, tea estates, and the Rwenzori foothills to Kibale Forest National Park — the Primate Capital of East Africa.',
+        activities: ['Scenic overland transfer via Hoima and Fort Portal tea estates', 'Evening arrival & forest lodge relaxation'],
+        accommodationTier: '4-Star Kibale Forest / Crater Lake Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '6 – 6.5 hours',
+        wildlifeHighlights: ['Black-and-White Colobus', 'Red-Tailed Monkey'],
+      },
+      {
+        day: 23,
+        title: 'Kibale Forest Chimpanzee Trekking & Transfer to Queen Elizabeth NP',
+        location: 'Kibale Forest → Queen Elizabeth NP, Uganda',
+        summary:
+          'Trek into the lush canopy of Kibale Forest with UWA rangers to spend an unforgettable hour with a habituated chimpanzee community, then drive past the Rwenzori mountains into Queen Elizabeth National Park.',
+        activities: ['Guided morning Chimpanzee Trekking in Kibale National Park (permit included)', 'Afternoon transfer to Queen Elizabeth National Park'],
+        accommodationTier: '4-Star Queen Elizabeth Safari Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '2.5 hours after trek',
+        wildlifeHighlights: ['Eastern Chimpanzee', 'Uganda Red Colobus', 'Great Blue Turaco'],
+      },
+      {
+        day: 24,
+        title: 'Queen Elizabeth NP, Kazinga Channel & Ishasha Tree-Climbing Lions',
+        location: 'Queen Elizabeth NP & Ishasha Sector, Uganda',
+        summary:
+          'Enjoy morning game viewing and a Kazinga Channel boat safari teeming with hippos and elephants before heading south into the Ishasha sector to search for its famous fig-tree-climbing lions.',
+        activities: ['Morning game drive & Kazinga Channel wildlife cruise', 'Afternoon game drive in the southern Ishasha sector for tree-climbing lions'],
+        accommodationTier: '4-Star Ishasha / Queen Elizabeth Wilderness Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '2.5 hours to Ishasha + game drives',
+        wildlifeHighlights: ['Tree-Climbing Lions of Ishasha', 'Topi', 'Hippopotamus', 'African Buffalo'],
+      },
+      {
+        day: 25,
+        title: 'Ishasha to Bwindi Impenetrable National Park',
+        location: 'Bwindi Impenetrable Forest, Uganda',
+        summary:
+          'Ascend from the savannah plains of Ishasha into the ancient montane rainforest of Bwindi Impenetrable National Park, settling into your forest lodge ahead of tomorrow’s gorilla trek.',
+        activities: ['Morning final search for Ishasha lions', 'Scenic climb into the Kigezi highlands & Bwindi gorilla trek preparation'],
+        accommodationTier: '4-Star Bwindi Forest Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '3 – 4 hours',
+        wildlifeHighlights: ['L’Hoest’s Monkey', 'Albertine Rift Forest Birds'],
+      },
+      {
+        day: 26,
+        title: 'Bwindi Mountain Gorilla Trekking & Cross Border to Volcanoes NP, Rwanda',
+        location: 'Bwindi (Uganda) → Volcanoes NP (Musanze, Rwanda)',
+        summary:
+          'Head into Bwindi Impenetrable Forest with UWA rangers to track a habituated mountain gorilla family and spend one awe-inspiring hour in their presence. In the afternoon, cross the Cyanika/Katuna border into Rwanda’s Virunga volcano highlands.',
+        activities: ['Once-in-a-lifetime Mountain Gorilla Trekking in Bwindi (UWA $800 permit included)', 'Afternoon border crossing into Musanze / Volcanoes National Park, Rwanda'],
+        accommodationTier: '4-Star Virunga / Musanze Mountain Lodge, Rwanda',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '2.5 – 3 hours after trek',
+        wildlifeHighlights: ['Mountain Gorilla (Gorilla beringei beringei)', 'Virunga Volcano Peaks'],
+      },
+      {
+        day: 27,
+        title: 'Golden Monkey Trekking in Volcanoes National Park & Cultural Visit',
+        location: 'Volcanoes National Park (Musanze), Rwanda',
+        summary:
+          'Enter the bamboo forests on the slopes of the Virunga volcanoes to track the playful, endangered Golden Monkey, followed by a visit to the Gorilla Guardians cultural village or Ellen DeGeneres Campus of the Dian Fossey Gorilla Fund.',
+        activities: ['Morning Golden Monkey Trekking in Volcanoes NP (permit included)', 'Afternoon Rwandan cultural heritage experience in Musanze'],
+        accommodationTier: '4-Star Virunga / Musanze Mountain Lodge, Rwanda',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '30 mins to park headquarters',
+        wildlifeHighlights: ['Golden Monkey', 'Rwenzori Double-Collared Sunbird'],
+      },
+      {
+        day: 28,
+        title: 'Volcanoes National Park to the Shores of Lake Kivu',
+        location: 'Lake Kivu (Rubavu / Karongi), Rwanda',
+        summary:
+          'Descend from the volcanic highlands to the emerald shores of Lake Kivu — one of Africa’s Great Lakes — for a restful afternoon boat excursion and lakeside relaxation.',
+        activities: ['Scenic transfer to Lake Kivu', 'Afternoon boat ride past coffee islands & lakeside leisure'],
+        accommodationTier: '4-Star Lake Kivu Resort / Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '2 – 3 hours',
+        wildlifeHighlights: ['Pied Kingfisher', 'Cormorants & Lake Kivu Islands'],
+      },
+      {
+        day: 29,
+        title: 'Lake Kivu Scenic Drive to Nyungwe Forest National Park',
+        location: 'Nyungwe Forest National Park, Rwanda',
+        summary:
+          'Follow the winding Congo Nile Divide trail southward along Lake Kivu through rolling tea plantations to Nyungwe Forest National Park, one of Africa’s oldest montane rainforests.',
+        activities: ['Scenic drive along the Congo Nile Divide & Gisakura tea estates', 'Late afternoon forest edge walk'],
+        accommodationTier: '4-Star Nyungwe Top View / Forest Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '4 – 4.5 hours',
+        wildlifeHighlights: ['Ruwenzori Colobus', 'Red-Cheeked Mangabey'],
+      },
+      {
+        day: 30,
+        title: 'Nyungwe Forest Chimpanzee Trekking & Suspended Canopy Walkway',
+        location: 'Nyungwe Forest National Park, Rwanda',
+        summary:
+          'Rise at dawn to track Nyungwe’s wild chimpanzees through ancient mahogany and tree-fern valleys, then walk the famous 160-meter Canopy Walkway suspended 70 meters above the forest floor.',
+        activities: ['Early morning Chimpanzee Trekking in Nyungwe Forest (permit included)', 'Afternoon guided walk across the Nyungwe Suspended Canopy Walkway'],
+        accommodationTier: '4-Star Nyungwe Top View / Forest Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: 'Short park transfers',
+        wildlifeHighlights: ['Eastern Chimpanzee', '13 Primate Species', 'Great Blue Turaco'],
+      },
+      {
+        day: 31,
+        title: 'Nyungwe to Kigali City Tour & Transfer to Akagera National Park',
+        location: 'Nyungwe → Kigali → Akagera National Park, Rwanda',
+        summary:
+          'Travel through southern Rwanda to Kigali for a respectful visit to the Kigali Genocide Memorial and lunch before continuing east to the savannahs and lakes of Akagera National Park.',
+        activities: ['Transfer to Kigali & visit to the Kigali Genocide Memorial', 'Afternoon transfer into Akagera National Park'],
+        accommodationTier: '4-Star Akagera Game Lodge / Ruzizi Tented Lodge Area',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '5.5 – 6 hours total with Kigali stop',
+        wildlifeHighlights: ['Impala', 'Defassa Waterbuck', 'Masai Giraffe'],
+      },
+      {
+        day: 32,
+        title: 'Akagera Morning Big-Five Game Drive & Departure from Kigali',
+        location: 'Akagera NP → Kigali International Airport (KGL), Rwanda',
+        summary:
+          'Conclude your 32-day East African Grand Safari with a morning game drive across Akagera’s lakeshore and savannah circuits before transferring back to Kigali International Airport for your onward international flight.',
+        activities: ['Morning Big-Five game drive in Akagera National Park', 'Private transfer to Kigali International Airport (KGL) for departure'],
+        accommodationTier: 'International Departure',
+        meals: 'Breakfast, Lunch',
+        driveTime: '2.5 – 3 hours to Kigali Airport',
+        wildlifeHighlights: ['African Elephant', 'Buffalo', 'Zebra', 'Lion & Rhino Habitat'],
+      },
+    ],
+    inclusions: [
+      ...STANDARD_INCLUSIONS,
+      '31 nights accommodation in comfortable mid-range / 4-star lodges & camps (4 Twin rooms + 1 Single room)',
+      '1 Complimentary / Free Tour Leader place for a group of 7 paying guests (8 travellers total)',
+      'Scheduled light-aircraft bush flight: Central Serengeti to Arusha (Day 7)',
+      'Scheduled regional flights: Arusha to Nairobi (Day 7) & Kisumu to Entebbe (Day 12)',
+      'Exclusive group private charter flight: Kidepo Valley to Murchison Falls (Day 20)',
+      '1 Uganda Mountain Gorilla Trekking Permit per guest in Bwindi Impenetrable NP',
+      '2 Chimpanzee Trekking Permits per guest (Kibale National Park & Nyungwe Forest NP)',
+      '1 Golden Monkey Trekking Permit & Nyungwe Canopy Walkway permit in Rwanda',
+      'Mabamba Shoebill canoe excursion, Source of the Nile cruise, Murchison Falls & Kazinga Channel boat cruises',
+    ],
+    exclusions: [
+      ...STANDARD_EXCLUSIONS,
+      'International long-haul flights to Kilimanjaro (JRO) and departing from Kigali (KGL)',
+      'East African Tourist Visa (Kenya/Uganda/Rwanda) & Tanzania entry visa fees',
+    ],
+    recommendedGuides: ['samuel-kato', 'moses-okello', 'grace-namukasa', 'david-ssekandi'],
+    permitsRequired: ['uwa-gorilla-trekking', 'uwa-chimp-kibale'],
+    bestMonths: 'June–September 2027 (Peak Migration & Dry-Season Primate Trekking Window)',
+    faqs: [
+      {
+        question: 'How does the "7 Guests + 1 Complimentary Tour Leader" pricing work?',
+        answer:
+          'Prepared by Shuma Africa Safaris, the total 32-day package cost for the entire group is $126,550 USD based on 7 paying guests ($18,078.57 USD per paying person), with the 8th spot included free of charge for your group’s Tour Leader across all 4 countries (4 Twin rooms + 1 Single room).',
+      },
+      {
+        question: 'Which flights are already built into the $18,078.57 per person tariff?',
+        answer:
+          'Four internal and regional air sectors are included so you spend maximum time with wildlife rather than backtracking by road: (1) Serengeti to Arusha bush flight on Day 7, (2) Arusha to Nairobi regional flight on Day 7, (3) Kisumu to Entebbe regional flight on Day 12, and (4) a private group charter flight from Kidepo Valley to Murchison Falls on Day 20.',
+      },
+      {
+        question: 'Can we book only the 15-Day Uganda sector or the 7-Day Uganda–Rwanda primate finale?',
+        answer:
+          'Yes! In addition to the complete 32-Day 4-Country Grand Safari, we offer the modular 15-Day Shuma Uganda Grand Sector (Days 12–26) and the 7-Day Shuma Uganda & Rwanda Cross-Border Primate & Akagera Odyssey (Days 25–32).',
+      },
+    ],
+  },
+  {
+    id: 'exp-15-day-shuma-uganda-grand-sector',
+    slug: '15-day-shuma-uganda-grand-sector',
+    title: '15-Day Shuma Uganda Grand Sector: Mabamba, Sipi, Pian Upe, Kidepo Charter, Murchison, Kibale & Bwindi',
+    subtitle: 'The complete Uganda heart of Shuma Africa Safaris’ 2027 Grand Expedition — including the private charter flight from Kidepo Valley to Murchison Falls.',
+    region: 'Uganda Complete Circuit (East, North & West)',
+    regions: [
+      'Entebbe & Mabamba Swamp',
+      'Jinja & Source of the Nile',
+      'Kidepo Valley NP',
+      'Murchison Falls NP',
+      'Kibale Forest',
+      'Queen Elizabeth NP',
+      'Bwindi & Mgahinga',
+    ],
+    durationDays: 15,
+    summary:
+      'Extracted directly from Days 12–26 of the Shuma Africa Safaris 2027 Grand Safari dossier, this 15-day Uganda master circuit traces an extraordinary clockwise arc across the Pearl of Africa: Mabamba Shoebill canoeing, Jinja Source of the Nile, Sipi Falls, Pian Upe Wildlife Reserve, Moroto Karamojong culture, Kidepo Valley National Park, a private charter flight to Murchison Falls, Kibale chimpanzees, Queen Elizabeth tree-climbing lions, and Bwindi mountain gorillas.',
+    heroImage: drivePhotoUrl('1wBIC1EmzEdimn4a4mA0TCekPT1Bjh-29', 1600), // Landscapes/SipiFalls.JPG
+    galleryImages: [
+      drivePhotoUrl('1K6wguyRvDvLZIhVR_8ewmPu7VCEWBaqD', 1200), // NP/Wildlife/Cats/Kidepo NP2.JPG
+      drivePhotoUrl('1w2fnNcGUBeeNT4hdkSjeUQL7jIW26EZg', 1200), // Landscapes/Murchison Falls NP.jpg
+      drivePhotoUrl('11fUkelkgVA56fyzUPqqVGfbNgAPhn127', 1200), // NP/Gorillas/DSC_6871.jpg
+    ],
+    interests: ['gorillas', 'chimps', 'big-game', 'birding', 'culture', 'hiking', 'photography'],
+    comfortTiers: ['mid-range', 'luxury', 'signature'],
+    priceBands: [
+      {
+        tier: 'mid-range',
+        label: 'Shuma 4-Star Uganda Sector (With Kidepo–Murchison Charter)',
+        perPersonUSD: 8490,
+        perPersonPerDayUSD: 566,
+        lodgeExamples: [
+          '4-Star Entebbe, Sipi, Moroto, Kidepo, Murchison, Kibale, Ishasha & Bwindi Lodges',
+        ],
+        description:
+          'Includes the private group charter flight from Kidepo Valley to Murchison Falls, UWA $800 Bwindi gorilla permit, Kibale chimpanzee permit, Mabamba Shoebill canoe, and private 4x4 Land Cruiser throughout.',
+      },
+      {
+        tier: 'luxury',
+        label: 'Luxury Uganda Grand Sector',
+        perPersonUSD: 10950,
+        perPersonPerDayUSD: 730,
+        lodgeExamples: ['Hotel No.5', 'Apoka / Adere Kidepo', 'Nile Safari Lodge', 'Primate Lodge', 'Buhoma Lodge'],
+        description: 'Upgrades every stop to flagship luxury wilderness lodges while keeping the Kidepo–Murchison private charter.',
+      },
+      {
+        tier: 'signature',
+        label: 'Signature Multi-Charter Uganda Collector’s Edition',
+        perPersonUSD: 13800,
+        perPersonPerDayUSD: 920,
+        lodgeExamples: ['Apoka Safari Lodge', 'Wildwaters Lodge', 'Kyambura Gorge Lodge', 'Clouds Mountain Gorilla Lodge'],
+        description: 'Adds a second private bush flight from Bwindi back to Entebbe alongside Uganda’s most exclusive lodges.',
+      },
+    ],
+    dayByDay: [
+      {
+        day: 1,
+        title: 'Arrival in Entebbe, Uganda',
+        location: 'Entebbe Peninsula',
+        summary: 'Arrive at Entebbe International Airport and transfer to your boutique hotel on the shores of Lake Victoria.',
+        activities: ['VIP Entebbe airport welcome', 'Expedition briefing with your Ugandan lead guide'],
+        accommodationTier: '4-Star Entebbe Hotel',
+        meals: 'Dinner',
+        driveTime: '10 minutes',
+        wildlifeHighlights: ['Lake Victoria Birdlife'],
+      },
+      {
+        day: 2,
+        title: 'Mabamba Wetland Shoebill Canoe Safari',
+        location: 'Mabamba Bay Ramsar Wetland',
+        summary: 'Glide through Mabamba’s papyrus channels by wooden canoe in search of the prehistoric Shoebill stork.',
+        activities: ['Morning canoe excursion in Mabamba Wetland', 'Afternoon Entebbe Botanical Gardens walk'],
+        accommodationTier: '4-Star Entebbe Hotel',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '1 hour each way',
+        wildlifeHighlights: ['Shoebill Stork', 'Papyrus Gonolek'],
+      },
+      {
+        day: 3,
+        title: 'Entebbe to Jinja & Source of the Nile Boat Cruise',
+        location: 'Jinja & Source of the Nile',
+        summary: 'Travel east to Jinja for a private boat excursion where Lake Victoria feeds the Victoria Nile.',
+        activities: ['Transfer to Jinja', 'Boat cruise at the Source of the River Nile'],
+        accommodationTier: '4-Star Jinja Riverfront Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '3 hours',
+        wildlifeHighlights: ['Giant Kingfisher', 'Nile Monitor Lizard'],
+      },
+      {
+        day: 4,
+        title: 'Jinja to Sipi Falls Waterfall Hike & Arabica Coffee Tour',
+        location: 'Sipi Falls (Mount Elgon)',
+        summary: 'Climb into the Mount Elgon foothills to hike the three waterfalls of Sipi and roast Bugisu Arabica coffee.',
+        activities: ['Guided hike to the three Sipi waterfalls', 'Community Arabica coffee experience'],
+        accommodationTier: '4-Star Sipi Falls Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '3.5 hours',
+        wildlifeHighlights: ['Three-Horned Chameleon', 'Tacazze Sunbird'],
+      },
+      {
+        day: 5,
+        title: 'Sipi Falls to Pian Upe Wildlife Reserve Game Drive',
+        location: 'Pian Upe Wildlife Reserve',
+        summary: 'Descend into the sweeping acacia plains of Pian Upe Wildlife Reserve to track roan antelope, ostriches, and cheetahs.',
+        activities: ['Morning transfer to Pian Upe', 'Afternoon savanna game drive'],
+        accommodationTier: 'Pian Upe Safari Lodge / Camp',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '2.5 hours',
+        wildlifeHighlights: ['Roan Antelope', 'Cheetah', 'Ostrich'],
+      },
+      {
+        day: 6,
+        title: 'Pian Upe to Moroto & Karamojong Cultural Experience',
+        location: 'Moroto, Karamoja',
+        summary: 'Drive north to Mount Moroto for an authentic afternoon inside a lived-in Karamojong pastoral manyatta.',
+        activities: ['Morning wildlife drive exiting Pian Upe', 'Guided Karamojong manyatta cultural exchange in Moroto'],
+        accommodationTier: 'Mount Moroto Boutique Camp',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '3.5 hours',
+        wildlifeHighlights: ['Dry-Savanna Raptors', 'Karamojong Homestead Heritage'],
+      },
+      {
+        day: 7,
+        title: 'Moroto Across Karamoja to Kidepo Valley National Park',
+        location: 'Kidepo Valley National Park',
+        summary: 'Continue through scenic northern Karamoja into Kidepo Valley National Park for a sunset drive in Narus Valley.',
+        activities: ['Overland journey through Karamoja', 'Sunset game drive in Kidepo’s Narus Valley'],
+        accommodationTier: '4-Star Kidepo Valley Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '4.5 hours',
+        wildlifeHighlights: ['Cape Buffalo', 'Lion', 'Jackson’s Hartebeest'],
+      },
+      {
+        day: 8,
+        title: 'Full-Day Kidepo Valley & Kanangorok Hot Springs Safari',
+        location: 'Kidepo Valley National Park',
+        summary: 'Spend a full day exploring the Narus and Kidepo valleys, tracking lions on granite kopjes, cheetahs, and huge buffalo herds.',
+        activities: ['Sunrise predator drive in Narus Valley', 'Excursion to Kidepo River & Kanangorok Hot Springs'],
+        accommodationTier: '4-Star Kidepo Valley Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: 'Full-day game drives',
+        wildlifeHighlights: ['Lion', 'Cheetah', '1,000+ Buffalo Herds', 'Ostrich'],
+      },
+      {
+        day: 9,
+        title: 'Private Charter Flight: Kidepo Valley to Murchison Falls NP',
+        location: 'Kidepo Valley → Murchison Falls NP',
+        summary: 'Fly by private charter aircraft directly from Kidepo Valley to Murchison Falls National Park for an afternoon game drive.',
+        activities: ['Private charter flight Kidepo to Murchison Falls', 'Afternoon Buligi tracks game drive'],
+        accommodationTier: '4-Star Murchison Falls Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '1 hr 15 min charter flight',
+        wildlifeHighlights: ['Rothschild’s Giraffe', 'African Elephant', 'Leopard'],
+      },
+      {
+        day: 10,
+        title: 'Murchison Falls Game Drive & Victoria Nile Boat Cruise',
+        location: 'Murchison Falls National Park',
+        summary: 'Morning savanna game drive followed by an afternoon boat launch upstream to the base of Murchison Falls.',
+        activities: ['Dawn game drive on the northern bank', 'Afternoon Victoria Nile boat cruise to the base of the falls'],
+        accommodationTier: '4-Star Murchison Falls Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: 'Game drive + 3-hour boat cruise',
+        wildlifeHighlights: ['Nile Crocodile', 'Hippopotamus', 'Lion'],
+      },
+      {
+        day: 11,
+        title: 'Murchison Falls to Kibale Forest National Park',
+        location: 'Kibale Forest National Park',
+        summary: 'Travel south along the Albertine Rift escarpment to Fort Portal and the rainforest of Kibale.',
+        activities: ['Scenic Albertine Rift transfer', 'Evening arrival at Kibale Forest lodge'],
+        accommodationTier: '4-Star Kibale Forest Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '6 hours',
+        wildlifeHighlights: ['Red-Tailed Monkey', 'Black-and-White Colobus'],
+      },
+      {
+        day: 12,
+        title: 'Kibale Chimpanzee Trekking & Transfer to Queen Elizabeth NP',
+        location: 'Kibale Forest → Queen Elizabeth NP',
+        summary: 'Track wild chimpanzees in Kibale Forest in the morning, then continue south into Queen Elizabeth National Park.',
+        activities: ['Morning Chimpanzee Trekking in Kibale (permit included)', 'Afternoon transfer to Queen Elizabeth NP'],
+        accommodationTier: '4-Star Queen Elizabeth Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '2.5 hours',
+        wildlifeHighlights: ['Eastern Chimpanzee', 'Uganda Red Colobus'],
+      },
+      {
+        day: 13,
+        title: 'Queen Elizabeth Kazinga Channel & Ishasha Tree-Climbing Lions',
+        location: 'Queen Elizabeth NP & Ishasha Sector',
+        summary: 'Cruise the Kazinga Channel and drive south into Ishasha to search for lions resting in giant fig trees.',
+        activities: ['Morning Kazinga Channel boat safari', 'Afternoon game drive in Ishasha for tree-climbing lions'],
+        accommodationTier: '4-Star Ishasha Wilderness Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '2.5 hours + game drives',
+        wildlifeHighlights: ['Tree-Climbing Lions', 'Hippopotamus', 'Elephant'],
+      },
+      {
+        day: 14,
+        title: 'Ishasha to Bwindi Impenetrable National Park',
+        location: 'Bwindi Impenetrable Forest',
+        summary: 'Ascend into the misty hills of Bwindi Impenetrable Forest and prepare for tomorrow’s mountain gorilla trek.',
+        activities: ['Morning game drive in Ishasha', 'Transfer to Bwindi Impenetrable Forest lodge'],
+        accommodationTier: '4-Star Bwindi Forest Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '3.5 hours',
+        wildlifeHighlights: ['L’Hoest’s Monkey', 'Mountain Forest Birds'],
+      },
+      {
+        day: 15,
+        title: 'Bwindi Mountain Gorilla Trekking & Onward Transfer (Kigali or Entebbe)',
+        location: 'Bwindi Impenetrable NP → Kigali / Entebbe',
+        summary: 'Trek with UWA rangers to spend one unforgettable hour with a habituated mountain gorilla family before your onward transfer.',
+        activities: ['Mountain Gorilla Trekking in Bwindi (UWA $800 permit included)', 'Transfer to Kigali or Kihihi/Entebbe'],
+        accommodationTier: 'Departure / Optional Extension to Rwanda',
+        meals: 'Breakfast, Lunch',
+        driveTime: '3–4 hours to Kigali or fly Kihihi–Entebbe',
+        wildlifeHighlights: ['Mountain Gorilla'],
+      },
+    ],
+    inclusions: [
+      ...STANDARD_INCLUSIONS,
+      'Private group charter flight from Kidepo Valley to Murchison Falls National Park',
+      'Official UWA Mountain Gorilla Trekking permit ($800) & Kibale Chimpanzee permit ($250/$300)',
+      'Mabamba Shoebill canoe, Source of the Nile boat cruise, Murchison Falls & Kazinga Channel boat cruises',
+    ],
+    exclusions: STANDARD_EXCLUSIONS,
+    recommendedGuides: ['moses-okello', 'samuel-kato', 'grace-namukasa', 'david-ssekandi'],
+    permitsRequired: ['uwa-gorilla-trekking', 'uwa-chimp-kibale'],
+    bestMonths: 'June–September & December–March',
+    faqs: [
+      {
+        question: 'Why does this 15-day route fly between Kidepo Valley and Murchison Falls?',
+        answer:
+          'By ascending Eastern Uganda via Jinja, Sipi Falls, Pian Upe, and Moroto into Kidepo Valley by 4x4, and then flying by private charter directly from Kidepo to Murchison Falls, you experience the entire Karamoja cultural and wildlife corridor without a single backtracking drive.',
+      },
+    ],
+  },
+  {
+    id: 'exp-7-day-shuma-uganda-rwanda-primate-akagera',
+    slug: '7-day-shuma-uganda-rwanda-primate-akagera',
+    title: '7-Day Shuma Uganda & Rwanda Primate, Canopy & Akagera Odyssey',
+    subtitle: 'Bwindi Mountain Gorillas, Volcanoes Golden Monkeys, Lake Kivu, Nyungwe Chimps & Canopy Walkway, plus Kigali & Akagera Big-Five.',
+    region: 'Bwindi & Mgahinga + Rwanda Cross-Border',
+    regions: ['Bwindi & Mgahinga'],
+    durationDays: 7,
+    summary:
+      'Following the final cross-border chapter (Days 26–32) of the Shuma Africa Safaris 2027 Grand Safari dossier, this 7-day expedition pairs Mountain Gorilla Trekking in Uganda’s Bwindi Impenetrable Forest with Rwanda’s Volcanoes National Park Golden Monkeys, Lake Kivu, Nyungwe Forest Chimpanzees & Suspended Canopy Walkway, a Kigali city tour, and a finale game drive in Akagera National Park.',
+    heroImage: drivePhotoUrl('10asgCFvINx_sZe-cMaFdS-PQd01dTpzS', 1600), // NP/Mgahinga/_KIM2695.jpg
+    galleryImages: [
+      drivePhotoUrl('1LwS0m-x4TsmxpgBaeByqmJkI-e_UPjiE', 1200), // NP/Bwindi/bwindi_baby_gorrilla.jpg
+      drivePhotoUrl('1Ax8VXb2QdAA6gfxh5W8QNQGw2FMIutwT', 1200), // Landscapes/Greater Lakes Volcano Region.jpg
+    ],
+    interests: ['gorillas', 'chimps', 'big-game', 'culture', 'hiking', 'photography'],
+    comfortTiers: ['mid-range', 'luxury', 'signature'],
+    priceBands: [
+      {
+        tier: 'mid-range',
+        label: 'Shuma 4-Star Cross-Border Primate & Akagera Package',
+        perPersonUSD: 4680,
+        perPersonPerDayUSD: 669,
+        lodgeExamples: ['Buhoma Haven / Ichumbi', 'Mountain Gorilla View Lodge', 'Cormoran Lake Kivu', 'Nyungwe Top View', 'Akagera Game Lodge'],
+        description:
+          'Includes Uganda Bwindi Gorilla Permit ($800), Volcanoes Golden Monkey permit, Nyungwe Chimpanzee & Canopy Walkway permits, Akagera NP entry, and private 4x4 cross-border transport.',
+      },
+      {
+        tier: 'luxury',
+        label: 'Luxury Albertine Rift Cross-Border Sanctuary',
+        perPersonUSD: 6450,
+        perPersonPerDayUSD: 921,
+        lodgeExamples: ['Buhoma Lodge', 'Five Volcanoes Boutique Hotel', 'Cleo Lake Kivu Hotel', 'Ruzizi Tented Lodge'],
+        description: 'Boutique luxury lodges across Bwindi, Musanze, Lake Kivu, Nyungwe, and Akagera.',
+      },
+      {
+        tier: 'signature',
+        label: 'Signature Ultra-Luxury Virunga, Nyungwe & Magashi Collection',
+        perPersonUSD: 9850,
+        perPersonPerDayUSD: 1407,
+        lodgeExamples: ['Clouds Mountain Gorilla Lodge', 'Virunga Lodge', 'One&Only Nyungwe House', 'Magashi Camp'],
+        description: 'East Africa’s premier architectural lodges with private butler service and helicopter transfer options.',
+      },
+    ],
+    dayByDay: [
+      {
+        day: 1,
+        title: 'Bwindi Mountain Gorilla Trekking & Cross Border to Volcanoes NP, Rwanda',
+        location: 'Bwindi (Uganda) → Musanze (Rwanda)',
+        summary: 'Track a habituated mountain gorilla family in Bwindi Impenetrable Forest, then cross into Rwanda’s Virunga mountains.',
+        activities: ['Mountain Gorilla Trekking in Bwindi (UWA $800 permit included)', 'Scenic cross-border transfer to Volcanoes NP, Rwanda'],
+        accommodationTier: '4-Star Musanze / Virunga Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '2.5 – 3 hours after trek',
+        wildlifeHighlights: ['Mountain Gorilla'],
+      },
+      {
+        day: 2,
+        title: 'Volcanoes NP Golden Monkey Trekking & Cultural Village',
+        location: 'Volcanoes National Park, Rwanda',
+        summary: 'Trek through bamboo forest on the Virunga slopes to observe endangered Golden Monkeys.',
+        activities: ['Morning Golden Monkey Trekking (permit included)', 'Afternoon visit to Gorilla Guardians Village'],
+        accommodationTier: '4-Star Musanze / Virunga Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '30 mins',
+        wildlifeHighlights: ['Golden Monkey'],
+      },
+      {
+        day: 3,
+        title: 'Volcanoes NP to Lake Kivu Boat Excursion',
+        location: 'Lake Kivu, Rwanda',
+        summary: 'Descend to the scenic shores of Lake Kivu for an afternoon island boat cruise.',
+        activities: ['Transfer to Lake Kivu', 'Private afternoon boat excursion on Lake Kivu'],
+        accommodationTier: '4-Star Lake Kivu Resort',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '2.5 hours',
+        wildlifeHighlights: ['Pied Kingfisher', 'Lake Kivu Islands'],
+      },
+      {
+        day: 4,
+        title: 'Lake Kivu Along the Congo Nile Divide to Nyungwe Forest',
+        location: 'Nyungwe Forest National Park, Rwanda',
+        summary: 'Drive south along Lake Kivu and lush tea estates to Nyungwe Forest National Park.',
+        activities: ['Scenic Congo Nile Divide transfer', 'Gisakura tea estate walk'],
+        accommodationTier: '4-Star Nyungwe Forest Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '4 hours',
+        wildlifeHighlights: ['L’Hoest’s Monkey', 'Colobus Monkeys'],
+      },
+      {
+        day: 5,
+        title: 'Nyungwe Chimpanzee Trekking & Suspended Canopy Walkway',
+        location: 'Nyungwe Forest National Park, Rwanda',
+        summary: 'Track wild chimpanzees at dawn and walk the 160-meter Canopy Walkway suspended high above Nyungwe rainforest.',
+        activities: ['Morning Chimpanzee Trekking in Nyungwe', 'Afternoon Nyungwe Canopy Walkway excursion'],
+        accommodationTier: '4-Star Nyungwe Forest Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: 'Short park transfers',
+        wildlifeHighlights: ['Eastern Chimpanzee', 'Great Blue Turaco'],
+      },
+      {
+        day: 6,
+        title: 'Nyungwe to Kigali City Tour & Transfer to Akagera National Park',
+        location: 'Nyungwe → Kigali → Akagera NP, Rwanda',
+        summary: 'Visit the Kigali Genocide Memorial in Rwanda’s capital before continuing east to Akagera National Park.',
+        activities: ['Kigali city & Genocide Memorial visit', 'Afternoon arrival inside Akagera National Park'],
+        accommodationTier: '4-Star Akagera Safari Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '5.5 hours total',
+        wildlifeHighlights: ['Zebra', 'Impala', 'Giraffe'],
+      },
+      {
+        day: 7,
+        title: 'Akagera Morning Game Drive & Departure from Kigali International Airport',
+        location: 'Akagera NP → Kigali (KGL)',
+        summary: 'Enjoy a morning Big-Five savanna game drive in Akagera before transferring to Kigali International Airport.',
+        activities: ['Morning game drive in Akagera National Park', 'Airport drop-off at Kigali International Airport (KGL)'],
+        accommodationTier: 'Departure',
+        meals: 'Breakfast, Lunch',
+        driveTime: '2.5 hours to Kigali Airport',
+        wildlifeHighlights: ['Elephant', 'Buffalo', 'Lion & Rhino Habitat'],
+      },
+    ],
+    inclusions: [
+      ...STANDARD_INCLUSIONS,
+      'Bwindi Mountain Gorilla Permit ($800 USD), Volcanoes Golden Monkey Permit & Nyungwe Chimpanzee + Canopy Permits',
+      'Cross-border 4x4 Land Cruiser transport from Bwindi (Uganda) through Rwanda to Kigali Airport',
+    ],
+    exclusions: STANDARD_EXCLUSIONS,
+    recommendedGuides: ['samuel-kato', 'grace-namukasa'],
+    permitsRequired: ['uwa-gorilla-trekking'],
+    bestMonths: 'June–September & December–February',
+    faqs: [
+      {
+        question: 'Why combine Bwindi gorilla trekking in Uganda with Volcanoes, Nyungwe & Akagera in Rwanda?',
+        answer:
+          'Trekking mountain gorillas in Uganda’s Bwindi Impenetrable Forest ($800 USD permit vs. $1,500 USD in Rwanda) saves $700 per person while allowing you to cross seamlessly into Rwanda for Golden Monkeys, Lake Kivu, Nyungwe’s Canopy Walkway, and Akagera’s savanna.',
+      },
+    ],
+  },
+  {
+    id: 'exp-8-day-tingatinga-signature-primate-lions-nile',
+    slug: '8-day-tingatinga-signature-primate-lions-nile',
+    title: '8-Day Tingatinga Safaris Signature: Gorillas, Chimps, Tree-Climbing Lions & Lake Mutanda',
+    subtitle: 'Curated by Tingatinga Safaris — combining Kibale Chimpanzees, Queen Elizabeth Ishasha Fig-Tree Lions, Bwindi Mountain Gorillas & Lake Mutanda Virunga Views.',
+    region: 'Bwindi & Mgahinga',
+    regions: [
+      'Entebbe & Mabamba Swamp',
+      'Kibale Forest',
+      'Queen Elizabeth NP',
+      'Bwindi & Mgahinga',
+      'Lake Bunyonyi',
+    ],
+    durationDays: 8,
+    summary:
+      'Operated by Tingatinga Safaris as one of our flagship partner tour operators in Uganda, this 8-day photographic and primate circuit is crafted for travelers who want unhurried time with Kibale’s chimpanzees, Queen Elizabeth’s Kazinga Channel and Ishasha tree-climbing lions, Bwindi’s mountain gorillas, and the volcanic lakes of Mutanda and Bunyonyi.',
+    heroImage: drivePhotoUrl('1JlyJNqQrtbnFgAD4H0LryA-0wej2NFwD', 1600), // NP/Tree climbing lions/A lion cub rests in the branches...
+    galleryImages: [
+      drivePhotoUrl('1NZlwpIbC6D9OStTOWb3PnoZM0CRdfMOM', 1200), // NP/Gorillas/DSC_6965.jpg
+      drivePhotoUrl('1IPVt0uIxVtYt4MLER4R9yxr1_sBVvd4o', 1200), // NP/Chimpanzees/DSC_1006.jpg
+      drivePhotoUrl('1D4YY7fBRDCwsMKKhZiG00PfqNNewq5AJ', 1200), // Other attractions/Lake Mutanda/IMG_1133.jpg
+    ],
+    interests: ['gorillas', 'chimps', 'big-game', 'photography', 'culture'],
+    comfortTiers: ['mid-range', 'luxury', 'signature'],
+    priceBands: [
+      {
+        tier: 'mid-range',
+        label: 'Tingatinga Safaris Classic Eco-Lodge Tier',
+        perPersonUSD: 3490,
+        perPersonPerDayUSD: 436,
+        lodgeExamples: ['Turaco Treetops', 'Ishasha Wilderness Camp', 'Ichumbi Gorilla Lodge', 'Mutanda Lake Resort'],
+        description: 'Includes UWA $800 Bwindi gorilla permit, Kibale chimpanzee permit, Tingatinga 4x4 extended Land Cruiser, and full-board lodges.',
+      },
+      {
+        tier: 'luxury',
+        label: 'Tingatinga Safaris Luxury Sanctuary Tier',
+        perPersonUSD: 4890,
+        perPersonPerDayUSD: 611,
+        lodgeExamples: ['Primate Lodge Kibale', 'Kyambura Gorge Lodge', 'Mahogany Springs Bwindi', 'Chameleon Hill Lodge'],
+        description: 'Upgraded boutique lodges overlooking Kyambura Gorge, Bwindi canopy, and Lake Mutanda.',
+      },
+      {
+        tier: 'signature',
+        label: 'Tingatinga Signature Photographic Fly-In Edition',
+        perPersonUSD: 6450,
+        perPersonPerDayUSD: 806,
+        lodgeExamples: ['Kyaninga Lodge', 'Kyambura Gorge Lodge', 'Clouds Mountain Gorilla Lodge'],
+        description: 'Includes return scheduled bush flight from Kisoro/Kihihi to Entebbe and premier photographic seating.',
+      },
+    ],
+    dayByDay: [
+      {
+        day: 1,
+        title: 'Arrival in Entebbe & Mabamba Shoebill Welcome',
+        location: 'Entebbe & Lake Victoria',
+        summary: 'Welcome by your Tingatinga Safaris & Enganda lead guide at Entebbe Airport followed by a sunset briefing.',
+        activities: ['VIP Entebbe Airport pickup', 'Safari Wallet & UWA permit verification briefing'],
+        accommodationTier: 'Boutique Entebbe Hotel',
+        meals: 'Dinner',
+        driveTime: '10 minutes',
+        wildlifeHighlights: ['Great Blue Turaco', 'Lake Victoria Waterbirds'],
+      },
+      {
+        day: 2,
+        title: 'Entebbe to Fort Portal Crater Lakes & Kibale Forest',
+        location: 'Kibale Forest National Park',
+        summary: 'Drive west through Toro tea estates to Kibale Forest and walk the Bigodi community wetland boardwalk.',
+        activities: ['Scenic tea plantation stop', 'Afternoon Bigodi Wetland Sanctuary primate walk'],
+        accommodationTier: 'Kibale Forest Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '5 hours',
+        wildlifeHighlights: ['Red Colobus', 'Black-and-White Colobus'],
+      },
+      {
+        day: 3,
+        title: 'Kibale Chimpanzee Tracking & Drive to Queen Elizabeth NP',
+        location: 'Kibale → Queen Elizabeth NP',
+        summary: 'Track habituated chimpanzees in Kibale Forest at dawn, then descend into Queen Elizabeth National Park.',
+        activities: ['Morning UWA Chimpanzee Tracking', 'Evening Kasenyi Crater drive'],
+        accommodationTier: 'Queen Elizabeth Safari Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '2.5 hours',
+        wildlifeHighlights: ['Eastern Chimpanzee', 'Uganda Kob', 'African Elephant'],
+      },
+      {
+        day: 4,
+        title: 'Kasenyi Plains Game Drive & Kazinga Channel Boat Launch',
+        location: 'Queen Elizabeth National Park',
+        summary: 'Search for lions and leopards at dawn and cruise the Kazinga Channel past elephant herds and hippo pods.',
+        activities: ['Morning Kasenyi predator drive', 'Afternoon Kazinga Channel boat launch'],
+        accommodationTier: 'Queen Elizabeth Safari Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: 'In-park game viewing',
+        wildlifeHighlights: ['Lion', 'Hippopotamus', 'Nile Crocodile', 'African Fish Eagle'],
+      },
+      {
+        day: 5,
+        title: 'Ishasha Fig-Tree Climbing Lions to Bwindi Impenetrable Forest',
+        location: 'Ishasha Sector → Bwindi Impenetrable NP',
+        summary: 'Track the famous tree-climbing lions of Ishasha before climbing into the misty Kigezi highlands of Bwindi.',
+        activities: ['Full morning game drive in Ishasha sector', 'Afternoon ascent into Bwindi Impenetrable Forest'],
+        accommodationTier: 'Bwindi Forest Lodge',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '4 hours',
+        wildlifeHighlights: ['Tree-Climbing Lions of Ishasha', 'Topi'],
+      },
+      {
+        day: 6,
+        title: 'Bwindi Mountain Gorilla Trekking & Batwa Cultural Trail',
+        location: 'Bwindi Impenetrable National Park',
+        summary: 'Trek into Bwindi’s ancient rainforest with UWA rangers to spend one unforgettable hour with a habituated mountain gorilla family.',
+        activities: ['Official UWA Mountain Gorilla Trekking (permit included)', 'Afternoon Batwa forest heritage walk'],
+        accommodationTier: 'Bwindi Forest Lodge',
+        meals: 'Breakfast, Packed Lunch, Dinner',
+        driveTime: '20 mins to trailhead',
+        wildlifeHighlights: ['Mountain Gorilla', 'L’Hoest’s Monkey'],
+      },
+      {
+        day: 7,
+        title: 'Lake Mutanda & Lake Bunyonyi Dugout Canoe Retreat',
+        location: 'Lake Mutanda & Lake Bunyonyi',
+        summary: 'Enjoy panoramic views of the Virunga volcanoes from Lake Mutanda and paddle across the tranquil islands of Lake Bunyonyi.',
+        activities: ['Morning canoe excursion overlooking the Virunga volcanoes', 'Afternoon island relaxation at Lake Bunyonyi'],
+        accommodationTier: 'Lake Mutanda / Bunyonyi Resort',
+        meals: 'Breakfast, Lunch, Dinner',
+        driveTime: '2 hours',
+        wildlifeHighlights: ['Grey Crowned Crane', 'Spotted-Necked Otter'],
+      },
+      {
+        day: 8,
+        title: 'Return Across Ankole & Uganda Equator to Entebbe',
+        location: 'Entebbe International Airport',
+        summary: 'Journey back to Entebbe with lunch at Igongo Cultural Centre and photography at the Uganda Equator monument.',
+        activities: ['Ankole long-horned cattle viewing', 'Uganda Equator crossing stop', 'Entebbe Airport drop-off'],
+        accommodationTier: 'Departure',
+        meals: 'Breakfast, Lunch',
+        driveTime: '7.5 hours (or optional morning bush flight)',
+        wildlifeHighlights: ['Ankole Long-Horned Cattle'],
+      },
+    ],
+    inclusions: STANDARD_INCLUSIONS,
+    exclusions: STANDARD_EXCLUSIONS,
+    recommendedGuides: ['daniel-tumusiime', 'samuel-kato', 'grace-namukasa'],
+    permitsRequired: ['uwa-gorilla-trekking', 'uwa-chimp-kibale'],
+    bestMonths: 'June–September & December–February',
+    faqs: [
+      {
+        question: 'Who operates the 8-Day Tingatinga Safaris Signature itinerary?',
+        answer:
+          'This itinerary is operated by Tingatinga Safaris in joint coordination with the Enganda Safaris guide collective in Entebbe, guaranteeing official UWA permits in escrow and a named USAGA-certified Ugandan specialist guide.',
+      },
+    ],
+  },
+];
+
+export const SHUMA_COMPANY_INFO = {
+  name: 'Shuma Africa Safaris',
+  shortName: 'Shuma Safaris',
+  tagline: 'WILD TALES AWAITS YOU',
+  divisionTitle: 'East African Multi-Country & Cross-Border Expedition Division',
+  flagshipTitle: 'The 32-Day East African Grand Safari 2027',
+  flagshipSlug: '32-day-east-african-grand-safari-2027',
+  season: 'June – September 2027',
+  countries: ['Tanzania', 'Kenya', 'Uganda', 'Rwanda'],
+  groupFormula: '7 Paying Guests + 1 Complimentary / Free Tour Leader (8 Travellers Total)',
+  roomingPlan: '4 Twin Rooms + 1 Single Room (Comfortable Mid-Range / 4-Star Lodges)',
+  totalGroupCostUSD: 126550,
+  perPersonExactUSD: 18078.57,
+  pdfBrochureUrl:
+    '/assets/aistudio/32_Day_East_African_Grand_Safari_2027___7_Guests___1_complementary_Tour_leader_78a354d7.pdf',
+};
+
+// ================= OFFICIAL TOUR OPERATORS COLLECTIVE =================
+export const TOUR_OPERATORS: TourOperatorPartner[] = [
+  {
+    id: 'operator-tingatinga-safaris',
+    slug: 'tingatinga-safaris',
+    name: 'Tingatinga Safaris',
+    shortName: 'Tingatinga Safaris',
+    tagline: 'Authentic East African Primate, Savanna & Photographic Safaris',
+    roleLabel: 'Official Partner Tour Operator',
+    headquarters: 'Entebbe & Kampala Safari Operations, Uganda',
+    countriesCovered: ['Uganda', 'Rwanda', 'Tanzania', 'Kenya'],
+    specialties: [
+      'Bwindi Mountain Gorilla & Kibale Chimpanzee Expeditions',
+      'Ishasha Tree-Climbing Lions & Wildlife Photography',
+      'Custom 4x4 Land Cruiser & Fly-In Crater Lake Safaris',
+    ],
+    description:
+      'Tingatinga Safaris is one of our core licensed tour operators on the platform, specializing in bespoke primate tracking, Ishasha tree-climbing lion photography, and community-rooted safaris across Uganda and East Africa.',
+    heroImage: drivePhotoUrl('1JlyJNqQrtbnFgAD4H0LryA-0wej2NFwD', 1200),
+    featuredExperienceSlugs: [
+      '8-day-tingatinga-signature-primate-lions-nile',
+      '7-day-best-of-uganda',
+      '5-day-gorillas-and-kibale-chimps',
+    ],
+    accreditations: ['UTB Licensed Tour Operator', 'AUTO Member', 'UWA Accredited Permit Partner'],
+  },
+  {
+    id: 'operator-enganda-wildlife-safaris',
+    slug: 'enganda-wildlife-safaris',
+    name: 'Enganda / WildLife Safaris',
+    shortName: 'Enganda Safaris',
+    tagline: 'Uganda, shown to you by the people who call it home',
+    roleLabel: 'Lead Ugandan Guide Collective & Entebbe Desk',
+    headquarters: 'Mugwanya Road, Bugonga, Entebbe (5 mins from EBB Airport)',
+    countriesCovered: ['Uganda'],
+    specialties: [
+      'Named USAGA-Certified Regional Ugandan Guides',
+      'Direct UWA Gorilla & Chimpanzee Permit Escrow',
+      'Safari Wallet & Multi-Location Enganda Agent Cash Network',
+    ],
+    description:
+      'Headquartered in Bugonga, Entebbe, Enganda / WildLife Safaris unites 8 named regional Ugandan naturalists with direct UWA permit escrow and nationwide Enganda Agent cash & wallet services.',
+    heroImage: drivePhotoUrl('1LwS0m-x4TsmxpgBaeByqmJkI-e_UPjiE', 1200),
+    featuredExperienceSlugs: [
+      '3-day-bwindi-gorilla-trek',
+      '10-day-uganda-grand-circuit-kidepo',
+      '1-day-mabamba-shoebill-entebbe',
+    ],
+    accreditations: ['UTB Licensed', 'AUTO Accredited', 'Official UWA Escrow Desk'],
+  },
+  {
+    id: 'operator-shuma-africa-safaris',
+    slug: 'shuma-africa-safaris',
+    name: 'Shuma Africa Safaris',
+    shortName: 'Shuma Safaris',
+    tagline: 'WILD TALES AWAITS YOU',
+    roleLabel: 'Multi-Country East African Grand Safari Operator',
+    headquarters: 'East African Cross-Border Desk (TZ • KE • UG • RW)',
+    countriesCovered: ['Tanzania', 'Kenya', 'Uganda', 'Rwanda'],
+    specialties: [
+      '32-Day East African Grand Safari 2027 (7 Guests + 1 Free Leader)',
+      'Private Group Charter Flights (Kidepo Valley to Murchison Falls)',
+      '4-Country Serengeti, Maasai Mara, Bwindi & Volcanoes Circuits',
+    ],
+    description:
+      'Shuma Africa Safaris curates flagship trans-boundary expeditions across Tanzania, Kenya, Uganda, and Rwanda, including the 32-Day East African Grand Safari 2027.',
+    heroImage: drivePhotoUrl('1zhQdtJnHOcHSL57vaDZDbZVdpwu9CfbB', 1200),
+    featuredExperienceSlugs: [
+      '32-day-east-african-grand-safari-2027',
+      '15-day-shuma-uganda-grand-sector',
+      '7-day-shuma-uganda-rwanda-primate-akagera',
+    ],
+    accreditations: ['East African Cross-Border Operator', 'UWA & RDB Permit Partner'],
+  },
+];
+
+// ================= OFFICIAL ENGANDA AGENT CASH WITHDRAWAL LOCATIONS =================
+export const ENGANDA_AGENT_LOCATIONS: EngandaAgentLocation[] = [
+  {
+    id: 'agent-entebbe-bugonga-hq',
+    name: 'Entebbe Bugonga Head Office Agent Desk',
+    cityOrPark: 'Entebbe (5 mins from EBB Airport)',
+    address: 'Mugwanya Road, Bugonga, Entebbe (Next to Rosemary Courts)',
+    hours: 'Daily 06:00 AM – 10:00 PM EAT',
+    maxInstantCashUSD: 5000,
+    contactPhone: '+256 700 000 001',
+  },
+  {
+    id: 'agent-kampala-nakasero',
+    name: 'Kampala Nakasero & Sheraton Safari Agent Desk',
+    cityOrPark: 'Kampala Central',
+    address: 'Ternan Avenue, Nakasero, Kampala',
+    hours: 'Mon–Sun 07:30 AM – 08:00 PM EAT',
+    maxInstantCashUSD: 5000,
+    contactPhone: '+256 700 000 002',
+  },
+  {
+    id: 'agent-jinja-source-nile',
+    name: 'Jinja Source of the Nile Enganda Agent',
+    cityOrPark: 'Jinja & Eastern Corridor',
+    address: 'Kiira Road, Jinja Riverfront',
+    hours: 'Daily 07:00 AM – 07:00 PM EAT',
+    maxInstantCashUSD: 3000,
+    contactPhone: '+256 700 000 003',
+  },
+  {
+    id: 'agent-fort-portal-kibale',
+    name: 'Fort Portal & Kibale Crater Field Agent',
+    cityOrPark: 'Fort Portal / Kibale Forest',
+    address: 'Lugard Road, Fort Portal Tourism City',
+    hours: 'Daily 06:30 AM – 07:30 PM EAT',
+    maxInstantCashUSD: 3000,
+    contactPhone: '+256 700 000 004',
+  },
+  {
+    id: 'agent-bwindi-buhoma-rushaga',
+    name: 'Bwindi Buhoma & Rushaga Trailhead Agent Desk',
+    cityOrPark: 'Bwindi Impenetrable NP',
+    address: 'Buhoma Trading Centre & Rushaga Briefing Post',
+    hours: 'Daily 06:00 AM – 06:30 PM EAT (For Porter Tips & Trail Cash)',
+    maxInstantCashUSD: 2500,
+    contactPhone: '+256 700 000 005',
+  },
+  {
+    id: 'agent-murchison-masindi',
+    name: 'Murchison Falls & Masindi Transit Agent Desk',
+    cityOrPark: 'Masindi / Murchison Falls NP',
+    address: 'Masindi–Paraa Highway Junction',
+    hours: 'Daily 06:30 AM – 07:00 PM EAT',
+    maxInstantCashUSD: 2500,
+    contactPhone: '+256 700 000 006',
+  },
+];
+
+// ================= SHARED GOOGLE DRIVE PHOTO CATALOG (1zvNrE4Vf8ZDPnXb95X4H7JMgXAUKRQY3) =================
+export const SHARED_DRIVE_MEDIA_VAULT: DriveMediaPhoto[] = [
+  {
+    id: 'drv-bwindi-baby-gorilla',
+    fileId: '1LwS0m-x4TsmxpgBaeByqmJkI-e_UPjiE',
+    title: 'Bwindi Baby Mountain Gorilla in Montane Canopy',
+    folderCategory: 'National Parks / Bwindi Impenetrable NP',
+    region: 'Bwindi & Mgahinga',
+    activityTag: 'Mountain Gorilla Trekking',
+    url: drivePhotoUrl('1LwS0m-x4TsmxpgBaeByqmJkI-e_UPjiE', 1600),
+  },
+  {
+    id: 'drv-gorillas-silverback',
+    fileId: '11fUkelkgVA56fyzUPqqVGfbNgAPhn127',
+    title: 'Habituated Mountain Gorilla Family (DSC_6871)',
+    folderCategory: 'National Parks / Gorillas',
+    region: 'Bwindi & Mgahinga',
+    activityTag: 'Gorilla Habituation',
+    url: drivePhotoUrl('11fUkelkgVA56fyzUPqqVGfbNgAPhn127', 1600),
+  },
+  {
+    id: 'drv-gorillas-foraging',
+    fileId: '1nWx99iFoWewVC5jsiYslmKcjkVPCgtT9',
+    title: 'Bwindi Gorilla Family Foraging in Fern Understory',
+    folderCategory: 'National Parks / Gorillas',
+    region: 'Bwindi & Mgahinga',
+    activityTag: 'Mountain Gorilla Trekking',
+    url: drivePhotoUrl('1nWx99iFoWewVC5jsiYslmKcjkVPCgtT9', 1600),
+  },
+  {
+    id: 'drv-bwindi-landscape',
+    fileId: '1QhLR6gqgNpPZNVM6hNU5TPWxX5LPBFkp',
+    title: 'Bwindi Impenetrable Rainforest Ridges at Dawn',
+    folderCategory: 'Landscapes / Bwindi NP',
+    region: 'Bwindi & Mgahinga',
+    activityTag: 'Rainforest Canopy & Lodges',
+    url: drivePhotoUrl('1QhLR6gqgNpPZNVM6hNU5TPWxX5LPBFkp', 1600),
+  },
+  {
+    id: 'drv-kibale-chimpanzee',
+    fileId: '1PFPHh53G9jb4Yd-jyM-U7wP199J8qRNA',
+    title: 'Kibale Forest Wild Chimpanzee in Fig Canopy',
+    folderCategory: 'National Parks / Chimpanzees',
+    region: 'Kibale Forest',
+    activityTag: 'Chimpanzee Tracking',
+    url: drivePhotoUrl('1PFPHh53G9jb4Yd-jyM-U7wP199J8qRNA', 1600),
+  },
+  {
+    id: 'drv-kibale-forest-trail',
+    fileId: '1ikdEDLch3JyGjMe-jZwvbO83kiCT4z0n',
+    title: 'Kanyanchu Primate Trail in Kibale National Park',
+    folderCategory: 'National Parks / Kibale Forest NP',
+    region: 'Kibale Forest',
+    activityTag: 'Primate Walk & Birding',
+    url: drivePhotoUrl('1ikdEDLch3JyGjMe-jZwvbO83kiCT4z0n', 1600),
+  },
+  {
+    id: 'drv-ishasha-tree-lions',
+    fileId: '1AbzGKpFsW-Ac-y9zX__91WppEfWr4VWV',
+    title: 'Tree-Climbing Lions in Ishasha Sycamore Fig (Queen Elizabeth NP)',
+    folderCategory: 'National Parks / Wildlife / Cats',
+    region: 'Queen Elizabeth NP',
+    activityTag: 'Ishasha Tree-Climbing Lions',
+    url: drivePhotoUrl('1AbzGKpFsW-Ac-y9zX__91WppEfWr4VWV', 1600),
+  },
+  {
+    id: 'drv-ishasha-lion-cub',
+    fileId: '1JlyJNqQrtbnFgAD4H0LryA-0wej2NFwD',
+    title: 'Lion Cub Resting in Candelabra Tree — Queen Elizabeth NP',
+    folderCategory: 'National Parks / Tree climbing lions',
+    region: 'Queen Elizabeth NP',
+    activityTag: 'Tingatinga Safaris Signature',
+    url: drivePhotoUrl('1JlyJNqQrtbnFgAD4H0LryA-0wej2NFwD', 1600),
+  },
+  {
+    id: 'drv-murchison-elephants-nile',
+    fileId: '1zhQdtJnHOcHSL57vaDZDbZVdpwu9CfbB',
+    title: 'African Elephants Bathing Along the Victoria Nile',
+    folderCategory: 'National Parks / Wildlife',
+    region: 'Murchison Falls NP',
+    activityTag: 'Victoria Nile Boat Launch',
+    url: drivePhotoUrl('1zhQdtJnHOcHSL57vaDZDbZVdpwu9CfbB', 1600),
+  },
+  {
+    id: 'drv-murchison-waterfall',
+    fileId: '1w2fnNcGUBeeNT4hdkSjeUQL7jIW26EZg',
+    title: 'Murchison Falls 7-Meter Victoria Nile Gorge',
+    folderCategory: 'Landscapes / Murchison Falls NP',
+    region: 'Murchison Falls NP',
+    activityTag: 'Top of the Falls Hike',
+    url: drivePhotoUrl('1w2fnNcGUBeeNT4hdkSjeUQL7jIW26EZg', 1600),
+  },
+  {
+    id: 'drv-kidepo-savanna',
+    fileId: '1K6wguyRvDvLZIhVR_8ewmPu7VCEWBaqD',
+    title: 'Kidepo Valley National Park Narus Savanna & Kopjes',
+    folderCategory: 'National Parks / Kidepo Valley NP',
+    region: 'Kidepo Valley NP',
+    activityTag: 'Northern Frontier Big Game',
+    url: drivePhotoUrl('1K6wguyRvDvLZIhVR_8ewmPu7VCEWBaqD', 1600),
+  },
+  {
+    id: 'drv-karamojong-culture',
+    fileId: '1VCblZTqrQkomeqwGsdoaRNg0xsJ2Atl2',
+    title: 'Karamojong Cultural Heritage & Manyatta Homestead',
+    folderCategory: 'Culture-Landmarks-monuments / Karamojong',
+    region: 'Kidepo Valley NP',
+    activityTag: 'Cultural Heritage Exchange',
+    url: drivePhotoUrl('1VCblZTqrQkomeqwGsdoaRNg0xsJ2Atl2', 1600),
+  },
+  {
+    id: 'drv-rwenzori-peaks',
+    fileId: '1qBi_GV2H2tPQuLACFR63DxdifMUOzc2y',
+    title: 'Snow-Capped Peaks of the Rwenzori Mountains National Park',
+    folderCategory: 'Landscapes / Rwenzori Mountains',
+    region: 'Rwenzori Mountains',
+    activityTag: 'Alpine Mountaineering',
+    url: drivePhotoUrl('1qBi_GV2H2tPQuLACFR63DxdifMUOzc2y', 1600),
+  },
+  {
+    id: 'drv-jinja-nile-horseback',
+    fileId: '1jJsBbw6rq9s_jTZF9G-09Xw4yRDnp8MX',
+    title: 'Source of the Nile & Jinja Riverbank Horse Safari',
+    folderCategory: 'Cities / JINJA / Horse riding',
+    region: 'Jinja & Source of the Nile',
+    activityTag: 'Nile Adventure & Jinja',
+    url: drivePhotoUrl('1jJsBbw6rq9s_jTZF9G-09Xw4yRDnp8MX', 1600),
+  },
+  {
+    id: 'drv-sipi-falls',
+    fileId: '1wBIC1EmzEdimn4a4mA0TCekPT1Bjh-29',
+    title: 'Sipi Falls Cascading Down Mount Elgon Escarpment',
+    folderCategory: 'Landscapes / Sipi Falls',
+    region: 'Jinja & Source of the Nile',
+    activityTag: 'Waterfall Hike & Arabica Coffee',
+    url: drivePhotoUrl('1wBIC1EmzEdimn4a4mA0TCekPT1Bjh-29', 1600),
+  },
+  {
+    id: 'drv-lake-bunyonyi-mutanda',
+    fileId: '1Ax8VXb2QdAA6gfxh5W8QNQGw2FMIutwT',
+    title: 'Greater Lakes & Virunga Volcano Highlands (Bunyonyi & Mutanda)',
+    folderCategory: 'Landscapes / Southwest Highlands',
+    region: 'Lake Bunyonyi',
+    activityTag: 'Canoeing & Island Retreat',
+    url: drivePhotoUrl('1Ax8VXb2QdAA6gfxh5W8QNQGw2FMIutwT', 1600),
+  },
+  {
+    id: 'drv-birding-mabamba',
+    fileId: '1GtJsMOQudny0lXpRN44zHg_cHN7NZwnu',
+    title: 'Uganda Specialist Birding & Wetland Ornithology',
+    folderCategory: 'National Parks / Birding',
+    region: 'Entebbe & Mabamba Swamp',
+    activityTag: 'Mabamba & Albertine Birding',
+    url: drivePhotoUrl('1GtJsMOQudny0lXpRN44zHg_cHN7NZwnu', 1600),
+  },
+  {
+    id: 'drv-lake-victoria-entebbe',
+    fileId: '1Tz6SxOj20JnRRf1yIGP4SSrcWVT-xkdX',
+    title: 'Lake Victoria Shoreline & Entebbe Peninsula',
+    folderCategory: 'Landscapes / Lake Victoria',
+    region: 'Entebbe & Mabamba Swamp',
+    activityTag: 'Entebbe Arrival & Boat Safaris',
+    url: drivePhotoUrl('1Tz6SxOj20JnRRf1yIGP4SSrcWVT-xkdX', 1600),
   },
 ];
 
@@ -1102,7 +2499,7 @@ export const DESTINATIONS: DestinationRegion[] = [
       'Golden monkey tracking and Virunga volcano hikes (Mt. Sabinyo, Gahinga, Muhabura) in Mgahinga',
       'Batwa cultural heritage trails and Ruhija birding along the Mubwindi Swamp trail',
     ],
-    heroImage: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1LwS0m-x4TsmxpgBaeByqmJkI-e_UPjiE', 1400), // NP/Bwindi/bwindi_baby_gorrilla.jpg
     parkElevation: '1,160m – 4,127m (Mt. Muhabura)',
     driveFromEntebbe: '8–9 hours overland or 1 hr 15 min scheduled bush flight to Kihihi/Kisoro',
   },
@@ -1120,7 +2517,7 @@ export const DESTINATIONS: DestinationRegion[] = [
       'Bigodi Wetland Sanctuary community boardwalk & women’s basket-weaving cooperative',
       'Scenic rim hikes around the Ndali-Kasenda volcanic Crater Lakes',
     ],
-    heroImage: 'https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1PFPHh53G9jb4Yd-jyM-U7wP199J8qRNA', 1400), // NP/Chimpanzees/DSC_0955.jpg
     parkElevation: '1,100m – 1,590m',
     driveFromEntebbe: '5–5.5 hours via Fort Portal highway',
   },
@@ -1138,7 +2535,7 @@ export const DESTINATIONS: DestinationRegion[] = [
       'Chimpanzee tracking inside the sunken Kyambura Gorge',
       'Katwe explosion craters drive & experiential lion predator tracking on Kasenyi plains',
     ],
-    heroImage: 'https://images.unsplash.com/photo-1534567153574-2b12153a87f0?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1AbzGKpFsW-Ac-y9zX__91WppEfWr4VWV', 1400), // NP/Wildlife/Cats/Baumlöwen in Ishasha_Queen Elizabeth Nationalpark.jpg
     parkElevation: '910m – 1,350m',
     driveFromEntebbe: '6–6.5 hours via Mbarara or Fort Portal',
   },
@@ -1156,7 +2553,7 @@ export const DESTINATIONS: DestinationRegion[] = [
       'On-foot white rhino tracking at Ziwa Rhino Sanctuary',
       'Lake Albert Delta morning boat excursion for Shoebill storks',
     ],
-    heroImage: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1w2fnNcGUBeeNT4hdkSjeUQL7jIW26EZg', 1400), // Landscapes/Murchison Falls NP.jpg
     parkElevation: '619m – 1,292m',
     driveFromEntebbe: '5–5.5 hours via Masindi (or 1 hr flight to Pakuba/Bugungu)',
   },
@@ -1174,7 +2571,7 @@ export const DESTINATIONS: DestinationRegion[] = [
       'Guided ranger walk on the slopes of Mount Morungole to meet the Ik mountain community',
       'Kanangorok Hot Springs & outstanding savanna birding (50+ raptor species)',
     ],
-    heroImage: 'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1K6wguyRvDvLZIhVR_8ewmPu7VCEWBaqD', 1400), // NP/Wildlife/Cats/Kidepo NP2.JPG
     parkElevation: '914m – 2,750m (Mt. Morungole)',
     driveFromEntebbe: '9–10 hours overland (recommended with stop in Gulu/Ziwa) or 2 hr charter flight to Apoka',
   },
@@ -1192,7 +2589,7 @@ export const DESTINATIONS: DestinationRegion[] = [
       'Botanical exploration of the Afro-alpine giant groundsel and lobelia zones',
       'Bakonzo community coffee and cultural walks in the Ruboni foothills',
     ],
-    heroImage: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1qBi_GV2H2tPQuLACFR63DxdifMUOzc2y', 1400), // Landscapes/schneebedeckte Gipfel im Rwenzori Mountain Nationalpark.jpg
     parkElevation: '1,600m – 5,109m (Margherita Peak)',
     driveFromEntebbe: '6 hours via Fort Portal to Kasese',
   },
@@ -1210,7 +2607,7 @@ export const DESTINATIONS: DestinationRegion[] = [
       'Forest walks in Mabira Central Forest Reserve for mangabeys and forest birds',
       'Ssezibwa Falls Buganda cultural site & Lugazi tea estate views',
     ],
-    heroImage: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1jJsBbw6rq9s_jTZF9G-09Xw4yRDnp8MX', 1400), // Cities/JINJA/1 hour horse safari - Nile Horseback Safaris.jpg
     parkElevation: '1,140m',
     driveFromEntebbe: '2.5–3 hours via Kampala-Jinja highway',
   },
@@ -1228,7 +2625,7 @@ export const DESTINATIONS: DestinationRegion[] = [
       'Highland zip-lining, swimming, and farm-to-table crayfish dinners',
       'Seamless 2-hour pairing after Bwindi gorilla trekking in Rushaga, Nkuringo, or Ruhija',
     ],
-    heroImage: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1Ax8VXb2QdAA6gfxh5W8QNQGw2FMIutwT', 1400), // Landscapes/Greater Lakes Volcano Region.jpg
     parkElevation: '1,962m',
     driveFromEntebbe: '7–7.5 hours via Mbarara and Kabale',
   },
@@ -1246,7 +2643,7 @@ export const DESTINATIONS: DestinationRegion[] = [
       'Ngamba Island Chimpanzee Sanctuary day boat excursions on Lake Victoria',
       'Pre-safari coffee and map briefing at our Entebbe office (5 minutes from the airport)',
     ],
-    heroImage: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1GtJsMOQudny0lXpRN44zHg_cHN7NZwnu', 1400), // NP/Birding/_DSC0571.jpg
     parkElevation: '1,135m',
     driveFromEntebbe: '5 minutes from Entebbe International Airport to our Bugonga office; 45–60 mins to Mabamba Bay',
   },
@@ -1359,7 +2756,7 @@ export const JOURNAL_ARTICLES: JournalArticle[] = [
     authorGuideSlug: 'moses-okello',
     publishedDate: 'November 2026',
     readTimeMinutes: 5,
-    heroImage: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1sMzL5F0WL3n7YCSPpzGehAMfB9ivgCDP', 1200), // NP/Kidepo 1/PA9_0226.jpg
     keyTakeaways: [
       'The tarmac highway from Kampala via Gulu to Kitgum is in excellent condition; only the final approach into Kidepo’s Lokumoit Gate is graded murram.',
       'Over 1,500 Cape buffalo and three resident lion prides are currently active along the Narus Valley drainage line at dawn.',
@@ -1386,7 +2783,7 @@ export const JOURNAL_ARTICLES: JournalArticle[] = [
     authorGuideSlug: 'grace-namukasa',
     publishedDate: 'November 2026',
     readTimeMinutes: 7,
-    heroImage: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1QhLR6gqgNpPZNVM6hNU5TPWxX5LPBFkp', 1200), // Landscapes/Bwindi NP.jpg
     keyTakeaways: [
       'Always wear long trousers tucked into tall socks or gaiters to keep safari ants and stinging nettles off your ankles.',
       'Lightweight cotton or leather gardening gloves protect your hands when holding onto vines on steep slopes.',
@@ -1417,7 +2814,7 @@ export const JOURNAL_ARTICLES: JournalArticle[] = [
     authorGuideSlug: 'moses-okello',
     publishedDate: 'October 2026',
     readTimeMinutes: 6,
-    heroImage: 'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1VCblZTqrQkomeqwGsdoaRNg0xsJ2Atl2', 1200), // Culture/Karamojong/2M6A6811.JPG
     keyTakeaways: [
       'Every Karamojong manyatta visit is arranged in advance with homestead elders so guests are welcomed as invited visitors.',
       'On the ridges of Mount Morungole, the Ik people — fewer than 15,000 strong — preserve one of East Africa’s rarest Cushitic-related languages and beekeeping traditions.',
@@ -1444,7 +2841,7 @@ export const JOURNAL_ARTICLES: JournalArticle[] = [
     authorGuideSlug: 'david-ssekandi',
     publishedDate: 'October 2026',
     readTimeMinutes: 5,
-    heroImage: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1y2VzKGL-2gGHF9IaDZvf_fLdta82IBHU', 1200), // NP/Birding/_DSC0592.jpg
     keyTakeaways: [
       'Being in the wooden canoe by 7:00 AM is critical before the equatorial sun warms the shallows.',
       'Shoebills stand motionless along floating Miscanthidium grass mats waiting for marbled lungfish to surface for air.',
@@ -1471,7 +2868,7 @@ export const JOURNAL_ARTICLES: JournalArticle[] = [
     authorGuideSlug: 'samuel-kato',
     publishedDate: 'November 2026',
     readTimeMinutes: 6,
-    heroImage: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('11fUkelkgVA56fyzUPqqVGfbNgAPhn127', 1200), // NP/Gorillas/DSC_6871.jpg
     keyTakeaways: [
       'Rushegura and Mubare gorilla families in Buhoma have been foraging along lower riverine valleys within 90 minutes of the briefing point.',
       'In Kibale Forest, ripening Ficus natalensis trees near Kanyanchu are attracting large chimpanzee foraging parties at dawn.',
@@ -1498,7 +2895,7 @@ export const JOURNAL_ARTICLES: JournalArticle[] = [
     authorGuideSlug: 'samuel-kato',
     publishedDate: 'September 2026',
     readTimeMinutes: 6,
-    heroImage: 'https://images.unsplash.com/photo-1534567153574-2b12153a87f0?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('13qwk8PTXM-s7bG7ms1FqnOlrtZfVe2Gt', 1200), // Culture/Batwa/Isaac Kisamani.Batwa 1.jpg
     keyTakeaways: [
       'Walk the Buniga and Buhoma forest boundary with Batwa elders to learn fire-making with friction sticks and wild medicinal plants.',
       'Join an Ankole family homestead at sunrise for traditional hand-milking (okukama) and poetic cattle recitation (ebyevugo).',
@@ -1542,13 +2939,86 @@ export const SOCIAL_LINKS: SocialLink[] = [
   },
 ];
 
-// ================= CONFIRMED PACKAGES & EVENTS (HERO CAROUSEL) =================
+// ================= CONFIRMED PACKAGES & EVENTS (HERO CAROUSEL + UPCOMING PROGRAMS) =================
 export const CONFIRMED_PACKAGES_AND_EVENTS: ConfirmedPackageEvent[] = [
+  {
+    id: 'pkg-tingatinga-8-day-signature-uganda',
+    title: '8-Day Tingatinga Safaris Signature: Gorillas, Chimps & Ishasha Tree Lions',
+    shortTabLabel: 'Tingatinga 8-Day',
+    subtitle:
+      'Operated by Tingatinga Safaris • Kibale Chimpanzees, Queen Elizabeth Kazinga Channel, Ishasha Tree-Climbing Lions, Bwindi Gorillas & Lake Mutanda',
+    eventTag: 'TINGATINGA SAFARIS • GUARANTEED',
+    category: 'Guaranteed Primate Departure',
+    dateWindow: '10 – 17 Dec 2026',
+    durationLabel: '8 Days / 7 Nights',
+    location: 'Kibale, Queen Elizabeth (Ishasha), Bwindi & Lake Mutanda',
+    spotsRemaining: 4,
+    pricePerPersonUSD: 3490,
+    leadGuideSlug: 'daniel-tumusiime',
+    experienceSlug: '8-day-tingatinga-signature-primate-lions-nile',
+    heroImage: drivePhotoUrl('1JlyJNqQrtbnFgAD4H0LryA-0wej2NFwD', 1400), // NP/Tree climbing lions/A lion cub rests in the branches...
+    highlights: [
+      'Official Tingatinga Safaris departure with UWA $800 Bwindi gorilla & $250 Kibale chimp permits',
+      'Full-day tracking of Ishasha fig-tree climbing lions & private Kazinga Channel launch',
+      'Includes Virunga volcano canoeing on Lake Mutanda & Lake Bunyonyi',
+    ],
+    statusLabel: 'Tingatinga • 4 Spots Left',
+    placement: 'both',
+  },
+  {
+    id: 'pkg-shuma-32-day-east-african-grand-safari-2027',
+    title: '32-Day East African Grand Safari 2027 (Shuma Africa Safaris)',
+    shortTabLabel: '32-Day Grand Safari',
+    subtitle:
+      'Tanzania, Kenya, Uganda & Rwanda • 7 Guests + 1 Complimentary Tour Leader ($126,550 Total / $18,078.57 pp) • Includes Kidepo Charter, Serengeti Bush Flight & Gorilla/Chimp Permits',
+    eventTag: 'SHUMA SAFARIS • 4 COUNTRIES',
+    category: 'Seasonal Migration & Savanna',
+    dateWindow: 'June – Sept 2027',
+    durationLabel: '32 Days / 31 Nights',
+    location: 'Tanzania • Kenya • Uganda • Rwanda',
+    spotsRemaining: 7,
+    pricePerPersonUSD: 18079,
+    leadGuideSlug: 'samuel-kato',
+    experienceSlug: '32-day-east-african-grand-safari-2027',
+    heroImage: drivePhotoUrl('1zhQdtJnHOcHSL57vaDZDbZVdpwu9CfbB', 1400), // NP/Wildlife/Elefanten beim Bad im Nil.jpg
+    highlights: [
+      '7 Paying Guests + 1 Complimentary Tour Leader ($126,550 USD Group / $18,078.57 pp)',
+      'Includes Serengeti–Arusha flight, Arusha–Nairobi, Kisumu–Entebbe & Kidepo–Murchison Private Charter',
+      'Tarangire, Ngorongoro, Serengeti, Maasai Mara, Kidepo, Murchison, Kibale, Bwindi Gorillas, Volcanoes & Nyungwe',
+    ],
+    statusLabel: '7 Guests + 1 Free Leader',
+    placement: 'both',
+  },
+  {
+    id: 'pkg-shuma-15-day-uganda-kidepo-charter',
+    title: '15-Day Shuma Uganda Grand Sector & Kidepo Charter',
+    shortTabLabel: '15-Day Shuma Uganda',
+    subtitle:
+      'Mabamba Shoebill, Jinja Nile, Sipi Falls, Pian Upe, Karamoja, Kidepo Charter to Murchison, Kibale Chimps & Bwindi Gorillas',
+    eventTag: 'SHUMA UGANDA SECTOR',
+    category: 'Guaranteed Primate Departure',
+    dateWindow: 'July – Aug 2027',
+    durationLabel: '15 Days / 14 Nights',
+    location: 'Entebbe, Sipi, Pian Upe, Kidepo, Murchison, Kibale & Bwindi',
+    spotsRemaining: 7,
+    pricePerPersonUSD: 8490,
+    leadGuideSlug: 'moses-okello',
+    experienceSlug: '15-day-shuma-uganda-grand-sector',
+    heroImage: drivePhotoUrl('1wBIC1EmzEdimn4a4mA0TCekPT1Bjh-29', 1400), // Landscapes/SipiFalls.JPG
+    highlights: [
+      'Includes private group charter flight directly from Kidepo Valley to Murchison Falls NP',
+      'UWA Bwindi Mountain Gorilla permit ($800) & Kibale Chimpanzee permit included',
+      'Eastern circuit gems: Mabamba Shoebill canoe, Source of the Nile, Sipi Falls & Pian Upe Reserve',
+    ],
+    statusLabel: '2027 Window • 7 Spots Open',
+    placement: 'upcoming',
+  },
   {
     id: 'pkg-nyege-nyege-nile-safari',
     title: 'Nyege Nyege Festival & Source of the Nile Safari',
+    shortTabLabel: 'Nyege Nyege & Nile',
     subtitle: '4-Day East African Music, Culture & Whitewater Nile Expedition in Jinja + Mabira Rainforest',
-    eventTag: 'CONFIRMED EVENT PACKAGE • NYEGE NYEGE',
+    eventTag: 'CONFIRMED EVENT • NYEGE NYEGE',
     category: 'Cultural & Music Event',
     dateWindow: '12 – 15 Nov 2026',
     durationLabel: '4 Days / 3 Nights',
@@ -1556,18 +3026,20 @@ export const CONFIRMED_PACKAGES_AND_EVENTS: ConfirmedPackageEvent[] = [
     spotsRemaining: 4,
     pricePerPersonUSD: 1480,
     leadGuideSlug: 'daniel-tumusiime',
-    experienceSlug: '5-day-gorillas-and-kibale-chimps',
-    heroImage: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1200&q=80',
+    experienceSlug: '2-day-jinja-source-of-the-nile',
+    heroImage: drivePhotoUrl('1jJsBbw6rq9s_jTZF9G-09Xw4yRDnp8MX', 1400), // Cities/JINJA/1 hour horse safari
     highlights: [
       '4-Day VIP Nyege Nyege Festival pass on the banks of the Victoria Nile',
-      'Private sunset boat cruise at the Source of the Nile & Grade-5 whitewater rafting option',
-      'Private 4x4 Land Cruiser transfers from Entebbe + Mabira Forest mangabey tracking',
+      'Private sunset boat cruise at the Source of the Nile & whitewater rafting',
+      'Private 4x4 Land Cruiser transfers from Entebbe + Mabira Forest tracking',
     ],
-    statusLabel: 'Confirmed Departure • 4 Spots Left',
+    statusLabel: 'Confirmed • 4 Spots Left',
+    placement: 'both',
   },
   {
     id: 'pkg-bwindi-low-season-gorilla-window',
     title: 'Bwindi Gorilla Trek & Lake Bunyonyi Sanctuary',
+    shortTabLabel: 'Bwindi Gorillas',
     subtitle: '4-Day Private Mountain Gorilla Trekking & Dugout Canoe Highland Escape in Buhoma & Rushaga',
     eventTag: 'CONFIRMED PRIMATE DEPARTURE',
     category: 'Guaranteed Primate Departure',
@@ -1578,17 +3050,19 @@ export const CONFIRMED_PACKAGES_AND_EVENTS: ConfirmedPackageEvent[] = [
     pricePerPersonUSD: 2290,
     leadGuideSlug: 'samuel-kato',
     experienceSlug: '3-day-bwindi-gorilla-trek',
-    heroImage: 'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1LwS0m-x4TsmxpgBaeByqmJkI-e_UPjiE', 1400), // NP/Bwindi/bwindi_baby_gorrilla.jpg
     highlights: [
       'Guided mountain gorilla trekking in Bwindi Impenetrable National Park',
       'Led personally by Bwindi native & former UWA tracker Samuel Kato',
       'Dugout canoe island excursion on bilharzia-free Lake Bunyonyi',
     ],
-    statusLabel: 'Confirmed Departure • 3 Spots Left',
+    statusLabel: 'Confirmed • 3 Spots Left',
+    placement: 'carousel',
   },
   {
     id: 'pkg-kidepo-dry-season-expedition',
     title: 'Kidepo Valley Dry-Season Big Game & Karamoja Culture',
+    shortTabLabel: 'Kidepo Big Game',
     subtitle: 'Remote Northern Frontier Safari Timed for Narus Valley Wildlife Concentrations',
     eventTag: 'CONFIRMED EXPEDITION',
     category: 'Seasonal Migration & Savanna',
@@ -1599,17 +3073,19 @@ export const CONFIRMED_PACKAGES_AND_EVENTS: ConfirmedPackageEvent[] = [
     pricePerPersonUSD: 3650,
     leadGuideSlug: 'moses-okello',
     experienceSlug: '10-day-uganda-grand-circuit-kidepo',
-    heroImage: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1K6wguyRvDvLZIhVR_8ewmPu7VCEWBaqD', 1400), // NP/Wildlife/Cats/Kidepo NP2.JPG
     highlights: [
       'Track tree-climbing lions, cheetahs, and 2,000-strong buffalo herds in Narus Valley',
       'Respectful Karamojong manyatta cultural exchange & Mount Morungole views',
       'Includes Nyero ancient rock art & Sipi Falls Arabica coffee hike',
     ],
-    statusLabel: 'Confirmed Departure • 4 Spots Left',
+    statusLabel: 'Confirmed • 4 Spots Left',
+    placement: 'both',
   },
   {
     id: 'pkg-mabamba-shoebill-kibale-primates',
     title: 'Mabamba Shoebill Dawn Canoe & Kibale Chimp Habituation',
+    shortTabLabel: 'Shoebill & Chimps',
     subtitle: 'Pre-2027 UWA Tariff Lock-In for Full-Day Chimpanzee Habituation & Birding',
     eventTag: 'PRE-2027 TARIFF LOCK-IN',
     category: 'Ornithology Special',
@@ -1620,13 +3096,106 @@ export const CONFIRMED_PACKAGES_AND_EVENTS: ConfirmedPackageEvent[] = [
     pricePerPersonUSD: 2740,
     leadGuideSlug: 'david-ssekandi',
     experienceSlug: '5-day-gorillas-and-kibale-chimps',
-    heroImage: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1GtJsMOQudny0lXpRN44zHg_cHN7NZwnu', 1400), // NP/Birding/_DSC0571.jpg
     highlights: [
       '7:00 AM wooden canoe excursion in Mabamba Bay for the prehistoric Shoebill Stork',
       'Locks in 2026 Kibale Chimpanzee Habituation tariff before Jan 2027 UWA adjustment',
       'Guided by Master Ornithologist David Ssekandi & Primate Ethologist Grace Namukasa',
     ],
     statusLabel: 'Guaranteed • Last 2 Spots',
+    placement: 'carousel',
+  },
+  {
+    id: 'pkg-queen-elizabeth-ishasha-lions',
+    title: 'Queen Elizabeth Ishasha Tree-Climbing Lions & Kazinga Channel',
+    shortTabLabel: 'Queen Elizabeth Lions',
+    subtitle: '5-Day Crater Lakes, Fig-Tree Lions & Private Kazinga Launch Safari with Kyambura Gorge Chimps',
+    eventTag: 'UPCOMING SAVANNA PROGRAM',
+    category: 'Seasonal Migration & Savanna',
+    dateWindow: '24 – 28 Nov 2026',
+    durationLabel: '5 Days / 4 Nights',
+    location: 'Queen Elizabeth NP, Ishasha Sector & Kazinga Channel',
+    spotsRemaining: 6,
+    pricePerPersonUSD: 1950,
+    leadGuideSlug: 'daniel-tumusiime',
+    experienceSlug: '7-day-best-of-uganda',
+    heroImage: drivePhotoUrl('1AbzGKpFsW-Ac-y9zX__91WppEfWr4VWV', 1400), // NP/Wildlife/Cats/Baumlöwen in Ishasha
+    highlights: [
+      'Full-day tracking of Ishasha fig-tree climbing lions & Uganda kob herds',
+      'Private afternoon photographic boat launch along Kazinga Channel',
+      'Morning chimpanzee trek inside the sunken Kyambura Gorge tropical forest',
+    ],
+    statusLabel: 'Upcoming • 6 Spots Open',
+    placement: 'upcoming',
+  },
+  {
+    id: 'pkg-murchison-falls-ziwa-rhino',
+    title: 'Murchison Falls Victoria Nile & Ziwa White Rhino Expedition',
+    shortTabLabel: 'Murchison & Rhinos',
+    subtitle: '5-Day On-Foot Southern White Rhino Tracking, Top-of-the-Falls Hike & Nile Delta Game Drives',
+    eventTag: 'UPCOMING BIG-5 CIRCUIT',
+    category: 'Seasonal Migration & Savanna',
+    dateWindow: '29 Nov – 03 Dec 2026',
+    durationLabel: '5 Days / 4 Nights',
+    location: 'Murchison Falls NP, Buligi Peninsula & Ziwa Sanctuary',
+    spotsRemaining: 5,
+    pricePerPersonUSD: 1840,
+    leadGuideSlug: 'moses-okello',
+    experienceSlug: '7-day-best-of-uganda',
+    heroImage: drivePhotoUrl('1w2fnNcGUBeeNT4hdkSjeUQL7jIW26EZg', 1400), // Landscapes/Murchison Falls NP.jpg
+    highlights: [
+      'Guided on-foot Southern White Rhino tracking at Ziwa Rhino Sanctuary',
+      'Private boat cruise to the base of Murchison Falls & guided Baker Trail hike',
+      'Rothschild giraffe, lion, and leopard drives across the Buligi Nile Delta',
+    ],
+    statusLabel: 'Upcoming • 5 Spots Open',
+    placement: 'upcoming',
+  },
+  {
+    id: 'pkg-rwenzori-crater-highlands-trek',
+    title: 'Rwenzori Foothills, Fort Portal Crater Lakes & Tooro Heritage',
+    shortTabLabel: 'Rwenzori & Craters',
+    subtitle: '6-Day Alpine Bamboo Zone Trekking, Ndali-Kasenda Crater Rim Hikes & Amabere Cultural Caves',
+    eventTag: 'UPCOMING HIGHLAND TREK',
+    category: 'Cultural & Music Event',
+    dateWindow: '08 – 13 Jan 2027',
+    durationLabel: '6 Days / 5 Nights',
+    location: 'Rwenzori Mountains NP & Fort Portal Crater Field',
+    spotsRemaining: 6,
+    pricePerPersonUSD: 2150,
+    leadGuideSlug: 'grace-namukasa',
+    experienceSlug: '5-day-gorillas-and-kibale-chimps',
+    heroImage: drivePhotoUrl('1qBi_GV2H2tPQuLACFR63DxdifMUOzc2y', 1400), // Landscapes/schneebedeckte Gipfel im Rwenzori Mountain Nationalpark.jpg
+    highlights: [
+      'Guided 2-day Rwenzori montane cloud forest & giant heather zone trek',
+      'Rim-to-rim walking safari across the scenic Ndali-Kasenda volcanic crater lakes',
+      'Tooro Kingdom cultural storytelling & vanilla-cocoa estate farm lunch',
+    ],
+    statusLabel: 'Upcoming • 6 Spots Open',
+    placement: 'upcoming',
+  },
+  {
+    id: 'pkg-lake-mburo-ankole-walking-safari',
+    title: 'Lake Mburo Walking Safari & Ankole Long-Horned Cattle Heritage',
+    shortTabLabel: 'Mburo & Ankole',
+    subtitle: '4-Day Guided Walking & Horseback Savanna Safari + Traditional Bahima Kraal Experience',
+    eventTag: 'UPCOMING CULTURAL SAFARI',
+    category: 'Cultural & Music Event',
+    dateWindow: '20 – 23 Jan 2027',
+    durationLabel: '4 Days / 3 Nights',
+    location: 'Lake Mburo NP & Kiruhura Ankole Ranchlands',
+    spotsRemaining: 4,
+    pricePerPersonUSD: 1420,
+    leadGuideSlug: 'daniel-tumusiime',
+    experienceSlug: '3-day-bwindi-gorilla-trek',
+    heroImage: drivePhotoUrl('16wE2n7H04jgcMOC86vmB1Bik4ZsA6_E_', 1400), // NP/Lake Mburo/TTP24Mburo-10.jpg
+    highlights: [
+      'UWA ranger-led walking safari among Burchell’s zebras, elands, and Rothschild giraffes',
+      'Authentic dawn milking & heritage visit with Bahima Ankole long-horned cattle keepers',
+      'Nocturnal bush baby & leopard spotlight drive in a custom 4x4 Land Cruiser',
+    ],
+    statusLabel: 'Upcoming • 4 Spots Open',
+    placement: 'upcoming',
   },
 ];
 
@@ -1645,7 +3214,7 @@ export const PARTNER_ACCOMMODATIONS: AccommodationPartner[] = [
     comfortTier: 'luxury',
     rating: 4.9,
     reviewCount: 68,
-    heroImage: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1mOjSitZ_BFrL5ayHQ5lSu5zPsX3NDaLm', 1200), // Landscapes/Bwindi NP 2.jpg
     summary:
       'Elevated timber-and-stone cottages overlooking the Bwindi Impenetrable canopy, operated in partnership with the Buhoma Mukono Community Development Association.',
     amenities: [
@@ -1671,7 +3240,7 @@ export const PARTNER_ACCOMMODATIONS: AccommodationPartner[] = [
     comfortTier: 'luxury',
     rating: 4.9,
     reviewCount: 54,
-    heroImage: 'https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('12F4qdRsjCXUMxgTim4p_WDye99Yrxe02', 1200), // NP/Kibale/DSC_0942.jpg
     summary:
       'Contemporary glass-fronted forest cottages frequented by black-and-white colobus monkeys and forest elephants, with views toward the snow-capped Rwenzori Mountains.',
     amenities: [
@@ -1697,7 +3266,7 @@ export const PARTNER_ACCOMMODATIONS: AccommodationPartner[] = [
     comfortTier: 'mid-range',
     rating: 4.8,
     reviewCount: 41,
-    heroImage: 'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1SgHMVTJrV25-8qti6vdrNVfMEw9ffR_x', 1200), // NP/Kidepo 1/PA9_0241.jpg
     summary:
       'Perched just 500 meters outside Kalokudo Gate with uninterrupted 180-degree views across the Narus Valley buffalo herds and distant Southern Sudan mountains.',
     amenities: [
@@ -1723,7 +3292,7 @@ export const PARTNER_ACCOMMODATIONS: AccommodationPartner[] = [
     comfortTier: 'mid-range',
     rating: 4.8,
     reviewCount: 49,
-    heroImage: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1LzKx2_DgumStBPRgqsvV0icaPYcyPJRp', 1200), // NP/Murchison Falls NP 2/DJI_0054.jpg
     summary:
       'Situated directly inside the prime northern game-viewing circuits of Murchison Falls, where Rothschild’s giraffes, waterbuck, and hippos graze past the dining terrace.',
     amenities: [
@@ -1751,7 +3320,7 @@ export const PARTNER_ACCOMMODATIONS: AccommodationPartner[] = [
     comfortTier: 'luxury',
     rating: 4.9,
     reviewCount: 92,
-    heroImage: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1Tz6SxOj20JnRRf1yIGP4SSrcWVT-xkdX', 1200), // Landscapes/Viktoriasee.jpg
     summary:
       'A serene, leafy boutique hotel in our home neighborhood of Entebbe — ideal for resting after your international arrival or before an early-morning Mabamba Shoebill canoe expedition.',
     amenities: [
@@ -1777,7 +3346,7 @@ export const PARTNER_ACCOMMODATIONS: AccommodationPartner[] = [
     comfortTier: 'mid-range',
     rating: 4.7,
     reviewCount: 63,
-    heroImage: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('154vfyf7sldcaOJYpWPhLtK0erdiVz72r', 1200), // Landscapes/Sonnenuntergang am Nil.jpg
     summary:
       'Set across tropical botanical gardens along the banks of the Victoria Nile in Jinja, combining resort-style hotel comforts with direct boat jetty access.',
     amenities: [
@@ -1803,7 +3372,7 @@ export const PARTNER_ACCOMMODATIONS: AccommodationPartner[] = [
     comfortTier: 'mid-range',
     rating: 4.7,
     reviewCount: 47,
-    heroImage: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1SmrTlNBPDmvbk07CADbDtJpU4cC5tZRM', 1200), // Landscapes/Rwenzori.jpg
     summary:
       'Set across 15 acres of manicured gardens in Fort Portal with views of the Rwenzori peaks, serving as a classic hub between Kibale Forest and Semuliki Valley.',
     amenities: [
@@ -1813,7 +3382,7 @@ export const PARTNER_ACCOMMODATIONS: AccommodationPartner[] = [
       'Farm-to-Table Crater Lakes Dining',
     ],
     sustainabilityNote: 'Partnered with Tooro Botanical Gardens for indigenous tree reforestation.',
-    recommendedGuideSlugs: ['grace-namukasa', 'esther-kobusingye'],
+    recommendedGuideSlugs: ['grace-namukasa', 'patrick-bwambale'],
     featured: false,
     verifiedPartnerBadge: 'Fort Portal Heritage Partner',
   },
@@ -1831,7 +3400,7 @@ export const PARTNER_ACCOMMODATIONS: AccommodationPartner[] = [
     comfortTier: 'mid-range',
     rating: 4.6,
     reviewCount: 58,
-    heroImage: 'https://images.unsplash.com/photo-1534567153574-2b12153a87f0?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1H5BUNIP68hvzQmCNLVtPXOSoQR38MmR2', 1200), // NP/Queen Elizabeth/TTP24Queen-100.jpg
     summary:
       'A spotless, motorist-friendly Ugandan transit motel with private drive-up courtyard rooms, Ankole roasted coffee bar, and shaded 4x4 Land Cruiser bays for breaking up long western transfers.',
     amenities: [
@@ -1857,7 +3426,7 @@ export const PARTNER_ACCOMMODATIONS: AccommodationPartner[] = [
     comfortTier: 'mid-range',
     rating: 4.6,
     reviewCount: 39,
-    heroImage: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1MD4uSuOzDgW-d-Nmj4KMi5DMYTfuEXd3', 1200), // Landscapes/Budongo Forrest.jpg
     summary:
       'Positioned between Ziwa Rhino Sanctuary and Budongo Forest on the road to Murchison Falls, offering restful garden motel rooms and hearty Ugandan buffet lunches.',
     amenities: [
@@ -1883,7 +3452,7 @@ export const PARTNER_ACCOMMODATIONS: AccommodationPartner[] = [
     comfortTier: 'mid-range',
     rating: 4.7,
     reviewCount: 64,
-    heroImage: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('11NF5SGRGGPefzMyijF_mew7W1-_xz3U2', 1200), // Landscapes/Ssese Inseln im Viktoriasee.jpg
     summary:
       'Designed specifically for late-night airport arrivals and early-morning safari departures, with ground-floor courtyard rooms, 24-hour reception, and complimentary airport pickup.',
     amenities: [
@@ -1911,7 +3480,7 @@ export const PARTNER_ACCOMMODATIONS: AccommodationPartner[] = [
     comfortTier: 'mid-range',
     rating: 4.9,
     reviewCount: 51,
-    heroImage: 'https://images.unsplash.com/photo-1534567153574-2b12153a87f0?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1ymccA2oXj9AQ3j1i2iURYYt2IghLQb5o', 1200), // NP/Tree climbing lions/Brothers in the canopy.jpg
     summary:
       'An intimate riverside canvas camp and overland pitch site shaded by ancient sycamore figs in the heart of Ishasha’s tree-climbing lion territory.',
     amenities: [
@@ -1937,7 +3506,7 @@ export const PARTNER_ACCOMMODATIONS: AccommodationPartner[] = [
     comfortTier: 'mid-range',
     rating: 4.8,
     reviewCount: 77,
-    heroImage: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1D4YY7fBRDCwsMKKhZiG00PfqNNewq5AJ', 1200), // Other attractions/Lake Mutanda/IMG_1133.jpg
     summary:
       'Terraced lakeside grass pitches and open-air geodomes on a tranquil, car-free island in Lake Bunyonyi — beloved by hikers returning from Bwindi gorilla treks.',
     amenities: [
@@ -1947,7 +3516,7 @@ export const PARTNER_ACCOMMODATIONS: AccommodationPartner[] = [
       'Hot Solar Showers & Campfire Circle',
     ],
     sustainabilityNote: 'Non-profit community enterprise funding Kigezi primary education and island clinics.',
-    recommendedGuideSlugs: ['samuel-kato', 'esther-kobusingye'],
+    recommendedGuideSlugs: ['samuel-kato', 'sarah-kemigisha'],
     featured: true,
     verifiedPartnerBadge: 'Community Island Eco-Camp',
   },
@@ -1963,7 +3532,7 @@ export const PARTNER_ACCOMMODATIONS: AccommodationPartner[] = [
     comfortTier: 'mid-range',
     rating: 4.9,
     reviewCount: 34,
-    heroImage: 'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1bnpzLnmp5WtspIWcFDB0uSNHVzx7YG6k', 1200), // NP/Kidepo 2/DSC_5057.jpg
     summary:
       'Fall asleep to the distant roar of Kidepo lions and wake to buffalo herds grazing across the golden Narus basin at this authentic, ranger-guarded wilderness camp site.',
     amenities: [
@@ -1979,4 +3548,67 @@ export const PARTNER_ACCOMMODATIONS: AccommodationPartner[] = [
   },
 ];
 
+export const DEFAULT_POWERED_BY_TEXT =
+  'Powered by WildLife, Tingatinga Safaris, RONSOL, RELWORX, FINCA & ECO Bank, SPYDA MC';
 
+export const INITIAL_FOOTER_LOGOS: FooterPartnerLogo[] = [
+  {
+    id: 'logo_uwa',
+    name: 'UWA',
+    subtitle: 'Uganda Wildlife Authority',
+    logoUrl: '/assets/aistudio/UWA_f423bf74.png',
+    category: 'Government & Conservation',
+    websiteUrl: 'https://ugandawildlife.org',
+    active: true,
+    displayOrder: 1,
+  },
+  {
+    id: 'logo_utb',
+    name: 'UTB',
+    subtitle: 'Uganda Tourism Board',
+    logoUrl: '/assets/aistudio/UTB_08177dce.png',
+    category: 'Government & Conservation',
+    websiteUrl: 'https://utb.go.ug',
+    active: true,
+    displayOrder: 2,
+  },
+  {
+    id: 'logo_gcic',
+    name: 'GCIC State House',
+    subtitle: 'Government Citizen Interaction Centre',
+    logoUrl: '/assets/aistudio/gcic_2d3a48ab.jfif',
+    category: 'Government & Conservation',
+    websiteUrl: 'https://gcic.go.ug',
+    active: true,
+    displayOrder: 3,
+  },
+  {
+    id: 'logo_plu',
+    name: 'PLU',
+    subtitle: 'Patriotic League of Uganda',
+    logoUrl: '/assets/aistudio/PLU_6740178b.jfif',
+    category: 'Strategic Partner',
+    active: true,
+    displayOrder: 4,
+  },
+  {
+    id: 'logo_finca',
+    name: 'FINCA',
+    subtitle: 'FINCA Banking & Microfinance Partner',
+    logoUrl: '/assets/aistudio/finca_84848a21.png',
+    category: 'Banking & Fintech',
+    websiteUrl: 'https://finca.ug',
+    active: true,
+    displayOrder: 5,
+  },
+  {
+    id: 'logo_relworx',
+    name: 'RELWORX',
+    subtitle: 'Digital Payments & Escrow Infrastructure',
+    logoUrl: '/assets/aistudio/relworx_9ec37c45.jfif',
+    category: 'Banking & Fintech',
+    websiteUrl: 'https://relworx.com',
+    active: true,
+    displayOrder: 6,
+  },
+];

@@ -48,7 +48,7 @@ export const GuideProfilePage: React.FC = () => {
     description: guide.tagline,
     worksFor: {
       '@type': 'TravelAgency',
-      name: 'Enganda Safaris',
+      name: 'WildLife Safaris',
     },
     homeLocation: {
       '@type': 'Place',
@@ -60,7 +60,7 @@ export const GuideProfilePage: React.FC = () => {
   return (
     <div className="bg-[#FAF7F2] min-h-screen pb-28">
       <SEO
-        title={`${guide.name} — ${guide.homeRegion} Safari Guide | Enganda Safaris`}
+        title={`${guide.name} — ${guide.homeRegion} Safari Guide | WildLife Safaris`}
         description={`${guide.name}: ${guide.tagline} (${guide.yearsExperience} years guiding in Uganda). Request ${guide.name} for your private Uganda safari.`}
         jsonLd={personJsonLd}
       />
@@ -73,7 +73,7 @@ export const GuideProfilePage: React.FC = () => {
             className="inline-flex items-center gap-1.5 text-[#226B3E] hover:text-[#C85A28] font-semibold"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to All 8 Enganda Guides</span>
+            <span>Back to All 8 WildLife Guides</span>
           </Link>
           <span className="font-mono text-[#5A5248]">
             Home Region: <strong className="text-[#1A1612]">{guide.homeRegion}</strong>

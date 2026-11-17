@@ -29,7 +29,7 @@ export const JournalPage: React.FC = () => {
   return (
     <div className="bg-[#FAF7F2] min-h-screen py-12 sm:py-16">
       <SEO
-        title={`${activeArticle.title} | Enganda Safaris Field Notes Journal`}
+        title={`${activeArticle.title} | WildLife Safaris Field Notes Journal`}
         description={activeArticle.excerpt}
       />
 
@@ -42,7 +42,7 @@ export const JournalPage: React.FC = () => {
               <span>Written & Bylined by Our Ugandan Safari Guides</span>
             </div>
             <h1 className="font-serif text-4xl sm:text-5xl font-bold text-white">
-              Enganda Field Notes & Uganda Safari Dispatches
+              WildLife Field Notes & Uganda Safari Dispatches
             </h1>
             <p className="text-sm sm:text-base text-[#D6CEC2] leading-relaxed">
               Practical advice on UWA gorilla and chimpanzee permits, seasonal trail conditions in Bwindi, and birding strategies — written directly by the Ugandan guides who lead your trip.

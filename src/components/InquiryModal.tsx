@@ -111,7 +111,7 @@ export const InquiryModal: React.FC = () => {
             <div className="pt-3 flex flex-col sm:flex-row items-center justify-center gap-3">
               <a
                 href={getWhatsAppUrl(
-                  `Oli otya Enganda team! I just submitted inquiry ${submittedLeadId} (${name}, ${partySize} guests, ${targetDates || 'flexible dates'}${
+                  `Oli otya WildLife team! I just submitted inquiry ${submittedLeadId} (${name}, ${partySize} guests, ${targetDates || 'flexible dates'}${
                     selectedGuide ? `, preferred guide: ${selectedGuide.name}` : ''
                   }).`
                 )}

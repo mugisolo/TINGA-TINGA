@@ -110,6 +110,50 @@
         "updatedAt": { "type": "string", "maxLength": 64 }
       },
       "required": ["id", "userId", "referenceCode", "title", "totalItems", "checkedCount", "updatedAt"]
+    },
+    "SafariEvent": {
+      "title": "SafariEvent",
+      "description": "Confirmed safari event or scheduled trip managed by Admin with toggle for Homepage Carousel vs Upcoming Programs",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "maxLength": 128 },
+        "title": { "type": "string", "maxLength": 200 },
+        "shortTabLabel": { "type": "string", "maxLength": 64 },
+        "subtitle": { "type": "string", "maxLength": 400 },
+        "eventTag": { "type": "string", "maxLength": 64 },
+        "category": { "type": "string", "enum": ["Cultural & Music Event", "Guaranteed Primate Departure", "Seasonal Migration & Savanna", "Ornithology Special"] },
+        "dateWindow": { "type": "string", "maxLength": 128 },
+        "durationLabel": { "type": "string", "maxLength": 128 },
+        "location": { "type": "string", "maxLength": 256 },
+        "spotsRemaining": { "type": "number" },
+        "pricePerPersonUSD": { "type": "number" },
+        "leadGuideSlug": { "type": "string", "maxLength": 128 },
+        "experienceSlug": { "type": "string", "maxLength": 128 },
+        "heroImage": { "type": "string", "maxLength": 1024 },
+        "statusLabel": { "type": "string", "maxLength": 128 },
+        "placement": { "type": "string", "enum": ["carousel", "upcoming", "both"] },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "title", "category", "dateWindow", "durationLabel", "location", "spotsRemaining", "pricePerPersonUSD", "leadGuideSlug", "heroImage", "placement", "createdAt"]
+    },
+    "FooterLogo": {
+      "title": "FooterLogo",
+      "description": "Partner, banking, fintech, or conservation authority logo displayed in the website footer and managed via Admin Dashboard",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "subtitle": { "type": "string", "maxLength": 256 },
+        "logoUrl": { "type": "string", "maxLength": 200000 },
+        "category": { "type": "string", "enum": ["Government & Conservation", "Banking & Fintech", "Strategic Partner"] },
+        "websiteUrl": { "type": "string", "maxLength": 512 },
+        "active": { "type": "boolean" },
+        "displayOrder": { "type": "number" },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "name", "subtitle", "logoUrl", "category", "active", "displayOrder", "updatedAt"]
     }
   },
   "firestore": {
@@ -136,6 +180,15 @@
     "/saved_checklists/{checklistId}": {
       "schema": "SavedChecklist",
       "description": "Custom Safari Essentials packing checklists saved to the user's wallet"
+    },
+    "/safari_events/{eventId}": {
+      "schema": "SafariEvent",
+      "description": "Safari events and scheduled trips with Homepage Carousel vs Upcoming Programs placement"
+    },
+    "/footer_logos/{logoId}": {
+      "schema": "FooterLogo",
+      "description": "Partner and institutional logos displayed in the website footer"
     }
   }
 }
+

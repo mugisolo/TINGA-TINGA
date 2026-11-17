@@ -19,7 +19,7 @@ export const DestinationsPage: React.FC = () => {
   return (
     <div className="bg-[#FAF7F2] min-h-screen py-12 sm:py-16">
       <SEO
-        title="Uganda Safari Destinations & Regions | Enganda Safaris"
+        title="Uganda Safari Destinations & Regions | WildLife Safaris"
         description="Explore all 9 Ugandan safari regions — Bwindi & Mgahinga, Kibale Forest, Queen Elizabeth NP, Murchison Falls NP, Kidepo Valley NP, Rwenzori Mountains, Jinja, Lake Bunyonyi, and Entebbe & Mabamba Swamp."
       />
 
@@ -35,7 +35,7 @@ export const DestinationsPage: React.FC = () => {
               Where Our Guides Call Home Across Uganda
             </h1>
             <p className="text-sm sm:text-base text-[#D6CEC2] leading-relaxed">
-              From the glacial peaks of the Rwenzori Mountains and the montane rainforest of Bwindi to the papyrus channels of Mabamba Swamp on Lake Victoria, explore Uganda’s nine core safari regions and see which Enganda guides specialize in each landscape.
+              From the glacial peaks of the Rwenzori Mountains and the montane rainforest of Bwindi to the papyrus channels of Mabamba Swamp on Lake Victoria, explore Uganda’s nine core safari regions and see which WildLife guides specialize in each landscape.
             </p>
           </div>
         </div>
@@ -168,10 +168,10 @@ export const DestinationsPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Enganda Guides Covering This Region */}
+                  {/* WildLife Guides Covering This Region */}
                   <div className="pt-4 border-t border-[#E4DCCF] space-y-3">
                     <div className="text-xs font-mono uppercase tracking-wider text-[#C85A28] font-semibold">
-                      Enganda Guides Covering {dest.name}
+                      WildLife Guides Covering {dest.name}
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
                       {regionalGuides.map((guide) => (
@@ -221,7 +221,7 @@ export const DestinationsPage: React.FC = () => {
                         type="button"
                         onClick={() =>
                           openInquiryModal({
-                            defaultNotes: `Interested in visiting ${dest.name} with an Enganda guide.`,
+                            defaultNotes: `Interested in visiting ${dest.name} with an WildLife guide.`,
                           })
                         }
                         className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-[#226B3E] hover:bg-[#194E2D] text-[#FAF7F2] text-xs font-semibold transition-colors cursor-pointer"

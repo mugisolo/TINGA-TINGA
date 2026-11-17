@@ -73,10 +73,10 @@ export const DURATION_BRACKET_CONFIG: Record<
   DurationBracket,
   { label: string; rangeText: string; min: number; max: number }
 > = {
-  all: { label: 'All Durations', rangeText: '1–10 Days', min: 1, max: 10 },
+  all: { label: 'All Durations', rangeText: '1–32+ Days', min: 1, max: 35 },
   short: { label: 'Short Excursions', rangeText: '1–3 Days', min: 1, max: 3 },
-  classic: { label: 'Classic Safaris', rangeText: '4–6 Days', min: 4, max: 6 },
-  extended: { label: 'Grand Expeditions', rangeText: '7–10 Days', min: 7, max: 10 },
+  classic: { label: 'Classic Safaris', rangeText: '4–7 Days', min: 4, max: 7 },
+  extended: { label: 'Grand Expeditions', rangeText: '8–32 Days', min: 8, max: 35 },
 };
 
 export const SORT_OPTION_LABELS: Record<ExperienceSortOption, string> = {
@@ -135,7 +135,7 @@ export const ExperienceFilterBar: React.FC<ExperienceFilterBarProps> = ({
     filters.activityCategory !== 'all' ||
     filters.specialty !== 'all' ||
     filters.durationBracket !== 'all' ||
-    filters.maxDays < 10 ||
+    filters.maxDays < 35 ||
     filters.tier !== 'all' ||
     filters.sortBy !== 'featured';
 
@@ -143,7 +143,7 @@ export const ExperienceFilterBar: React.FC<ExperienceFilterBarProps> = ({
     const maxForBracket = DURATION_BRACKET_CONFIG[bracket].max;
     onChange({
       durationBracket: bracket,
-      maxDays: bracket === 'all' ? 10 : maxForBracket,
+      maxDays: bracket === 'all' ? 35 : maxForBracket,
     });
   };
 
@@ -377,7 +377,7 @@ export const ExperienceFilterBar: React.FC<ExperienceFilterBarProps> = ({
               <input
                 type="range"
                 min={1}
-                max={10}
+                max={35}
                 value={filters.maxDays}
                 onChange={(e) =>
                   onChange({
@@ -492,7 +492,7 @@ export const ExperienceFilterBar: React.FC<ExperienceFilterBarProps> = ({
                   <button
                     type="button"
                     onClick={() =>
-                      onChange({ durationBracket: 'all', maxDays: 10 })
+                      onChange({ durationBracket: 'all', maxDays: 35 })
                     }
                     aria-label="Remove duration bracket filter"
                     className="hover:text-[#C85A28] ml-0.5 cursor-pointer"
@@ -502,12 +502,12 @@ export const ExperienceFilterBar: React.FC<ExperienceFilterBarProps> = ({
                 </span>
               )}
 
-              {filters.durationBracket === 'all' && filters.maxDays < 10 && (
+              {filters.durationBracket === 'all' && filters.maxDays < 35 && (
                 <span className="inline-flex items-center gap-1.5 bg-[#1A1612]/10 text-[#1A1612] border border-[#1A1612]/20 px-2.5 py-1 rounded text-xs font-medium">
                   Max Duration: ≤ {filters.maxDays} Days
                   <button
                     type="button"
-                    onClick={() => onChange({ maxDays: 10 })}
+                    onClick={() => onChange({ maxDays: 35 })}
                     aria-label="Remove max days filter"
                     className="hover:text-[#C85A28] ml-0.5 cursor-pointer"
                   >

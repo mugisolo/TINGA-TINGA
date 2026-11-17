@@ -14,7 +14,7 @@ export const ResponsibleTravelPage: React.FC = () => {
   return (
     <div className="bg-[#FAF7F2] min-h-screen py-12 sm:py-16">
       <SEO
-        title="Responsible Travel & Conservation Charter | Enganda Safaris"
+        title="Responsible Travel & Conservation Charter | WildLife Safaris"
         description="Our commitment to fair living wages for Ugandan guides and mountain porters, UWA park revenue sharing, zero single-use plastics on safari, and conservation contributions."
       />
 
@@ -48,7 +48,7 @@ export const ResponsibleTravelPage: React.FC = () => {
               Dignified Compensation Above Industry Standards
             </h2>
             <p className="text-sm text-[#5A5248] leading-relaxed">
-              Every Enganda guide earns a professional daily retainer, full accommodation and meal allowances, and AMREF emergency medical coverage — never relying solely on tips. On gorilla and volcano treks, we actively encourage and facilitate hiring local community porters at the trailhead (US$20), providing direct household income to forest-edge families.
+              Every WildLife guide earns a professional daily retainer, full accommodation and meal allowances, and AMREF emergency medical coverage — never relying solely on tips. On gorilla and volcano treks, we actively encourage and facilitate hiring local community porters at the trailhead (US$20), providing direct household income to forest-edge families.
             </p>
           </article>
 
@@ -93,7 +93,7 @@ export const ResponsibleTravelPage: React.FC = () => {
               Supporting Primate Veterinary Care & Wetland Guardians
             </h2>
             <p className="text-sm text-[#5A5248] leading-relaxed">
-              For every confirmed safari, Enganda Safaris contributes US$25 per traveler to grass-roots Ugandan conservation initiatives — alternating between mountain gorilla veterinary health monitoring in Bwindi (Conservation Through Public Health) and Shoebill nest-protection boatmen in Mabamba Bay.
+              For every confirmed safari, WildLife Safaris contributes US$25 per traveler to grass-roots Ugandan conservation initiatives — alternating between mountain gorilla veterinary health monitoring in Bwindi (Conservation Through Public Health) and Shoebill nest-protection boatmen in Mabamba Bay.
             </p>
           </article>
         </div>

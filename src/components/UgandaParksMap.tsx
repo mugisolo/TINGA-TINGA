@@ -13,7 +13,7 @@ import {
   Clock,
   Calendar,
 } from 'lucide-react';
-import { GUIDES, EXPERIENCES } from '../data/seedData';
+import { GUIDES, EXPERIENCES, drivePhotoUrl } from '../data/seedData';
 import { SmartImage } from './SmartImage';
 import { useInquiry } from '../context/InquiryContext';
 
@@ -58,8 +58,7 @@ export const MAJOR_UGANDA_PARKS: NationalParkMarker[] = [
       'African Green Broadbill',
       'Forest Elephant',
     ],
-    heroImage:
-      'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1LwS0m-x4TsmxpgBaeByqmJkI-e_UPjiE'),
     markerColor: '#C85A28',
     labelOffset: [16, 4],
   },
@@ -84,8 +83,7 @@ export const MAJOR_UGANDA_PARKS: NationalParkMarker[] = [
       'Great Blue Turaco',
       'Black-and-White Colobus',
     ],
-    heroImage:
-      'https://images.unsplash.com/photo-1540573133985-87b6da6d54a9?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1PFPHh53G9jb4Yd-jyM-U7wP199J8qRNA'),
     markerColor: '#D99B26',
     labelOffset: [16, -6],
   },
@@ -110,8 +108,7 @@ export const MAJOR_UGANDA_PARKS: NationalParkMarker[] = [
       'Shoebill Stork',
       'Nile Crocodile & Hippo',
     ],
-    heroImage:
-      'https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1w2fnNcGUBeeNT4hdkSjeUQL7jIW26EZg'),
     markerColor: '#C85A28',
     labelOffset: [16, 4],
   },
@@ -136,8 +133,7 @@ export const MAJOR_UGANDA_PARKS: NationalParkMarker[] = [
       'Common Ostrich',
       'Karamojong Apalis',
     ],
-    heroImage:
-      'https://images.unsplash.com/photo-1534567153574-2b12153a87f0?auto=format&fit=crop&w=1200&q=80',
+    heroImage: drivePhotoUrl('1K6wguyRvDvLZIhVR_8ewmPu7VCEWBaqD'),
     markerColor: '#D99B26',
     labelOffset: [-16, 22],
   },
@@ -971,7 +967,7 @@ export const UgandaParksMap: React.FC<UgandaParksMapProps> = ({
                   openInquiryModal({
                     guideSlug: matchingGuides[0]?.slug,
                     experienceSlug: matchingExperiences[0]?.slug,
-                    defaultNotes: `Exploring ${selectedPark.name} via the interactive Uganda map. Interested in a private safari led by an Enganda specialist.`,
+                    defaultNotes: `Exploring ${selectedPark.name} via the interactive Uganda map. Interested in a private safari led by an WildLife specialist.`,
                   })
                 }
                 className="flex-1 inline-flex items-center justify-center gap-2 bg-[#226B3E] hover:bg-[#194E2D] text-[#FAF7F2] text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-md transition-colors cursor-pointer"

@@ -12,6 +12,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import {
   WalletTransaction,
   WalletPaymentRail,
+  WithdrawalChannel,
   PermitEscrowHold,
   PartnerBookingRecord,
   NewsletterSubscription,
@@ -23,8 +24,22 @@ import {
   PERMIT_FACTS,
   PARTNER_ACCOMMODATIONS,
   EXPERIENCES,
+  ENGANDA_AGENT_LOCATIONS,
 } from '../data/seedData';
 import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
+
+export interface WithdrawalRequestDetails {
+  channel: WithdrawalChannel;
+  bankName?: string;
+  accountName?: string;
+  accountNumber?: string;
+  momoProvider?: 'MTN Mobile Money Uganda' | 'Airtel Money Uganda';
+  momoNumber?: string;
+  agentLocationId?: string;
+  agentLocationName?: string;
+  recipientName?: string;
+  idDocumentNumber?: string;
+}
 
 interface WalletState {
   availableBalanceUSD: number;
@@ -47,8 +62,14 @@ interface WalletContextValue extends WalletState {
   withdrawFunds: (
     amountUSD: number,
     paymentRail: WalletPaymentRail,
-    destinationAccount: string
-  ) => { ok: boolean; message: string; transaction?: WalletTransaction };
+    destinationAccount: string,
+    details?: WithdrawalRequestDetails
+  ) => {
+    ok: boolean;
+    message: string;
+    transaction?: WalletTransaction;
+    cashPickupCode?: string;
+  };
   holdPermitInEscrow: (
     permitId: string,
     guests: number,
@@ -108,7 +129,7 @@ interface WalletContextValue extends WalletState {
   resetWalletToDefault: () => void;
 }
 
-const WALLET_STORAGE_KEY = 'enganda_safari_wallet_v2';
+const WALLET_STORAGE_KEY = 'wildlife_safari_wallet_v2';
 
 function makeCode(prefix: string): string {
   const randomDigits = Math.floor(100000 + Math.random() * 900000);
@@ -152,12 +173,12 @@ const INITIAL_WALLET_STATE: WalletState = {
     {
       id: 'tx-seed-3',
       type: 'expedition_reward',
-      title: 'Enganda Welcome Expedition Credit',
+      title: 'WildLife Welcome Expedition Credit',
       subtitle: 'Entebbe Coordination Desk Direct Booking Credit',
       amountUSD: 50,
       direction: 'credit',
       status: 'completed',
-      paymentRail: 'Enganda Expedition Credit',
+      paymentRail: 'WildLife Expedition Credit',
       referenceCode: 'ENG-RWD-104829',
       createdAt: '2026-11-01T11:00:00.000Z',
     },
@@ -368,7 +389,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       title: `Safari Wallet Top-Up (${paymentRail})`,
       subtitle: note?.trim()
         ? note.trim()
-        : `Instant settlement to Enganda Entebbe Trust Account via ${paymentRail}`,
+        : `Instant settlement to WildLife Entebbe Trust Account via ${paymentRail}`,
       amountUSD: cleanAmount,
       direction: 'credit',
       status: 'completed',
@@ -393,7 +414,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
   const withdrawFunds: WalletContextValue['withdrawFunds'] = (
     amountUSD,
     paymentRail,
-    destinationAccount
+    destinationAccount,
+    details
   ) => {
     const cleanAmount = Math.round(Number(amountUSD));
     if (!Number.isFinite(cleanAmount) || cleanAmount < 10) {
@@ -409,19 +431,74 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       };
     }
 
+    const channel: WithdrawalChannel =
+      details?.channel ||
+      (paymentRail === 'Cash Withdrawal at Enganda Agent'
+        ? 'enganda_agent'
+        : paymentRail === 'MTN Mobile Money Uganda' ||
+          paymentRail === 'Airtel Money Uganda'
+        ? 'momo'
+        : 'bank_account');
+
+    let resolvedTitle = `Wallet Withdrawal to ${paymentRail}`;
+    let resolvedSubtitle = destinationAccount?.trim()
+      ? `Transferred to ${destinationAccount.trim()}`
+      : `Refunded to registered ${paymentRail} account`;
+    let cashPickupCode: string | undefined;
+
+    if (channel === 'bank_account') {
+      const bankLabel = details?.bankName || 'Bank Account';
+      const accName = details?.accountName || 'Account Holder';
+      const accNum = details?.accountNumber || destinationAccount || 'Verified Account';
+      resolvedTitle = `Bank Account Withdrawal • ${bankLabel}`;
+      resolvedSubtitle = `Beneficiary: ${accName} • Acc/IBAN: ${accNum} • Instant RTGS/SWIFT Settlement`;
+    } else if (channel === 'momo') {
+      const provider = details?.momoProvider || paymentRail;
+      const phone = details?.momoNumber || destinationAccount || '+256 Mobile Wallet';
+      const recipient = details?.recipientName ? ` (${details.recipientName})` : '';
+      resolvedTitle = `Mobile Money (MoMo) Withdrawal • ${provider}`;
+      resolvedSubtitle = `Sent to ${phone}${recipient} via RELWORX Instant Mobile Payout`;
+    } else if (channel === 'enganda_agent') {
+      cashPickupCode = makeCode('ENG-CASH');
+      const agentObj = ENGANDA_AGENT_LOCATIONS.find(
+        (a) => a.id === details?.agentLocationId
+      );
+      const agentName =
+        details?.agentLocationName ||
+        agentObj?.name ||
+        'Enganda Head Office Agent Desk (Bugonga, Entebbe)';
+      const recipient = details?.recipientName || 'Authorized Wallet Holder';
+      const idDoc = details?.idDocumentNumber
+        ? ` • ID/Passport: ${details.idDocumentNumber}`
+        : '';
+      resolvedTitle = `Cash Withdrawal at Enganda Agent • ${agentName}`;
+      resolvedSubtitle = `Cash Pickup Code: ${cashPickupCode} • Recipient: ${recipient}${idDoc}`;
+    }
+
     const tx: WalletTransaction = {
       id: 'tx_' + Date.now(),
       type: 'withdrawal',
-      title: `Wallet Withdrawal to ${paymentRail}`,
-      subtitle: destinationAccount?.trim()
-        ? `Transferred to ${destinationAccount.trim()}`
-        : `Refunded to registered ${paymentRail} account`,
+      title: resolvedTitle,
+      subtitle: resolvedSubtitle,
       amountUSD: cleanAmount,
       direction: 'debit',
       status: 'completed',
       paymentRail,
-      referenceCode: makeCode('ENG-WDR'),
+      referenceCode: cashPickupCode || makeCode('ENG-WDR'),
       createdAt: new Date().toISOString(),
+      metadata: {
+        withdrawalChannel: channel,
+        bankName: details?.bankName,
+        accountName: details?.accountName,
+        accountNumber: details?.accountNumber,
+        momoProvider: details?.momoProvider,
+        momoNumber: details?.momoNumber,
+        agentLocationId: details?.agentLocationId,
+        agentLocationName: details?.agentLocationName,
+        cashPickupCode,
+        recipientName: details?.recipientName,
+        idDocumentNumber: details?.idDocumentNumber,
+      },
     };
 
     setState((prev) => ({
@@ -432,8 +509,20 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
 
     return {
       ok: true,
-      message: `Withdrew US$${cleanAmount.toLocaleString()} via ${paymentRail} (${tx.referenceCode}).`,
+      message:
+        channel === 'enganda_agent' && cashPickupCode
+          ? `Authorized US$${cleanAmount.toLocaleString()} Cash Withdrawal at ${
+              details?.agentLocationName || 'Enganda Agent Desk'
+            }. Present Cash Pickup Code ${cashPickupCode} with your ID.`
+          : channel === 'momo'
+          ? `Sent US$${cleanAmount.toLocaleString()} to ${
+              details?.momoProvider || paymentRail
+            } (${details?.momoNumber || destinationAccount}) — Ref ${tx.referenceCode}.`
+          : `Withdrew US$${cleanAmount.toLocaleString()} to Bank Account (${
+              details?.bankName || paymentRail
+            }) — Ref ${tx.referenceCode}.`,
       transaction: tx,
+      cashPickupCode,
     };
   };
 
@@ -526,7 +615,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       amountUSD: existing.amountHeldUSD,
       direction: 'escrow_unlock',
       status: 'refunded',
-      paymentRail: 'Enganda Expedition Credit',
+      paymentRail: 'WildLife Expedition Credit',
       referenceCode: makeCode('UWA-REL'),
       createdAt: new Date().toISOString(),
     };
@@ -726,11 +815,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       id: 'tx_' + Date.now(),
       type: 'expedition_reward',
       title: 'Join the Expedition Newsletter Credit',
-      subtitle: `Awarded to ${normalizedEmail} for subscribing to Enganda Field Dispatches`,
+      subtitle: `Awarded to ${normalizedEmail} for subscribing to WildLife Field Dispatches`,
       amountUSD: rewardUSD,
       direction: 'credit',
       status: 'completed',
-      paymentRail: 'Enganda Expedition Credit',
+      paymentRail: 'WildLife Expedition Credit',
       referenceCode: makeCode('ENG-EXP'),
       createdAt: nowIso,
     };

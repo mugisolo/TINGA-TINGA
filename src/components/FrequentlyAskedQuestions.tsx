@@ -151,7 +151,7 @@ export const SAFARI_FAQS: FAQItem[] = [
     categoryLabel: 'Permits, Currency & Logistics',
     question: 'What currency is accepted in Uganda, and why does the print year of US Dollar bills matter?',
     summary:
-      'US Dollars (strictly printed 2013 or newer, crisp and untorn) and Ugandan Shillings (UGX) are standard; credit cards work at lodges and in your Enganda Wallet.',
+      'US Dollars (strictly printed 2013 or newer, crisp and untorn) and Ugandan Shillings (UGX) are standard; credit cards work at lodges and in your WildLife Wallet.',
     answer: [
       'Banks, forex bureaus, national parks, and safari lodges in Uganda strictly reject US Dollar bills printed before 2013, as well as notes with even tiny edge tears, ink stamps, or heavy creases. Additionally, $50 and $100 bills receive a noticeably higher exchange rate to Ugandan Shillings (UGX) than $1, $5, $10, or $20 denominations.',
       'We recommend bringing crisp, uncreased US Dollar bills printed 2013 or later for lodge gratuities, Bwindi community porters ($20 USD per trekker), and UWA ranger tips, while exchanging $100–$200 into Ugandan Shillings (UGX) with your named guide in Entebbe for roadside craft markets and espresso stops.',
@@ -159,7 +159,7 @@ export const SAFARI_FAQS: FAQItem[] = [
     keyTakeaways: [
       'US Dollar Rule: Bring only crisp, unmarked USD bills printed in series 2013 or newer',
       'Bwindi Trail Porter: Hiring a local community porter at the trailhead costs $20 USD (carries your daypack & assists on steep slopes)',
-      'Card Payments: Visa and Mastercard are accepted at major lodges and directly in your Enganda Safari Wallet (3.5% local bank surcharge often applies at remote terminals)',
+      'Card Payments: Visa and Mastercard are accepted at major lodges and directly in your WildLife Safari Wallet (3.5% local bank surcharge often applies at remote terminals)',
     ],
   },
   {
@@ -171,7 +171,7 @@ export const SAFARI_FAQS: FAQItem[] = [
       'We recommend reserving 3 to 6 months ahead for peak dry seasons (June–September & December–February), as each gorilla family allows only 8 visitors per day.',
     answer: [
       'Because Mountain Gorilla groups in Bwindi (Buhoma, Ruhija, Rushaga, and Nkuringo sectors) and Mgahinga are strictly capped at 8 trekkers per family per day, permit allocations for June, July, August, September, December, and January frequently sell out months in advance.',
-      'When you book with Enganda Safaris, your permit deposit goes directly into our Safari Wallet Permit Escrow. Our Entebbe operations desk secures your date-specific permits at Uganda Wildlife Authority headquarters in Kampala and uploads the official scanned receipt before your final safari balance is due.',
+      'When you book with WildLife Safaris, your permit deposit goes directly into our Safari Wallet Permit Escrow. Our Entebbe operations desk secures your date-specific permits at Uganda Wildlife Authority headquarters in Kampala and uploads the official scanned receipt before your final safari balance is due.',
     ],
     keyTakeaways: [
       'Peak Dry Seasons (Jun–Sep & Dec–Feb): Book 4 to 6 months in advance for preferred Bwindi sectors',

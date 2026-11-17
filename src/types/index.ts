@@ -50,6 +50,27 @@ export interface PriceBand {
   description: string;
 }
 
+export interface ShumaGroupOffer {
+  companyName: string;
+  tagline: string;
+  seasonWindow: string;
+  countries: string[];
+  payingGuests: number;
+  freeTourLeaders: number;
+  totalTravellers: number;
+  totalGroupCostUSD: number;
+  perPersonExactUSD: number;
+  roomingPlan: string;
+  accommodationStyle: string;
+  flightsAndTransport: {
+    sector: string;
+    mode: string;
+    details: string;
+  }[];
+  planningNotes: string[];
+  pdfBrochureUrl: string;
+}
+
 export interface Experience {
   id: string;
   slug: string;
@@ -74,6 +95,7 @@ export interface Experience {
     question: string;
     answer: string;
   }[];
+  shumaGroupOffer?: ShumaGroupOffer;
 }
 
 export interface PermitFact {
@@ -229,9 +251,12 @@ export interface SocialLink {
   description: string;
 }
 
+export type EventDisplayPlacement = 'carousel' | 'upcoming' | 'both';
+
 export interface ConfirmedPackageEvent {
   id: string;
   title: string;
+  shortTabLabel?: string;
   subtitle: string;
   eventTag: string;
   category: 'Cultural & Music Event' | 'Guaranteed Primate Departure' | 'Seasonal Migration & Savanna' | 'Ornithology Special';
@@ -245,7 +270,20 @@ export interface ConfirmedPackageEvent {
   heroImage: string;
   highlights: string[];
   statusLabel: string;
+  placement?: EventDisplayPlacement;
 }
+
+export interface FooterPartnerLogo {
+  id: string;
+  name: string;
+  subtitle: string;
+  logoUrl: string;
+  category: 'Government & Conservation' | 'Banking & Fintech' | 'Strategic Partner';
+  websiteUrl?: string;
+  active: boolean;
+  displayOrder: number;
+}
+
 
 export type UgandaRegion = string;
 
@@ -272,6 +310,44 @@ export interface AccommodationPartner {
   verifiedPartnerBadge: string;
 }
 
+export interface TourOperatorPartner {
+  id: string;
+  slug: string;
+  name: string;
+  shortName: string;
+  tagline: string;
+  roleLabel: string;
+  headquarters: string;
+  countriesCovered: string[];
+  specialties: string[];
+  description: string;
+  heroImage: string;
+  featuredExperienceSlugs: string[];
+  accreditations: string[];
+}
+
+export interface DriveMediaPhoto {
+  id: string;
+  fileId: string;
+  title: string;
+  folderCategory: string;
+  region: string;
+  activityTag: string;
+  url: string;
+}
+
+export type WithdrawalChannel = 'bank_account' | 'momo' | 'enganda_agent';
+
+export interface EngandaAgentLocation {
+  id: string;
+  name: string;
+  cityOrPark: string;
+  address: string;
+  hours: string;
+  maxInstantCashUSD: number;
+  contactPhone: string;
+}
+
 export type WalletTransactionType =
   | 'deposit'
   | 'withdrawal'
@@ -286,7 +362,10 @@ export type WalletPaymentRail =
   | 'MTN Mobile Money Uganda'
   | 'Airtel Money Uganda'
   | 'International Bank Wire'
-  | 'Enganda Expedition Credit';
+  | 'Bank Account Transfer'
+  | 'Cash Withdrawal at Enganda Agent'
+  | 'Enganda Expedition Credit'
+  | 'WildLife Expedition Credit';
 
 export interface WalletTransaction {
   id: string;
@@ -307,6 +386,17 @@ export interface WalletTransaction {
     nights?: number;
     guests?: number;
     trekDate?: string;
+    withdrawalChannel?: WithdrawalChannel;
+    bankName?: string;
+    accountName?: string;
+    accountNumber?: string;
+    momoProvider?: string;
+    momoNumber?: string;
+    agentLocationId?: string;
+    agentLocationName?: string;
+    cashPickupCode?: string;
+    recipientName?: string;
+    idDocumentNumber?: string;
   };
 }
 

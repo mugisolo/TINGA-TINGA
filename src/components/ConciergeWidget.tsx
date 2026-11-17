@@ -266,7 +266,7 @@ export const ConciergeWidget: React.FC = () => {
               <span>{t.concierge.footerGuarantee}</span>
             </span>
             <a
-              href={getWhatsAppUrl('Oli otya! I was chatting with the Enganda Guide Matcher and would like to speak with a coordinator.')}
+              href={getWhatsAppUrl('Oli otya! I was chatting with the WildLife Guide Matcher and would like to speak with a coordinator.')}
               target="_blank"
               rel="noopener noreferrer"
               className="text-[#D99B26] hover:underline font-medium inline-flex items-center gap-1"

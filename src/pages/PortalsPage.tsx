@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   collection,
   doc,
@@ -42,15 +42,19 @@ import {
   PortalRole,
   PortalDispatch,
   Lead,
+  ConfirmedPackageEvent,
+  EventDisplayPlacement,
 } from '../types';
 import {
   GUIDES,
   PARTNER_ACCOMMODATIONS,
   PERMIT_FACTS,
   CONFIRMED_PACKAGES_AND_EVENTS as CONFIRMED_EVENTS,
+  drivePhotoUrl,
 } from '../data/seedData';
 import { formatPrice } from '../lib/currency';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
+import { AdminDashboard } from '../components/AdminDashboard';
 
 const DISPATCH_STORAGE_KEY = 'enganda_portal_dispatches_v1';
 
@@ -128,10 +132,12 @@ const PORTAL_DEFINITIONS: PortalDefinition[] = [
     slug: 'admin',
     label: 'Admin Governance Portal',
     shortLabel: 'Admin',
-    subtitle: 'Executive Treasury, Multi-Role Access Governance, Escrow Audit & Cloud Firestore Sync',
+    subtitle: 'Upload Events & Trips (Carousel / Upcoming Toggle), Update Footer Partner Logos & Platform Audit',
     badgeText: 'Executive Admin',
     icon: ShieldCheck,
     sections: [
+      { id: 'events-manager', label: 'Events, Trips & Carousel' },
+      { id: 'footer-logos', label: 'Footer Logos & Attribution' },
       { id: 'command', label: 'Treasury & Platform Audit' },
       { id: 'rbac', label: 'Portal Roles & Directory' },
       { id: 'dispatches', label: 'All Operational Dispatches' },
@@ -261,6 +267,7 @@ function normalizeRoleParam(param?: string): PortalRole | null {
 
 export const PortalsPage: React.FC = () => {
   const { role: routeRoleParam } = useParams<{ role?: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   const {
@@ -295,6 +302,12 @@ export const PortalsPage: React.FC = () => {
     leads,
     updateLeadStatus,
     openInquiryModal,
+    safariEvents,
+    carouselEvents,
+    upcomingEvents,
+    addSafariEvent,
+    updateSafariEventPlacement,
+    deleteSafariEvent,
   } = useInquiry();
 
   const currentRole: PortalRole = useMemo(() => {
@@ -308,15 +321,35 @@ export const PortalsPage: React.FC = () => {
     );
   }, [currentRole]);
 
-  const [activeSection, setActiveSection] = useState<string>(
-    activePortalDef.sections[0].id
-  );
+  const [activeSection, setActiveSection] = useState<string>(() => {
+    const requested = searchParams.get('section');
+    if (requested) return requested;
+    return activePortalDef.sections[0].id;
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [statusBanner, setStatusBanner] = useState<{
     type: 'success' | 'error';
     text: string;
   } | null>(null);
+
+  // Admin New Event / Trip Form State
+  const [evtTitle, setEvtTitle] = useState('');
+  const [evtShortTab, setEvtShortTab] = useState('');
+  const [evtSubtitle, setEvtSubtitle] = useState('');
+  const [evtTag, setEvtTag] = useState('CONFIRMED EXPEDITION');
+  const [evtCategory, setEvtCategory] = useState<ConfirmedPackageEvent['category']>('Guaranteed Primate Departure');
+  const [evtDateWindow, setEvtDateWindow] = useState('15 – 20 Feb 2027');
+  const [evtDurationLabel, setEvtDurationLabel] = useState('6 Days / 5 Nights');
+  const [evtLocation, setEvtLocation] = useState('Bwindi Impenetrable NP & Queen Elizabeth NP');
+  const [evtSpots, setEvtSpots] = useState<number>(4);
+  const [evtPriceUSD, setEvtPriceUSD] = useState<number>(2450);
+  const [evtGuideSlug, setEvtGuideSlug] = useState<string>(GUIDES[0]?.slug || 'samuel-kato');
+  const [evtImage, setEvtImage] = useState<string>(drivePhotoUrl('1LwS0m-x4TsmxpgBaeByqmJkI-e_UPjiE'));
+  const [evtHighlightsText, setEvtHighlightsText] = useState<string>(
+    'Guaranteed UWA Mountain Gorilla & Chimpanzee permits in escrow\nPrivate 4x4 Extended Land Cruiser with pop-up photographic roof\nFull-board luxury eco-lodge stays & Entebbe airport VIP pickup'
+  );
+  const [evtPlacement, setEvtPlacement] = useState<EventDisplayPlacement>('both');
 
   // Specialist & Partner active selector state
   const [selectedGuideSlug, setSelectedGuideSlug] = useState<string>(
@@ -356,15 +389,20 @@ export const PortalsPage: React.FC = () => {
   const [newDispatchPriority, setNewDispatchPriority] = useState<'normal' | 'high' | 'urgent'>('normal');
   const [newDispatchNotes, setNewDispatchNotes] = useState('');
 
-  // Reset active section when portal role changes
+  // Reset active section when portal role or query param changes
   useEffect(() => {
     const def =
       PORTAL_DEFINITIONS.find((p) => p.role === currentRole) ||
       PORTAL_DEFINITIONS[0];
-    setActiveSection(def.sections[0].id);
+    const requestedSection = searchParams.get('section');
+    if (requestedSection && def.sections.some((s) => s.id === requestedSection)) {
+      setActiveSection(requestedSection);
+    } else {
+      setActiveSection(def.sections[0].id);
+    }
     setStatusFilter('all');
     setSearchQuery('');
-  }, [currentRole]);
+  }, [currentRole, searchParams]);
 
   // Persist dispatches locally
   useEffect(() => {
@@ -2095,24 +2133,24 @@ export const PortalsPage: React.FC = () => {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div className="bg-white border border-[#E4DCCF] rounded-lg p-3.5">
                     <div className="font-mono text-[10px] uppercase text-[#5A5248]">
-                      Total Client & Escrow Liquidity
+                      Carousel &amp; Upcoming Trips
+                    </div>
+                    <div className="font-mono text-lg font-bold text-[#226B3E] tabular-nums mt-1">
+                      {carouselEvents.length} Carousel · {upcomingEvents.length} Upcoming
+                    </div>
+                    <div className="text-[11px] text-[#5A5248] mt-0.5 tabular-nums">
+                      {safariEvents.length} total loaded programs
+                    </div>
+                  </div>
+                  <div className="bg-white border border-[#E4DCCF] rounded-lg p-3.5">
+                    <div className="font-mono text-[10px] uppercase text-[#5A5248]">
+                      Total Client &amp; Escrow Liquidity
                     </div>
                     <div className="font-mono text-lg font-bold text-[#226B3E] tabular-nums mt-1">
                       {formatPrice(availableBalanceUSD + escrowBalanceUSD, currency)}
                     </div>
                     <div className="text-[11px] text-[#5A5248] mt-0.5 tabular-nums">
                       {transactions.length} ledger transactions
-                    </div>
-                  </div>
-                  <div className="bg-white border border-[#E4DCCF] rounded-lg p-3.5">
-                    <div className="font-mono text-[10px] uppercase text-[#5A5248]">
-                      Verified Specialists & Partners
-                    </div>
-                    <div className="font-mono text-lg font-bold text-[#1A1612] tabular-nums mt-1">
-                      {GUIDES.length} Guides • {PARTNER_ACCOMMODATIONS.length} Lodges
-                    </div>
-                    <div className="text-[11px] text-[#5A5248] mt-0.5">
-                      UTB & AUTO Accredited
                     </div>
                   </div>
                   <div className="bg-white border border-[#E4DCCF] rounded-lg p-3.5">
@@ -2131,13 +2169,23 @@ export const PortalsPage: React.FC = () => {
                       Cloud Firestore RBAC
                     </div>
                     <div className="font-mono text-sm font-bold text-[#16A34A] mt-1">
-                      Rules Enforced
+                      Admin Enabled
                     </div>
                     <div className="text-[11px] text-[#5A5248] mt-0.5">
-                      Admin: mugisolo@gmail.com
+                      Events &amp; Trips Sync Active
                     </div>
                   </div>
                 </div>
+
+                {/* ADMIN SECTION 1: EVENTS, TRIPS & CAROUSEL MANAGER */}
+                {activeSection === 'events-manager' && (
+                  <AdminDashboard initialTab="events" onNotify={notify} />
+                )}
+
+                {/* ADMIN SECTION 2: FOOTER LOGOS & ATTRIBUTION MANAGER */}
+                {activeSection === 'footer-logos' && (
+                  <AdminDashboard initialTab="logos" onNotify={notify} />
+                )}
 
                 {activeSection === 'command' && (
                   <div className="bg-white border border-[#E4DCCF] rounded-lg overflow-hidden">

@@ -10,7 +10,7 @@ export const CURRENCY_RATES: Record<
   UGX: { symbol: 'UGX ', rate: 3720.0, label: 'UGX (USh)', name: 'Ugandan Shilling' },
 };
 
-const RATES_STORAGE_KEY = 'enganda_live_currency_rates_v2';
+const RATES_STORAGE_KEY = 'wildlife_live_currency_rates_v2';
 
 // Hydrate cached live rates immediately if present
 try {

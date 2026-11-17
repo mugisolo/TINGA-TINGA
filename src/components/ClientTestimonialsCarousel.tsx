@@ -430,7 +430,7 @@ export const ClientTestimonialsCarousel: React.FC = () => {
                   </>
                 ) : (
                   <div className="text-xs text-[#D6CEC2]">
-                    Guided by {currentReview.guideName || 'Enganda Specialist'}
+                    Guided by {currentReview.guideName || 'WildLife Specialist'}
                   </div>
                 )}
               </div>
@@ -671,7 +671,7 @@ export const ClientTestimonialsCarousel: React.FC = () => {
                     required
                     value={newText}
                     onChange={(e) => setNewText(e.target.value)}
-                    placeholder="Share how your Enganda guide shaped your experience in Uganda..."
+                    placeholder="Share how your WildLife guide shaped your experience in Uganda..."
                     className="w-full px-3 py-2 rounded border border-[#D6CEC2] bg-white text-sm"
                   />
                 </div>

@@ -128,7 +128,7 @@ export const TripPlannerPage: React.FC = () => {
   return (
     <div className="bg-[#FAF7F2] min-h-screen py-12 sm:py-16">
       <SEO
-        title="Interactive Uganda Safari Trip Planner & Guide Matcher | Enganda Safaris"
+        title="Interactive Uganda Safari Trip Planner & Guide Matcher | WildLife Safaris"
         description="Design your custom Uganda safari step-by-step: choose your wildlife interests, Uganda regions, duration, comfort tier, and optional preferred Ugandan guide."
       />
 
@@ -139,7 +139,7 @@ export const TripPlannerPage: React.FC = () => {
             <div>
               <div className="inline-flex items-center gap-2 text-xs font-mono text-[#D99B26] uppercase tracking-wider">
                 <Compass className="w-3.5 h-3.5" />
-                <span>Enganda Custom Safari Designer • Entebbe Coordination</span>
+                <span>WildLife Custom Safari Designer • Entebbe Coordination</span>
               </div>
               <h1 className="font-serif text-3xl sm:text-5xl font-bold text-white mt-1">
                 Design Your Uganda Safari & Choose Your Guide
@@ -168,7 +168,7 @@ export const TripPlannerPage: React.FC = () => {
                 Inquiry Reference: {submittedLeadId}
               </span>
               <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#1A1612]">
-                A Real Enganda Coordinator Replies Within 12 Hours
+                A Real WildLife Coordinator Replies Within 12 Hours
               </h2>
               <p className="text-sm text-[#5A5248] leading-relaxed">
                 Thank you, <strong className="text-[#1A1612]">{name}</strong>. Your custom {durationDays}-day Uganda safari brief has been logged with our head office in Bugonga, Entebbe. {AVAILABILITY_PROMISE}
@@ -199,7 +199,7 @@ export const TripPlannerPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
               <a
                 href={getWhatsAppUrl(
-                  `Oli otya Enganda team! I just completed the Trip Planner (Ref ${submittedLeadId}: ${durationDays} days, ${partySize} guests, ${budgetTier} tier${
+                  `Oli otya WildLife team! I just completed the Trip Planner (Ref ${submittedLeadId}: ${durationDays} days, ${partySize} guests, ${budgetTier} tier${
                     selectedGuideObj ? `, preferred guide: ${selectedGuideObj.name}` : ''
                   }).`
                 )}
@@ -306,7 +306,7 @@ export const TripPlannerPage: React.FC = () => {
                     Which Uganda Regions Would You Like to Visit?
                   </h2>
                   <p className="text-xs sm:text-sm text-[#5A5248] mt-1">
-                    Every Enganda itinerary stays strictly within Uganda. Select the parks and regions you want in your route.
+                    Every WildLife itinerary stays strictly within Uganda. Select the parks and regions you want in your route.
                   </p>
                 </div>
 
@@ -613,7 +613,7 @@ export const TripPlannerPage: React.FC = () => {
                     <strong className="text-[#1A1612] text-sm">
                       {selectedGuideObj
                         ? `${selectedGuideObj.name} (${selectedGuideObj.homeRegion})`
-                        : 'Best Matched Enganda Specialist'}
+                        : 'Best Matched WildLife Specialist'}
                     </strong>
                   </div>
 
@@ -687,7 +687,7 @@ export const TripPlannerPage: React.FC = () => {
                 <div className="bg-[#FAF7F2] border border-[#E4DCCF] rounded-md p-3.5 flex items-center gap-2 text-xs text-[#5A5248]">
                   <ShieldCheck className="w-4 h-4 text-[#2D6A4F] flex-shrink-0" />
                   <span>
-                    {PERMIT_RECEIPT_GUARANTEE} A real Enganda coordinator replies within 12 hours.
+                    {PERMIT_RECEIPT_GUARANTEE} A real WildLife coordinator replies within 12 hours.
                   </span>
                 </div>
 

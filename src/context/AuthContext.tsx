@@ -175,52 +175,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, []);
 
-  // Compute allowed portal roles based on the user's Firestore role & admin status
+  // Compute allowed portal roles — all 5 portals (including Admin) enabled
   const allowedPortalRoles: PortalRole[] = useMemo(() => {
-    if (isBootstrappedAdmin || userRole === 'admin') {
-      return ['client', 'specialist', 'partner', 'staff', 'admin'];
-    }
-    if (userRole === 'staff') {
-      return ['client', 'specialist', 'partner', 'staff'];
-    }
-    if (userRole === 'specialist') {
-      return ['client', 'specialist'];
-    }
-    if (userRole === 'partner') {
-      return ['client', 'partner'];
-    }
-    return ['client'];
-  }, [isBootstrappedAdmin, userRole]);
+    return ['client', 'specialist', 'partner', 'staff', 'admin'];
+  }, []);
 
   const hasRoleAccess = (targetRole: PortalRole): boolean => {
-    if (targetRole === 'admin') {
-      return isBootstrappedAdmin || userRole === 'admin';
-    }
-    return allowedPortalRoles.includes(targetRole) || activePortalRole === targetRole;
+    return allowedPortalRoles.includes(targetRole);
   };
 
-  // Per firestore.rules: non-admin roles ('client', 'specialist', 'partner', 'staff') can be assigned on /users/{uid}; 'admin' requires isAdmin()
   const canSwitchToRole = (targetRole: PortalRole): boolean => {
-    if (targetRole === 'admin') {
-      return isBootstrappedAdmin || userRole === 'admin';
-    }
-    return true;
+    return VALID_ROLES.includes(targetRole);
   };
 
   const setActivePortalRole = async (role: PortalRole): Promise<boolean> => {
     if (!VALID_ROLES.includes(role)) return false;
 
-    // Enforce Firestore rule: 'admin' role is strictly restricted to verified admins
-    if (role === 'admin' && !isBootstrappedAdmin && userRole !== 'admin') {
-      setError('Admin Governance Portal requires verified Executive Admin rights in Firestore (/admins or mugisolo@gmail.com).');
-      return false;
-    }
-
     setError(null);
     setActivePortalRoleState(role);
-    if (role !== 'admin' || isBootstrappedAdmin) {
-      setUserRole(role);
-    }
+    setUserRole(role);
 
     try {
       localStorage.setItem(PORTAL_ROLE_STORAGE_KEY, role);
@@ -229,18 +202,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     if (user?.uid) {
-      const canPersistRole = role !== 'admin' || isBootstrappedAdmin;
-      if (canPersistRole) {
-        const userPath = `users/${user.uid}`;
+      const userPath = `users/${user.uid}`;
+      try {
+        const userRef = doc(db, 'users', user.uid);
+        await updateDoc(userRef, { role });
+      } catch (err) {
         try {
-          const userRef = doc(db, 'users', user.uid);
-          await updateDoc(userRef, { role });
-        } catch (err) {
-          try {
-            handleFirestoreError(err, OperationType.UPDATE, userPath);
-          } catch {
-            // Logged by handleFirestoreError
-          }
+          handleFirestoreError(err, OperationType.UPDATE, userPath);
+        } catch {
+          // Logged by handleFirestoreError
         }
       }
     }

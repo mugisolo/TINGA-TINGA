@@ -64,8 +64,8 @@ export const ContactPage: React.FC = () => {
   return (
     <div className="bg-[#FAF7F2] min-h-screen py-12 sm:py-16">
       <SEO
-        title="Contact Our Entebbe Head Office | Enganda Safaris Uganda"
-        description="Visit or message Enganda Safaris at Mugwanya Road, Bugonga, Entebbe, Uganda (next to Rosemary Courts — 5 minutes from Entebbe International Airport)."
+        title="Contact Our Entebbe Head Office | WildLife Safaris Uganda"
+        description="Visit or message WildLife Safaris at Mugwanya Road, Bugonga, Entebbe, Uganda (next to Rosemary Courts — 5 minutes from Entebbe International Airport)."
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
@@ -182,7 +182,7 @@ export const ContactPage: React.FC = () => {
                   Social Channels & Dispatches
                 </span>
                 <h3 className="font-serif text-xl font-bold text-[#1A1612] mt-1">
-                  Follow Enganda Safaris Online
+                  Follow WildLife Safaris Online
                 </h3>
                 <p className="text-xs text-[#5A5248] mt-1">
                   Connect with our Entebbe desk and field guides on X, Instagram, and LinkedIn for live UWA permit alerts and trail updates.

@@ -12,6 +12,10 @@ import {
   Clock,
   Utensils,
   BedDouble,
+  Plane,
+  FileText,
+  Users,
+  AlertCircle,
 } from 'lucide-react';
 import {
   EXPERIENCES,
@@ -33,7 +37,9 @@ export const ExperienceDetailPage: React.FC = () => {
   const { currency, openInquiryModal } = useInquiry();
 
   const experience = EXPERIENCES.find((e) => e.slug === slug);
-  const [selectedTier, setSelectedTier] = useState<ComfortTier>('luxury');
+  const [selectedTier, setSelectedTier] = useState<ComfortTier>(
+    experience?.shumaGroupOffer ? 'mid-range' : 'luxury'
+  );
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
   if (!experience) {
@@ -55,7 +61,7 @@ export const ExperienceDetailPage: React.FC = () => {
   const origin =
     typeof window !== 'undefined' && window.location?.origin
       ? window.location.origin
-      : 'https://engandasafaris.com';
+      : 'https://wildlifesafaris.com';
   const canonicalUrl = `${origin}/experiences/${experience.slug}`;
 
   const lowestPriceUSD = Math.min(
@@ -68,13 +74,13 @@ export const ExperienceDetailPage: React.FC = () => {
   const guideNames = recommendedGuides.map((g) => g.name).join(', ');
   const durationLabel = `${experience.durationDays}-${experience.durationDays === 1 ? 'Day' : 'Day'}`;
 
-  const seoTitle = `${experience.title} (${durationLabel} Uganda Safari) | Enganda Safaris`;
+  const seoTitle = `${experience.title} (${durationLabel} Uganda Safari) | WildLife Safaris`;
   const ogSocialTitle = `${experience.title} — ${experience.durationDays} ${
     experience.durationDays === 1 ? 'Day' : 'Days'
-  } in ${experience.region} | Enganda Safaris`;
+  } in ${experience.region} | WildLife Safaris`;
   const seoDescription = `${experience.durationDays}-day private Uganda safari in ${experience.regions.join(
     ', '
-  )} led by named Enganda guides (${guideNames}). Starting from $${lowestPriceUSD.toLocaleString()} per person. ${
+  )} led by named WildLife guides (${guideNames}). Starting from $${lowestPriceUSD.toLocaleString()} per person. ${
     experience.subtitle
   }`;
   const ogSocialDescription = `${experience.subtitle} Travel in a private 4x4 Land Cruiser with ${guideNames} across ${experience.regions.join(
@@ -87,7 +93,7 @@ export const ExperienceDetailPage: React.FC = () => {
     ...experience.interests.map((interest) => SPECIALTY_LABELS[interest]),
     ...recommendedGuides.map((g) => `${g.name} Uganda Safari Guide`),
     'Uganda Safari',
-    'Enganda Safaris',
+    'WildLife Safaris',
   ];
 
   const structuredDataGraph: Record<string, any>[] = [
@@ -99,15 +105,15 @@ export const ExperienceDetailPage: React.FC = () => {
       description: experience.summary,
       url: canonicalUrl,
       image: [experience.heroImage, ...experience.galleryImages],
-      sku: `ENGANDA-${experience.id.toUpperCase()}`,
+      sku: `WILDLIFE-${experience.id.toUpperCase()}`,
       brand: {
         '@type': 'Brand',
-        name: 'Enganda Safaris',
+        name: 'WildLife Safaris',
       },
       provider: {
         '@type': 'TravelAgency',
         '@id': `${origin}/#organization`,
-        name: 'Enganda Safaris',
+        name: 'WildLife Safaris',
         url: origin,
         address: {
           '@type': 'PostalAddress',
@@ -331,6 +337,133 @@ export const ExperienceDetailPage: React.FC = () => {
             </div>
           </section>
 
+          {/* Official Shuma Africa Safaris Dossier Breakdown (Rendered when shumaGroupOffer is present) */}
+          {experience.shumaGroupOffer && (
+            <section className="bg-[#144225] text-[#FAF7F2] border-2 border-[#D99B26]/60 rounded-xl overflow-hidden shadow-md">
+              <div className="px-6 py-4 bg-[#1A1612]/90 border-b border-white/15 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <span className="font-mono text-[11px] uppercase tracking-wider text-[#D99B26] font-bold block">
+                    {experience.shumaGroupOffer.companyName} — “{experience.shumaGroupOffer.tagline}”
+                  </span>
+                  <h2 className="font-serif text-2xl font-bold text-white">
+                    Official 2027 Group Package &amp; Complimentary Tour Leader Dossier
+                  </h2>
+                </div>
+                <a
+                  href={experience.shumaGroupOffer.pdfBrochureUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md bg-[#D99B26] hover:bg-[#c5891d] text-[#1A1612] font-mono text-xs font-bold transition-colors"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>Download Official 32-Day PDF Dossier</span>
+                </a>
+              </div>
+
+              <div className="p-6 sm:p-8 space-y-6">
+                {/* 4-Country Sector Pills */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {experience.shumaGroupOffer.countries.map((countryLabel, i) => (
+                    <div
+                      key={countryLabel}
+                      className="bg-[#1B5632] border border-white/15 rounded-lg p-3"
+                    >
+                      <div className="font-mono text-[10px] text-[#D99B26] uppercase">
+                        Sector 0{i + 1}
+                      </div>
+                      <div className="font-serif text-base font-bold text-white mt-0.5">
+                        {countryLabel}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Package Cost Summary Table from PDF Page 8 */}
+                <div className="bg-[#1A1612]/85 border border-white/15 rounded-lg overflow-hidden">
+                  <div className="px-4 py-3 bg-[#1B5632]/60 border-b border-white/10 flex items-center justify-between">
+                    <span className="font-mono text-xs uppercase tracking-wider text-[#D99B26] font-semibold flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      <span>Package Cost Summary (7 Paying Guests + 1 Complimentary Tour Leader)</span>
+                    </span>
+                    <span className="font-mono text-xs text-[#E4DCCF]">
+                      {experience.shumaGroupOffer.seasonWindow}
+                    </span>
+                  </div>
+                  <div className="divide-y divide-white/10 text-xs sm:text-sm font-mono">
+                    <div className="px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-[#D6CEC2]">Total Group Package Cost (7 Paying Guests + 1 Free Tour Leader):</span>
+                      <span className="text-white font-bold text-base">
+                        {formatPrice(experience.shumaGroupOffer.totalGroupCostUSD, currency)} ($126,550 USD)
+                      </span>
+                    </div>
+                    <div className="px-4 py-3 flex flex-wrap items-center justify-between gap-2 bg-[#226B3E]/30">
+                      <span className="text-[#FAF7F2] font-semibold">Exact Cost Per Paying Person (Based on 7 Guests):</span>
+                      <span className="text-[#D99B26] font-bold text-base">
+                        $18,078.57 USD / person
+                      </span>
+                    </div>
+                    <div className="px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-[#D6CEC2]">Complimentary Tour Leader Allocation (8th Traveller):</span>
+                      <span className="text-[#4CC37A] font-bold">
+                        1 Tour Leader Included Free of Charge
+                      </span>
+                    </div>
+                    <div className="px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-[#D6CEC2]">Rooming &amp; Accommodation Standard:</span>
+                      <span className="text-white">
+                        {experience.shumaGroupOffer.roomingPlan} • {experience.shumaGroupOffer.accommodationStyle}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Flights & Key Transport Arrangements from PDF Page 2 */}
+                <div className="space-y-3">
+                  <h3 className="font-serif text-xl font-bold text-white flex items-center gap-2">
+                    <Plane className="w-5 h-5 text-[#D99B26]" />
+                    <span>Included Regional, Bush &amp; Private Charter Flights</span>
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {experience.shumaGroupOffer.flightsAndTransport.map((item) => (
+                      <div
+                        key={item.sector}
+                        className="bg-[#1B5632]/80 border border-white/15 rounded-lg p-3.5 space-y-1"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-mono text-xs font-bold text-[#D99B26]">
+                            {item.sector}
+                          </span>
+                          <span className="px-2 py-0.5 rounded bg-[#1A1612]/70 text-[10px] font-mono text-[#E4DCCF]">
+                            {item.mode}
+                          </span>
+                        </div>
+                        <p className="text-xs text-[#E4DCCF] leading-relaxed">
+                          {item.details}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Important Planning Notes from PDF Page 8 */}
+                <div className="bg-[#1A1612]/75 border border-[#D99B26]/40 rounded-lg p-4 space-y-2">
+                  <div className="font-mono text-xs uppercase tracking-wider text-[#D99B26] font-semibold flex items-center gap-1.5">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>Important Multi-Country Planning Notes</span>
+                  </div>
+                  <ul className="space-y-1.5 text-xs text-[#E4DCCF]">
+                    {experience.shumaGroupOffer.planningNotes.map((note) => (
+                      <li key={note} className="flex items-start gap-2">
+                        <span className="text-[#D99B26] font-bold">•</span>
+                        <span>{note}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </section>
+          )}
+
           {/* Price Bands per Comfort Tier */}
           <section className="space-y-4">
             <div>
@@ -535,7 +668,7 @@ export const ExperienceDetailPage: React.FC = () => {
           <div className="bg-white border border-[#E4DCCF] rounded-lg p-6 space-y-5 sticky top-24">
             <div>
               <span className="font-mono text-xs uppercase tracking-wider text-[#C85A28] font-semibold">
-                Recommended Enganda Guides
+                Recommended WildLife Guides
               </span>
               <h3 className="font-serif text-2xl font-bold text-[#1A1612] mt-1">
                 Specialists Who Lead This Route

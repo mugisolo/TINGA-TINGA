@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ScrollToTop } from './components/ScrollToTop';
+import { RouteSeoManager } from './components/RouteSeoManager';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { InquiryModal } from './components/InquiryModal';
@@ -11,7 +12,7 @@ import { AuthProvider } from './context/AuthContext';
 import { WalletProvider } from './context/WalletContext';
 import { LanguageProvider } from './context/LanguageContext';
 
-// All Required Enganda Safaris Pages (+ Safari Wallet)
+// All Required WildLife Safaris Pages (+ Safari Wallet)
 import { HomePage } from './pages/HomePage';
 import { GuidesPage } from './pages/GuidesPage';
 import { GuideProfilePage } from './pages/GuideProfilePage';
@@ -37,6 +38,7 @@ export default function App() {
           <WalletProvider>
             <Router>
               <ScrollToTop />
+              <RouteSeoManager />
               <div className="flex flex-col min-h-screen w-full max-w-full overflow-x-hidden bg-[#FAF7F2] text-[#1A1612] selection:bg-[#C85A28] selection:text-white">
                 {/* Global Sticky Header */}
                 <Navbar />

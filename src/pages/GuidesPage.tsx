@@ -226,7 +226,7 @@ export const GuidesPage: React.FC = () => {
                 Meet Our Guides and Partners
               </h1>
               <p className="text-base text-[#E4DCCF] leading-relaxed">
-                Every Enganda safari pairs you with a named, licensed Ugandan specialist and our hand-vetted network of partner <strong className="text-white">Hotels</strong>, <strong className="text-white">Motels</strong>, <strong className="text-white">Camp Sites</strong>, and <strong className="text-white">Safari Lodges</strong> across all nine regions of Uganda.
+                Every WildLife safari pairs you with a named, licensed Ugandan specialist and our hand-vetted network of partner <strong className="text-white">Hotels</strong>, <strong className="text-white">Motels</strong>, <strong className="text-white">Camp Sites</strong>, and <strong className="text-white">Safari Lodges</strong> across all nine regions of Uganda.
               </p>
             </div>
 
@@ -633,7 +633,7 @@ export const GuidesPage: React.FC = () => {
                         {recommendedGuides.length > 0 && (
                           <div className="space-y-1.5">
                             <div className="text-[10px] font-mono uppercase tracking-wider text-[#5A5248]">
-                              Paired Enganda Regional Guides
+                              Paired WildLife Regional Guides
                             </div>
                             <div className="flex flex-wrap gap-2">
                               {recommendedGuides.map((g) => (

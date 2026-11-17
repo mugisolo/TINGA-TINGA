@@ -11,7 +11,7 @@ import {
   JOURNAL_ARTICLES,
   HQ_ADDRESS,
 } from './src/data/seedData';
-import { ENGANDA_CONCIERGE_SYSTEM_PROMPT } from './src/config/systemPrompt';
+import { WILDLIFE_CONCIERGE_SYSTEM_PROMPT } from './src/config/systemPrompt';
 import {
   executeConciergeTool,
   generateRuleBasedConciergeReply,
@@ -56,7 +56,7 @@ const inMemorySessions: Record<string, ChatSession> = {};
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
-    operator: 'Enganda Safaris',
+    operator: 'WildLife Safaris',
     headOffice: HQ_ADDRESS,
     timeEAT: new Date().toISOString(),
   });
@@ -210,7 +210,7 @@ function buildDeterministicUgandaItinerary(params: {
         day: 1,
         title: `Entebbe Welcome Briefing & Overland Transfer to ${region}`,
         destination: `Entebbe to ${region}`,
-        morningActivity: `Meet your named Enganda specialist ${matchedGuide.name} at our Bugonga Head Office (5 mins from Entebbe Airport) for Ugandan coffee, route map review, and official UWA permit inspection.`,
+        morningActivity: `Meet your named WildLife specialist ${matchedGuide.name} at our Bugonga Head Office (5 mins from Entebbe Airport) for Ugandan coffee, route map review, and official UWA permit inspection.`,
         afternoonActivity: `Scenic drive in your private 4x4 Land Cruiser with pop-up roof toward ${region}, stopping at the Equator crossing or Mabamba/Ziwa conservation corridor en route.`,
         accommodation: lodgePool[0],
         meals: 'Breakfast, Lunch, Dinner',
@@ -293,7 +293,7 @@ function buildDeterministicUgandaItinerary(params: {
     recommendedPartnerStays: lodgePool.slice(0, 3),
     days,
     conservationNote:
-      'Every Enganda itinerary stays 100% within Uganda, includes official UWA conservation permits, and contributes US$25 per booking to our Porter Welfare & Community Water Fund.',
+      'Every WildLife itinerary stays 100% within Uganda, includes official UWA conservation permits, and contributes US$25 per booking to our Porter Welfare & Community Water Fund.',
     createdAt: new Date().toISOString(),
   };
 }
@@ -338,9 +338,9 @@ User Preferences:
 - Preferred Activities: ${activityList.join(', ')}
 - Additional Notes: ${specialRequests || 'Include authentic Ugandan cultural touchpoints and unhurried wildlife viewing'}
 
-Strict Enganda Safaris Rules:
+Strict WildLife Safaris Rules:
 1. All destinations MUST be 100% inside Uganda (e.g., Entebbe, Mabamba Swamp, Bwindi Impenetrable NP, Mgahinga, Kibale Forest, Queen Elizabeth NP, Murchison Falls NP, Ziwa Rhino Sanctuary, Kidepo Valley NP, Rwenzori Mountains, Lake Bunyonyi, Jinja).
-2. Match the itinerary to the best guide from this exact Enganda roster:
+2. Match the itinerary to the best guide from this exact WildLife roster:
 ${guideRosterSummary}
 3. Use accurate UWA permit tariffs (Mountain Gorilla Trekking Permit = US$800, Gorilla Habituation = US$1500, Kibale Chimpanzee Permit = US$250, Kyambura Gorge Chimp Permit = US$100).
 4. Provide exactly ${cleanDays} day objects in the "days" array.
@@ -351,7 +351,7 @@ ${guideRosterSummary}
         contents: prompt,
         config: {
           systemInstruction:
-            'You are the Chief Expedition Architect at Enganda Safaris in Entebbe, Uganda. Build accurate, inspiring, logistically realistic multi-day Uganda safari itineraries led by a named Ugandan guide from our collective. Never mention the word AI or artificial intelligence. Always return valid JSON matching the schema.',
+            'You are the Chief Expedition Architect at WildLife Safaris in Entebbe, Uganda. Build accurate, inspiring, logistically realistic multi-day Uganda safari itineraries led by a named Ugandan guide from our collective. Never mention the word AI or artificial intelligence. Always return valid JSON matching the schema.',
           responseMimeType: 'application/json',
           responseSchema: {
             type: Type.OBJECT,
@@ -366,7 +366,7 @@ ${guideRosterSummary}
               },
               matchedGuideSlug: {
                 type: Type.STRING,
-                description: 'Exact slug of the matched guide from the Enganda roster.',
+                description: 'Exact slug of the matched guide from the WildLife roster.',
               },
               matchedGuideName: {
                 type: Type.STRING,
@@ -500,13 +500,13 @@ ${guideRosterSummary}
   return res.json(fallbackItinerary);
 });
 
-// ================= ENGANDA CONCIERGE ("GUIDE MATCHER") =================
+// ================= WILDLIFE CONCIERGE ("GUIDE MATCHER") =================
 
 const conciergeToolDeclarations: FunctionDeclaration[] = [
   {
     name: 'match_guide',
     description:
-      'Match the guest with 1 to 3 named Ugandan safari guides from the Enganda collective based on wildlife specialty, Uganda region, or spoken language.',
+      'Match the guest with 1 to 3 named Ugandan safari guides from the WildLife collective based on wildlife specialty, Uganda region, or spoken language.',
     parameters: {
       type: Type.OBJECT,
       properties: {
@@ -527,7 +527,7 @@ const conciergeToolDeclarations: FunctionDeclaration[] = [
   },
   {
     name: 'search_experiences',
-    description: 'Search Enganda Safaris signature Uganda itineraries by duration, region, or wildlife interest.',
+    description: 'Search WildLife Safaris signature Uganda itineraries by duration, region, or wildlife interest.',
     parameters: {
       type: Type.OBJECT,
       properties: {
@@ -650,7 +650,7 @@ app.post('/api/chat', async (req, res) => {
         model: 'gemini-3.8-flash',
         contents,
         config: {
-          systemInstruction: ENGANDA_CONCIERGE_SYSTEM_PROMPT,
+          systemInstruction: WILDLIFE_CONCIERGE_SYSTEM_PROMPT,
           tools: [{ functionDeclarations: conciergeToolDeclarations }],
         },
       });
@@ -683,7 +683,7 @@ app.post('/api/chat', async (req, res) => {
             ...contents,
             {
               role: 'model',
-              parts: [{ text: replyText || 'Checking Enganda guide profiles and UWA tariffs...' }],
+              parts: [{ text: replyText || 'Checking WildLife guide profiles and UWA tariffs...' }],
             },
             {
               role: 'user',
@@ -697,7 +697,7 @@ app.post('/api/chat', async (req, res) => {
             },
           ],
           config: {
-            systemInstruction: ENGANDA_CONCIERGE_SYSTEM_PROMPT,
+            systemInstruction: WILDLIFE_CONCIERGE_SYSTEM_PROMPT,
           },
         });
 
@@ -721,7 +721,7 @@ app.post('/api/chat', async (req, res) => {
         });
       }
     } catch (err: any) {
-      console.error('[Enganda Concierge Fallback]:', err?.message || err);
+      console.error('[WildLife Concierge Fallback]:', err?.message || err);
     }
   }
 
@@ -764,7 +764,7 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[Enganda Safaris] Server running on http://0.0.0.0:${PORT}`);
+    console.log(`[WildLife Safaris] Server running on http://0.0.0.0:${PORT}`);
   });
 }
 

@@ -1,15 +1,15 @@
-# Enganda Safaris — Uganda Guide Collective Platform
+# WildLife Safaris — Uganda Guide Collective Platform
 
 > **Tagline:** *"Uganda, shown to you by the people who call it home."*  
 > **Core Promise:** *"The guide is the product."*  
 > **Head Office:** Mugwanya Road, Bugonga, Entebbe, Uganda *(next to Rosemary Courts — 5 minutes from Entebbe International Airport)*  
-> **WhatsApp:** `+256 700 000 000` | **Email:** `hello@engandasafaris.com`
+> **WhatsApp:** `+256 700 000 000` | **Email:** `hello@wildlifesafaris.com`
 
 ---
 
 ## 1. Overview
 
-**Enganda Safaris** is a web application for a curated collective of 8 licensed local Ugandan safari guides coordinated from Entebbe, Uganda. Rather than booking an anonymous package, travelers browse and request a named Ugandan guide who designs and leads their private Uganda safari.
+**WildLife Safaris** is a web application for a curated collective of 8 licensed local Ugandan safari guides coordinated from Entebbe, Uganda. Rather than booking an anonymous package, travelers browse and request a named Ugandan guide who designs and leads their private Uganda safari.
 
 ### Key Architectural & Content Guarantees
 - **Uganda Exclusive:** All 6 experiences and 9 destination regions are strictly within Uganda.
@@ -36,7 +36,7 @@ npm run build
 
 ## 3. Configuring `GEMINI_API_KEY` (AI Concierge)
 
-The **Enganda Guide Matcher** AI Concierge uses the `@google/genai` SDK (`gemini-2.5-flash`) on the server (`server.ts` -> `POST /api/chat`) with 7 function-calling tools:
+The **WildLife Guide Matcher** AI Concierge uses the `@google/genai` SDK (`gemini-2.5-flash`) on the server (`server.ts` -> `POST /api/chat`) with 7 function-calling tools:
 - `match_guide`
 - `search_experiences`
 - `get_permit_info`

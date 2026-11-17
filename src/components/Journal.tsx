@@ -55,7 +55,7 @@ export const Journal: React.FC = () => {
           <div className="space-y-2 max-w-2xl">
             <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#226B3E] font-semibold">
               <BookOpen className="w-3.5 h-3.5 text-[#C85A28]" />
-              <span>Enganda Field Journal · Written by Our Ugandan Guides</span>
+              <span>WildLife Field Journal · Written by Our Ugandan Guides</span>
             </div>
             <h2
               id="home-journal-heading"

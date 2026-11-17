@@ -1,6 +1,16 @@
 import React, { useState, useMemo } from 'react';
-import { Compass } from 'lucide-react';
-import { EXPERIENCES } from '../data/seedData';
+import { Link } from 'react-router-dom';
+import {
+  Compass,
+  FileText,
+  Plane,
+  Users,
+  Globe,
+  ArrowRight,
+  Sparkles,
+  CheckCircle2,
+} from 'lucide-react';
+import { EXPERIENCES, SHUMA_COMPANY_INFO } from '../data/seedData';
 import { ExperienceCard } from '../components/ExperienceCard';
 import { SEO } from '../components/SEO';
 import {
@@ -9,19 +19,22 @@ import {
   ACTIVITY_CATEGORY_CONFIG,
   DURATION_BRACKET_CONFIG,
 } from '../components/ExperienceFilterBar';
+import { useInquiry } from '../context/InquiryContext';
+import { formatPrice } from '../lib/currency';
 
 const INITIAL_FILTERS: ExperienceFilterState = {
   region: 'all',
   activityCategory: 'all',
   specialty: 'all',
   durationBracket: 'all',
-  maxDays: 10,
+  maxDays: 35,
   tier: 'all',
   sortBy: 'featured',
 };
 
 export const ExperiencesPage: React.FC = () => {
   const [filters, setFilters] = useState<ExperienceFilterState>(INITIAL_FILTERS);
+  const { currency, openInquiryModal } = useInquiry();
 
   const handleFilterChange = (updated: Partial<ExperienceFilterState>) => {
     setFilters((prev) => ({ ...prev, ...updated }));
@@ -108,15 +121,15 @@ export const ExperiencesPage: React.FC = () => {
   const origin =
     typeof window !== 'undefined' && window.location?.origin
       ? window.location.origin
-      : 'https://engandasafaris.com';
+      : 'https://wildlifesafaris.com';
 
   const experiencesCatalogJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
     '@id': `${origin}/experiences#collection`,
-    name: 'Uganda Safari Experiences & Gorilla Trekking Itineraries | Enganda Safaris',
+    name: 'Uganda & East African Safari Experiences | WildLife & Shuma Africa Safaris',
     description:
-      'Explore 6 private Uganda safari itineraries led by named, licensed Ugandan guides — including Bwindi gorilla trekking, Kibale chimpanzees, Murchison Falls, and Kidepo Valley.',
+      'Explore private Uganda safari itineraries and the flagship 32-Day East African Grand Safari 2027 by Shuma Africa Safaris across Tanzania, Kenya, Uganda, and Rwanda.',
     url: `${origin}/experiences`,
     mainEntity: {
       '@type': 'ItemList',
@@ -145,21 +158,22 @@ export const ExperiencesPage: React.FC = () => {
   return (
     <div className="bg-[#FAF7F2] min-h-screen py-12 sm:py-16">
       <SEO
-        title="Uganda Safari Experiences & Gorilla Trekking Itineraries | Enganda Safaris"
-        description="Explore our 6 signature Uganda safari experiences — from a 1-day Mabamba Shoebill excursion and 3-day Bwindi gorilla trek to a 10-day Uganda Grand Circuit including Kidepo Valley."
-        ogTitle="6 Private Uganda Safari Experiences Led by Named Ugandan Guides | Enganda Safaris"
-        ogDescription="Compare duration, regions, and comfort tier pricing across all 6 signature Uganda safari itineraries — Bwindi gorillas, Kibale chimps, Queen Elizabeth, Murchison Falls, and Kidepo Valley."
+        title="Uganda & East African Grand Safari Experiences | WildLife & Shuma Africa Safaris"
+        description="Explore our signature Uganda safari experiences and the 32-Day East African Grand Safari 2027 by Shuma Africa Safaris (Tanzania, Kenya, Uganda & Rwanda — 7 Guests + 1 Complimentary Tour Leader)."
+        ogTitle="Uganda & East African Safari Experiences | WildLife & Shuma Africa Safaris"
+        ogDescription="Compare duration, regions, and comfort tier pricing across all Uganda itineraries plus the 32-Day East African Grand Safari 2027 ($18,078.57 pp / $126,550 group of 7 + 1 Free Tour Leader)."
         ogType="website"
         ogImage={EXPERIENCES[0]?.heroImage}
-        ogImageAlt="Mountain Gorilla Trekking & Private Uganda Safari Experiences — Enganda Safaris"
+        ogImageAlt="Mountain Gorilla Trekking & East African Grand Safari — WildLife & Shuma Africa Safaris"
         canonicalPath="/experiences"
         keywords={[
           'Uganda Safari Experiences',
+          'Shuma Africa Safaris',
+          '32 Day East African Grand Safari 2027',
           'Bwindi Gorilla Trekking Itinerary',
           'Kibale Chimpanzee Safari',
-          'Murchison Falls Safari',
-          'Kidepo Valley Expedition',
-          'Enganda Safaris Uganda',
+          'Kidepo Valley Charter Safari',
+          'WildLife Safaris Uganda',
         ]}
         jsonLd={experiencesCatalogJsonLd}
       />
@@ -170,16 +184,181 @@ export const ExperiencesPage: React.FC = () => {
           <div className="max-w-3xl space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#1B5632] border border-[#D99B26]/40 text-xs font-mono text-[#D99B26]">
               <Compass className="w-3.5 h-3.5" />
-              <span>Strictly Within Uganda • Private 4x4 &amp; Named Ugandan Guide</span>
+              <span>Uganda &amp; East African Multi-Country Expeditions • Private 4x4 &amp; Named Guides</span>
             </div>
             <h1 className="font-serif text-4xl sm:text-5xl font-bold text-white">
-              Uganda Safari Experiences Led by Our Guide Collective
+              Uganda &amp; East African Safari Experiences
             </h1>
             <p className="text-sm sm:text-base text-[#D6CEC2] leading-relaxed">
-              Every itinerary below is private and customizable. Your safari includes a private 4x4 Land Cruiser with pop-up roof, driven by your professional Enganda guide, full-board lodges, and official UWA permits.
+              Every itinerary below is private and customizable — from 1-to-10-day Uganda primate and savanna circuits to our flagship <strong>32-Day East African Grand Safari 2027</strong> curated with <strong>{SHUMA_COMPANY_INFO.name}</strong> (<em>“{SHUMA_COMPANY_INFO.tagline}”</em>).
             </p>
           </div>
         </div>
+
+        {/* Shuma Africa Safaris — 2027 Grand Safari Partner Spotlight */}
+        <section
+          aria-label="Shuma Africa Safaris 32-Day East African Grand Safari 2027 Spotlight"
+          className="bg-[#144225] text-[#FAF7F2] rounded-xl border-2 border-[#D99B26]/60 shadow-lg overflow-hidden"
+        >
+          <div className="px-6 py-4 bg-[#1A1612]/90 border-b border-white/15 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <Sparkles className="w-4 h-4 text-[#D99B26] shrink-0" />
+              <span className="font-mono text-xs uppercase tracking-wider text-[#D99B26] font-bold">
+                {SHUMA_COMPANY_INFO.name} — “{SHUMA_COMPANY_INFO.tagline}”
+              </span>
+              <span className="hidden sm:inline-block text-white/30">•</span>
+              <span className="font-mono text-xs text-[#E4DCCF] hidden sm:inline">
+                Official 2027 Multi-Country Dossier Integrated
+              </span>
+            </div>
+            <a
+              href={SHUMA_COMPANY_INFO.pdfBrochureUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#D99B26] hover:bg-[#c3871c] text-[#1A1612] font-mono text-xs font-bold transition-colors"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Open Official 32-Day PDF Brochure</span>
+            </a>
+          </div>
+
+          <div className="p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            <div className="lg:col-span-7 space-y-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="px-2.5 py-1 rounded bg-[#C85A28] text-white font-mono text-[11px] font-semibold uppercase">
+                  32 Days / 31 Nights • June–Sept 2027
+                </span>
+                <span className="px-2.5 py-1 rounded bg-[#1B5632] border border-white/20 text-[#E4DCCF] font-mono text-[11px] flex items-center gap-1">
+                  <Globe className="w-3.5 h-3.5 text-[#D99B26]" />
+                  <span>Tanzania • Kenya • Uganda • Rwanda</span>
+                </span>
+                <span className="px-2.5 py-1 rounded bg-[#1B5632] border border-white/20 text-[#D99B26] font-mono text-[11px] flex items-center gap-1">
+                  <Users className="w-3.5 h-3.5" />
+                  <span>7 Guests + 1 Free Tour Leader</span>
+                </span>
+              </div>
+
+              <h2 className="font-serif text-2xl sm:text-4xl font-bold text-white leading-tight">
+                The 32-Day East African Grand Safari 2027
+              </h2>
+
+              <p className="text-xs sm:text-sm text-[#E4DCCF] leading-relaxed">
+                Experience East Africa’s most complete four-country wildlife and primate expedition: Tarangire, Ngorongoro Crater &amp; Central Serengeti (Days 1–7) • Maasai Mara, Lake Nakuru &amp; Kisumu (Days 8–12) • Mabamba Shoebill, Jinja Nile, Sipi Falls, Pian Upe, Moroto Karamoja, Kidepo Valley with <strong>private group charter flight to Murchison Falls</strong>, Kibale Chimps, Queen Elizabeth Ishasha &amp; Bwindi Gorillas (Days 13–26) • Volcanoes Golden Monkeys, Lake Kivu, Nyungwe Canopy &amp; Akagera Big-Five (Days 27–32).
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                <Link
+                  to="/experiences/32-day-east-african-grand-safari-2027"
+                  className="bg-[#1B5632] hover:bg-[#226B3E] border border-[#D99B26]/50 rounded-lg p-3 transition-colors block"
+                >
+                  <div className="font-mono text-[10px] uppercase text-[#D99B26] font-semibold">
+                    Full 4-Country Dossier
+                  </div>
+                  <div className="font-serif text-base font-bold text-white mt-0.5">
+                    32-Day Grand Safari →
+                  </div>
+                  <div className="text-[11px] text-[#D6CEC2] mt-0.5">
+                    TZ • KE • UG • RW ($18,078.57 pp)
+                  </div>
+                </Link>
+
+                <Link
+                  to="/experiences/15-day-shuma-uganda-grand-sector"
+                  className="bg-[#1B5632] hover:bg-[#226B3E] border border-white/15 rounded-lg p-3 transition-colors block"
+                >
+                  <div className="font-mono text-[10px] uppercase text-[#D99B26] font-semibold">
+                    Modular Uganda Sector
+                  </div>
+                  <div className="font-serif text-base font-bold text-white mt-0.5">
+                    15-Day Uganda + Charter →
+                  </div>
+                  <div className="text-[11px] text-[#D6CEC2] mt-0.5">
+                    Days 12–26 • Kidepo–Murchison Flight
+                  </div>
+                </Link>
+
+                <Link
+                  to="/experiences/7-day-shuma-uganda-rwanda-primate-akagera"
+                  className="bg-[#1B5632] hover:bg-[#226B3E] border border-white/15 rounded-lg p-3 transition-colors block"
+                >
+                  <div className="font-mono text-[10px] uppercase text-[#D99B26] font-semibold">
+                    Cross-Border Finale
+                  </div>
+                  <div className="font-serif text-base font-bold text-white mt-0.5">
+                    7-Day Uganda &amp; Rwanda →
+                  </div>
+                  <div className="text-[11px] text-[#D6CEC2] mt-0.5">
+                    Bwindi • Volcanoes • Nyungwe • Akagera
+                  </div>
+                </Link>
+              </div>
+            </div>
+
+            {/* Right 5 Cols: Official Group & Complimentary Tour Leader Pricing Box */}
+            <div className="lg:col-span-5 bg-[#1A1612]/90 border border-[#D99B26]/40 rounded-xl p-5 space-y-4">
+              <div className="flex items-center justify-between border-b border-white/15 pb-3">
+                <div>
+                  <div className="font-mono text-[10px] uppercase tracking-wider text-[#D99B26]">
+                    Official 2027 Group Tariff
+                  </div>
+                  <div className="font-serif text-lg font-bold text-white">
+                    7 Guests + 1 Complimentary Tour Leader
+                  </div>
+                </div>
+                <Plane className="w-5 h-5 text-[#D99B26] shrink-0" />
+              </div>
+
+              <div className="space-y-2 text-xs font-mono">
+                <div className="flex items-center justify-between py-1.5 border-b border-white/10">
+                  <span className="text-[#D6CEC2]">Total Group Package (7 Paying + 1 Free):</span>
+                  <span className="text-white font-bold text-sm">
+                    {formatPrice(SHUMA_COMPANY_INFO.totalGroupCostUSD, currency)} ($126,550 USD)
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-1.5 border-b border-white/10">
+                  <span className="text-[#D6CEC2]">Cost Per Paying Guest (7 Guests):</span>
+                  <span className="text-[#D99B26] font-bold text-sm">
+                    $18,078.57 USD
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-1.5 border-b border-white/10">
+                  <span className="text-[#D6CEC2]">Tour Leader Place (8th Traveller):</span>
+                  <span className="text-[#4CC37A] font-bold">
+                    COMPLIMENTARY (FREE)
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-1.5">
+                  <span className="text-[#D6CEC2]">Rooming Configuration:</span>
+                  <span className="text-white">4 Twin + 1 Single (4-Star)</span>
+                </div>
+              </div>
+
+              <div className="pt-1 flex flex-wrap gap-2">
+                <Link
+                  to="/experiences/32-day-east-african-grand-safari-2027"
+                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-md bg-[#C85A28] hover:bg-[#B04B1D] text-white text-xs font-semibold transition-colors text-center"
+                >
+                  <span>View 32-Day Day-by-Day Plan</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <button
+                  type="button"
+                  onClick={() =>
+                    openInquiryModal({
+                      experienceSlug: '32-day-east-african-grand-safari-2027',
+                      defaultTier: 'mid-range',
+                      defaultNotes:
+                        'Inquiring about Shuma Africa Safaris 32-Day East African Grand Safari 2027 (7 Paying Guests + 1 Complimentary Tour Leader @ $126,550 USD total / $18,078.57 pp).',
+                    })
+                  }
+                  className="px-4 py-2.5 rounded-md bg-[#226B3E] hover:bg-[#2E8550] text-white border border-white/20 text-xs font-semibold transition-colors cursor-pointer"
+                >
+                  Reserve 2027 Group
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
 
         {/* Dedicated Filter & Sort Component */}
         <ExperienceFilterBar
@@ -204,7 +383,7 @@ export const ExperiencesPage: React.FC = () => {
               onClick={resetFilters}
               className="px-5 py-2.5 rounded-md bg-[#226B3E] text-[#FAF7F2] text-xs font-semibold hover:bg-[#1B5632] transition-colors cursor-pointer"
             >
-              Show All {EXPERIENCES.length} Uganda Experiences
+              Show All {EXPERIENCES.length} Safari Experiences
             </button>
           </div>
         ) : (

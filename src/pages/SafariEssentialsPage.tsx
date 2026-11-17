@@ -163,7 +163,7 @@ const DEFAULT_CHECKLIST_ITEMS: Omit<SafariChecklistItem, 'checked'>[] = [
     priority: 'essential',
     weightOrSpec: '8x42 or 10x42 waterproof',
     guideTip:
-      'While every Enganda 4x4 Land Cruiser carries a guide pair, having your own binoculars transforms Kazinga Channel and Kidepo sightings.',
+      'While every WildLife 4x4 Land Cruiser carries a guide pair, having your own binoculars transforms Kazinga Channel and Kidepo sightings.',
   },
   {
     id: 'sgd-neutral-layers',
@@ -317,13 +317,13 @@ const DEFAULT_CHECKLIST_ITEMS: Omit<SafariChecklistItem, 'checked'>[] = [
     category: 'documents-health',
     title: 'UK 3-Pin Square Plug Adapter (Type G, 240V) & Power Bank',
     description:
-      'Uganda uses British Type G wall sockets. Every Enganda 4x4 Land Cruiser also has inverter charging ports between seats.',
+      'Uganda uses British Type G wall sockets. Every WildLife 4x4 Land Cruiser also has inverter charging ports between seats.',
     priority: 'essential',
     weightOrSpec: 'Type G (3 rectangular pins)',
   },
 ];
 
-const CHECKLIST_LOCAL_KEY = 'enganda_active_safari_checklist_v1';
+const CHECKLIST_LOCAL_KEY = 'wildlife_active_safari_checklist_v1';
 
 export const SafariEssentialsPage: React.FC = () => {
   const { savedChecklists, saveChecklistToWallet, removeSavedChecklist } =
@@ -627,7 +627,7 @@ export const SafariEssentialsPage: React.FC = () => {
   return (
     <div className="bg-[#FAF7F2] text-[#1A1612] min-h-screen pb-24">
       <SEO
-        title="Safari Essentials Interactive Checklist | Gorilla Trekking, Savanna & Cultural Packing Guide | Enganda Safaris"
+        title="Safari Essentials Interactive Checklist | Gorilla Trekking, Savanna & Cultural Packing Guide | WildLife Safaris"
         description="Interactive Uganda Safari Essentials checklist categorized by Gorilla Trekking, Savannah Game Drives, Cultural Visits, and Chimpanzee Tracking. Customize, print, or save directly to your Safari Wallet."
       />
 

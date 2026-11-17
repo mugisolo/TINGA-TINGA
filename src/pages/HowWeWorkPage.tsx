@@ -22,8 +22,8 @@ export const HowWeWorkPage: React.FC = () => {
   return (
     <div className="bg-[#FAF7F2] min-h-screen py-12 sm:py-16">
       <SEO
-        title="How Our Ugandan Guide Collective Works | Enganda Safaris"
-        description="Discover the 4-step Enganda guide-network model, deposit protection guarantee, official UWA permit receipts, and fair wages for Ugandan guides and porters."
+        title="How Our Ugandan Guide Collective Works | WildLife Safaris"
+        description="Discover the 4-step WildLife guide-network model, deposit protection guarantee, official UWA permit receipts, and fair wages for Ugandan guides and porters."
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-14">
@@ -35,10 +35,10 @@ export const HowWeWorkPage: React.FC = () => {
               <span>The Guide Is The Product • Coordinated from Entebbe</span>
             </div>
             <h1 className="font-serif text-4xl sm:text-5xl font-bold text-white">
-              How the Enganda Guide Collective Works
+              How the WildLife Guide Collective Works
             </h1>
             <p className="text-sm sm:text-base text-[#D6CEC2] leading-relaxed">
-              Most overseas safari brokers sell you a generic package and assign whichever driver happens to be free the night before you land. Enganda Safaris was built in Entebbe to invert that model: you book a named, verified Ugandan guide who designs and leads your safari from start to finish.
+              Most overseas safari brokers sell you a generic package and assign whichever driver happens to be free the night before you land. WildLife Safaris was built in Entebbe to invert that model: you book a named, verified Ugandan guide who designs and leads your safari from start to finish.
             </p>
           </div>
         </div>
@@ -132,7 +132,7 @@ export const HowWeWorkPage: React.FC = () => {
               <span>Fair Guide Wages & Accreditations</span>
             </div>
             <h2 className="font-serif text-3xl font-bold text-[#1A1612]">
-              Why the Best Guides Choose Enganda
+              Why the Best Guides Choose WildLife
             </h2>
             <p className="text-sm text-[#5A5248] leading-relaxed">
               Guides are the heroes of every journey we run. Because our collective connects travelers directly with senior Ugandan guides without layers of overseas middlemen, our guides earn dignified professional retainers, full field allowances, and comprehensive medical cover.

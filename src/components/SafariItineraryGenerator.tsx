@@ -209,7 +209,7 @@ export const SafariItineraryGenerator: React.FC = () => {
                 to="/wallet"
                 className="text-[#226B3E] font-semibold underline hover:text-[#C85A28]"
               >
-                Enganda {t.nav.safariWallet}
+                WildLife {t.nav.safariWallet}
               </Link>
               .
             </p>

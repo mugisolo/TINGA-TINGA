@@ -394,7 +394,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
   en: {
     geoBanner: {
       detectedFrom: 'Visiting from',
-      proposeSwitch: 'Would you like to view Enganda Safaris in',
+      proposeSwitch: 'Would you like to view WildLife Safaris in',
       switchButton: 'Switch to',
       keepCurrent: 'Continue in English',
       locateMe: 'Detect My Location',
@@ -425,7 +425,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       heroBadge: 'Curated Ugandan Guide Collective • Coordinated from Entebbe',
       heroTitle: 'Uganda, shown to you by the people who call it home.',
       heroParagraph:
-        'At Enganda Safaris, the guide is the product. Instead of being assigned an anonymous driver on arrival, you choose and travel with a named, licensed Ugandan specialist — from Bwindi’s gorilla ridges and Kibale’s chimpanzee canopy to the Shoebill channels of Mabamba and the plains of Kidepo Valley.',
+        'At WildLife Safaris, the guide is the product. Instead of being assigned an anonymous driver on arrival, you choose and travel with a named, licensed Ugandan specialist — from Bwindi’s gorilla ridges and Kibale’s chimpanzee canopy to the Shoebill channels of Mabamba and the plains of Kidepo Valley.',
       ctaMeetGuides: 'Meet Our Guides and Partners',
       ctaPlanSafari: 'Plan My Safari',
       ctaWhatsappDesk: 'WhatsApp Entebbe Desk',
@@ -440,7 +440,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       reserveSpot: 'Reserve Spot',
       left: 'Left',
       itineraryBtn: 'Itinerary',
-      howItWorksTag: 'How Enganda Works',
+      howItWorksTag: 'How WildLife Works',
       howItWorksTitle: 'From Your First Message to the Forest Trailhead',
       howItWorksLink: 'Read our full guide-network model & deposit protection',
       step1Tag: '01. Tell Us Your Interests',
@@ -450,7 +450,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       step2Tag: '02. We Match Your Guide',
       step2Title: 'Meet Your Named Ugandan Specialist Before You Book',
       step2Desc:
-        'Within 12 hours, our Entebbe coordination desk confirms UWA permit and lodge availability and pairs you with the specific Enganda guide whose home region, languages, and specialty fit your trip.',
+        'Within 12 hours, our Entebbe coordination desk confirms UWA permit and lodge availability and pairs you with the specific WildLife guide whose home region, languages, and specialty fit your trip.',
       step3Tag: '03. Your Guide Leads Your Safari',
       step3Title: 'One Accountable Host from Entebbe to Every Park',
       step3Desc:
@@ -458,11 +458,11 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       guidesSectionTag: 'The Guide Is The Product',
       guidesSectionTitle: 'Meet Our Guides and Partners',
       guidesSectionDesc:
-        'Every Enganda safari is designed and led by a licensed Ugandan naturalist and paired with our verified partner lodges, hotels, motels, and camp sites across Uganda.',
+        'Every WildLife safari is designed and led by a licensed Ugandan naturalist and paired with our verified partner lodges, hotels, motels, and camp sites across Uganda.',
       experiencesSectionTag: '100% Uganda • Private Departures',
       experiencesSectionTitle: 'Signature Uganda Safari Experiences',
       experiencesSectionDesc:
-        'Every route stays strictly within Uganda and can be customized around your pace, comfort tier, and preferred Enganda guide.',
+        'Every route stays strictly within Uganda and can be customized around your pace, comfort tier, and preferred WildLife guide.',
       filterAllExperiences: 'Filter All 6 Experiences',
       bottomCtaTag: '5 Minutes from Entebbe International Airport',
       bottomCtaTitle: 'Ready to Match With Your Ugandan Guide?',
@@ -511,12 +511,12 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
     concierge: {
       launcherOpen: 'Ask Guide Matcher',
       launcherClose: 'Close Guide Matcher',
-      headerTitle: 'Enganda Guide Matcher',
+      headerTitle: 'WildLife Guide Matcher',
       headerBadge: 'Entebbe Concierge',
       headerSubtitle: 'Matches Ugandan guides & verified UWA permit tariffs',
       welcomeMessage:
-        'Oli otya! Welcome to the Enganda Guide Matcher. At Enganda Safaris, the guide is the product — tell me what you want to see in Uganda (mountain gorillas, Kibale chimpanzees, the Shoebill at Mabamba, or Kidepo lions) and I will match you with a named Ugandan guide and verified UWA permit tariffs.',
-      loadingMessage: 'Consulting Enganda guide profiles & UWA permit schedule...',
+        'Oli otya! Welcome to the WildLife Guide Matcher. At WildLife Safaris, the guide is the product — tell me what you want to see in Uganda (mountain gorillas, Kibale chimpanzees, the Shoebill at Mabamba, or Kidepo lions) and I will match you with a named Ugandan guide and verified UWA permit tariffs.',
+      loadingMessage: 'Consulting WildLife guide profiles & UWA permit schedule...',
       inputPlaceholder: 'Ask about guides, Bwindi permits, or a 7-day plan...',
       footerGuarantee: '12-hr Entebbe human confirmation',
       quickPrompts: [
@@ -560,7 +560,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
   fr: {
     geoBanner: {
       detectedFrom: 'Visite détectée depuis',
-      proposeSwitch: 'Souhaitez-vous consulter Enganda Safaris en',
+      proposeSwitch: 'Souhaitez-vous consulter WildLife Safaris en',
       switchButton: 'Passer en Français',
       keepCurrent: 'Garder la langue actuelle',
       locateMe: 'Me géolocaliser',
@@ -591,7 +591,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       heroBadge: 'Collectif de Guides Ougandais Certifiés • Coordonné depuis Entebbe',
       heroTitle: 'L’Ouganda, raconté par ceux qui l’appellent chez eux.',
       heroParagraph:
-        'Chez Enganda Safaris, le guide est le cœur du voyage. Au lieu d’un chauffeur anonyme attribué à la dernière minute, vous choisissez et voyagez avec un spécialiste ougandais agréé et nommé — des crêtes des gorilles de Bwindi aux chimpanzés de Kibale, du Bec-en-sabot de Mabamba aux lions de la vallée de Kidepo.',
+        'Chez WildLife Safaris, le guide est le cœur du voyage. Au lieu d’un chauffeur anonyme attribué à la dernière minute, vous choisissez et voyagez avec un spécialiste ougandais agréé et nommé — des crêtes des gorilles de Bwindi aux chimpanzés de Kibale, du Bec-en-sabot de Mabamba aux lions de la vallée de Kidepo.',
       ctaMeetGuides: 'Découvrir Nos Guides et Partenaires',
       ctaPlanSafari: 'Créer Mon Safari',
       ctaWhatsappDesk: 'WhatsApp Bureau d’Entebbe',
@@ -606,7 +606,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       reserveSpot: 'Réserver',
       left: 'places',
       itineraryBtn: 'Itinéraire',
-      howItWorksTag: 'Comment Fonctionne Enganda',
+      howItWorksTag: 'Comment Fonctionne WildLife',
       howItWorksTitle: 'De Votre Premier Message au Sentier de la Forêt',
       howItWorksLink: 'Découvrir notre modèle collectif et la protection des acomptes',
       step1Tag: '01. Partagez Vos Envies',
@@ -616,7 +616,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       step2Tag: '02. Votre Guide Attitré',
       step2Title: 'Rencontrez Votre Spécialiste Ougandais Avant de Réserver',
       step2Desc:
-        'Sous 12 heures, notre bureau d’Entebbe vérifie les permis UWA et les lodges, et vous associe au guide Enganda dont la région natale et les langues correspondent à votre voyage.',
+        'Sous 12 heures, notre bureau d’Entebbe vérifie les permis UWA et les lodges, et vous associe au guide WildLife dont la région natale et les langues correspondent à votre voyage.',
       step3Tag: '03. Guidé à Travers l’Ouganda',
       step3Title: 'Un Seul Hôte Dédié d’Entebbe à Chaque Parc National',
       step3Desc:
@@ -624,11 +624,11 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       guidesSectionTag: 'Le Guide Est Notre Signature',
       guidesSectionTitle: 'Rencontrez Nos Guides et Partenaires',
       guidesSectionDesc:
-        'Chaque safari Enganda est conçu et mené par un naturaliste ougandais agréé, en partenariat avec nos lodges, hôtels, motels et campements vérifiés à travers l’Ouganda.',
+        'Chaque safari WildLife est conçu et mené par un naturaliste ougandais agréé, en partenariat avec nos lodges, hôtels, motels et campements vérifiés à travers l’Ouganda.',
       experiencesSectionTag: '100% Ouganda • Départs Privés',
       experiencesSectionTitle: 'Nos Expériences Safari Signature en Ouganda',
       experiencesSectionDesc:
-        'Chaque itinéraire se déroule exclusivement en Ouganda et s’adapte à votre rythme, votre catégorie de lodges et votre guide Enganda préféré.',
+        'Chaque itinéraire se déroule exclusivement en Ouganda et s’adapte à votre rythme, votre catégorie de lodges et votre guide WildLife préféré.',
       filterAllExperiences: 'Filtrer les 6 Expériences',
       bottomCtaTag: 'À 5 Minutes de l’Aéroport International d’Entebbe',
       bottomCtaTitle: 'Prêt à Choisir Votre Guide Ougandais ?',
@@ -676,12 +676,12 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
     concierge: {
       launcherOpen: 'Conseiller Guides',
       launcherClose: 'Fermer le Conseiller',
-      headerTitle: 'Conseiller Guides Enganda',
+      headerTitle: 'Conseiller Guides WildLife',
       headerBadge: 'Conciergerie Entebbe',
       headerSubtitle: 'Association de guides ougandais & tarifs officiels UWA',
       welcomeMessage:
-        'Oli otya ! Bienvenue sur le Conseiller Guides Enganda. Chez Enganda Safaris, le guide fait toute la différence — dites-moi ce que vous souhaitez découvrir en Ouganda (gorilles de Bwindi, chimpanzés de Kibale, Bec-en-sabot de Mabamba ou lions de Kidepo) et je vous présenterai le guide ougandais idéal ainsi que les tarifs officiels des permis UWA.',
-      loadingMessage: 'Consultation des profils de guides Enganda et des tarifs UWA...',
+        'Oli otya ! Bienvenue sur le Conseiller Guides WildLife. Chez WildLife Safaris, le guide fait toute la différence — dites-moi ce que vous souhaitez découvrir en Ouganda (gorilles de Bwindi, chimpanzés de Kibale, Bec-en-sabot de Mabamba ou lions de Kidepo) et je vous présenterai le guide ougandais idéal ainsi que les tarifs officiels des permis UWA.',
+      loadingMessage: 'Consultation des profils de guides WildLife et des tarifs UWA...',
       inputPlaceholder: 'Posez une question sur nos guides, les permis Bwindi ou un circuit...',
       footerGuarantee: 'Confirmation humaine à Entebbe sous 12h',
       quickPrompts: [
@@ -890,7 +890,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
   zh: {
     geoBanner: {
       detectedFrom: '检测到您访问自',
-      proposeSwitch: '是否将 Enganda Safaris 切换为',
+      proposeSwitch: '是否将 WildLife Safaris 切换为',
       switchButton: '切换为中文',
       keepCurrent: '保持当前语言',
       locateMe: '定位我的位置',
@@ -921,7 +921,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       heroBadge: '乌干达持证向导联盟 • 恩德培总部统筹调度',
       heroTitle: '乌干达，由世代居住于此的向导为您呈现。',
       heroParagraph:
-        '在 Enganda Safaris，向导本身就是最核心的体验。我们绝不在您抵达时临时指派陌生司机，而是让您提前选择并与一位实名认证的乌干达持证自然学家同行——从布温迪的山地大猩猩山脊、基巴莱的黑猩猩树冠，到马班巴湿地的鲸头鹳水道与基德坡谷的狮群平原。',
+        '在 WildLife Safaris，向导本身就是最核心的体验。我们绝不在您抵达时临时指派陌生司机，而是让您提前选择并与一位实名认证的乌干达持证自然学家同行——从布温迪的山地大猩猩山脊、基巴莱的黑猩猩树冠，到马班巴湿地的鲸头鹳水道与基德坡谷的狮群平原。',
       ctaMeetGuides: '认识我们的向导与合作伙伴',
       ctaPlanSafari: '定制我的猎游',
       ctaWhatsappDesk: 'WhatsApp 联系恩德培总部',
@@ -936,7 +936,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       reserveSpot: '立即预订名额',
       left: '席剩余',
       itineraryBtn: '查看行程',
-      howItWorksTag: 'Enganda 运作方式',
+      howItWorksTag: 'WildLife 运作方式',
       howItWorksTitle: '从您的第一条咨询到步入热带雨林步道',
       howItWorksLink: '了解我们的向导联盟模式与定金保障机制',
       step1Tag: '01. 告诉我们您的兴趣',
@@ -954,7 +954,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       guidesSectionTag: '向导即核心体验',
       guidesSectionTitle: '认识我们的向导与合作伙伴',
       guidesSectionDesc:
-        '每一次 Enganda 猎游均由持证乌干达自然向导亲自设计并带队，配合遍布乌干达的认证生态旅馆、酒店、汽车旅馆及露营地。',
+        '每一次 WildLife 猎游均由持证乌干达自然向导亲自设计并带队，配合遍布乌干达的认证生态旅馆、酒店、汽车旅馆及露营地。',
       experiencesSectionTag: '100% 乌干达深度纯玩 • 私人独立成团',
       experiencesSectionTitle: '乌干达王牌猎游路线',
       experiencesSectionDesc:
@@ -1005,12 +1005,12 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
     concierge: {
       launcherOpen: '向导匹配顾问',
       launcherClose: '关闭向导顾问',
-      headerTitle: 'Enganda 向导匹配顾问',
+      headerTitle: 'WildLife 向导匹配顾问',
       headerBadge: '恩德培礼宾台',
       headerSubtitle: '为您匹配乌干达向导并查询 UWA 官方许可证价格',
       welcomeMessage:
-        'Oli otya（您好）！欢迎使用 Enganda 向导匹配顾问。在 Enganda Safaris，向导是旅程的灵魂——请告诉我您最想在乌干达看到什么（布温迪山地大猩猩、基巴莱黑猩猩、马班巴鲸头鹳或基德坡狮群），我将为您推荐最合适的实名乌干达向导及 UWA 官方许可证报价。',
-      loadingMessage: '正在检索 Enganda 向导档案与 UWA 许可证价目表...',
+        'Oli otya（您好）！欢迎使用 WildLife 向导匹配顾问。在 WildLife Safaris，向导是旅程的灵魂——请告诉我您最想在乌干达看到什么（布温迪山地大猩猩、基巴莱黑猩猩、马班巴鲸头鹳或基德坡狮群），我将为您推荐最合适的实名乌干达向导及 UWA 官方许可证报价。',
+      loadingMessage: '正在检索 WildLife 向导档案与 UWA 许可证价目表...',
       inputPlaceholder: '咨询向导信息、布温迪大猩猩许可证或 7 日行程...',
       footerGuarantee: '恩德培人工团队 12 小时内确认',
       quickPrompts: [
@@ -1050,7 +1050,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
   nl: {
     geoBanner: {
       detectedFrom: 'Bezoek gedetecteerd vanuit',
-      proposeSwitch: 'Wilt u Enganda Safaris bekijken in het',
+      proposeSwitch: 'Wilt u WildLife Safaris bekijken in het',
       switchButton: 'Overschakelen naar Nederlands',
       keepCurrent: 'Huidige taal behouden',
       locateMe: 'Mijn locatie detecteren',
@@ -1081,7 +1081,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       heroBadge: 'Collectief van Gecertificeerde Oegandese Gidsen • Gecoördineerd vanuit Entebbe',
       heroTitle: 'Oeganda, aan u getoond door de mensen die er thuis zijn.',
       heroParagraph:
-        'Bij Enganda Safaris staat de gids centraal. In plaats van bij aankomst een willekeurige chauffeur toegewezen te krijgen, kiest en reist u met een bij naam genoemde, gelicentieerde Oegandese specialist — van de gorillabossen van Bwindi en de chimpansees van Kibale tot de schoenbekooievaar in Mabamba en de vlaktes van Kidepo Valley.',
+        'Bij WildLife Safaris staat de gids centraal. In plaats van bij aankomst een willekeurige chauffeur toegewezen te krijgen, kiest en reist u met een bij naam genoemde, gelicentieerde Oegandese specialist — van de gorillabossen van Bwindi en de chimpansees van Kibale tot de schoenbekooievaar in Mabamba en de vlaktes van Kidepo Valley.',
       ctaMeetGuides: 'Ontmoet Onze Gidsen en Partners',
       ctaPlanSafari: 'Plan Mijn Safari',
       ctaWhatsappDesk: 'WhatsApp Entebbe Desk',
@@ -1096,7 +1096,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       reserveSpot: 'Reserveer Plek',
       left: 'plekken vrij',
       itineraryBtn: 'Route',
-      howItWorksTag: 'Hoe Enganda Werkt',
+      howItWorksTag: 'Hoe WildLife Werkt',
       howItWorksTitle: 'Van Uw Eerste Bericht tot het Begin van het Bospad',
       howItWorksLink: 'Lees alles over ons gidsenmodel & aanbetalingsbescherming',
       step1Tag: '01. Deel Uw Wensen',
@@ -1106,7 +1106,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       step2Tag: '02. Wij Matchen Uw Gids',
       step2Title: 'Maak Kennis Met Uw Persoonlijke Oegandese Gids Vóór U Boekt',
       step2Desc:
-        'Binnen 12 uur controleert ons kantoor in Entebbe de beschikbaarheid van UWA-vergunningen en lodges en koppelt u aan de Enganda-gids wiens regio en expertise bij uw reis passen.',
+        'Binnen 12 uur controleert ons kantoor in Entebbe de beschikbaarheid van UWA-vergunningen en lodges en koppelt u aan de WildLife-gids wiens regio en expertise bij uw reis passen.',
       step3Tag: '03. Uw Gids Leidt Uw Safari',
       step3Title: 'Één Vertrouwde Gastheer van Entebbe tot Elk Nationaal Park',
       step3Desc:
@@ -1114,11 +1114,11 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       guidesSectionTag: 'De Gids Maakt Het Verschil',
       guidesSectionTitle: 'Ontmoet Onze Gidsen en Partners',
       guidesSectionDesc:
-        'Elke Enganda-safari wordt ontworpen en geleid door een gecertificeerde Oegandese natuurgids en gecombineerd met onze geverifieerde partnerlodges, hotels, motels en campings.',
+        'Elke WildLife-safari wordt ontworpen en geleid door een gecertificeerde Oegandese natuurgids en gecombineerd met onze geverifieerde partnerlodges, hotels, motels en campings.',
       experiencesSectionTag: '100% Oeganda • Privévertrekken',
       experiencesSectionTitle: 'Onze Kenmerkende Oeganda Safari’s',
       experiencesSectionDesc:
-        'Elke route blijft volledig binnen Oeganda en kan op maat worden aangepast aan uw tempo, comfortklasse en favoriete Enganda-gids.',
+        'Elke route blijft volledig binnen Oeganda en kan op maat worden aangepast aan uw tempo, comfortklasse en favoriete WildLife-gids.',
       filterAllExperiences: 'Filter Alle 6 Safari’s',
       bottomCtaTag: 'Op 5 Minuten van Entebbe International Airport',
       bottomCtaTitle: 'Klaar om Uw Oegandese Gids te Kiezen?',
@@ -1166,12 +1166,12 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
     concierge: {
       launcherOpen: 'Gidsenwijzer',
       launcherClose: 'Sluit Gidsenwijzer',
-      headerTitle: 'Enganda Gidsenwijzer',
+      headerTitle: 'WildLife Gidsenwijzer',
       headerBadge: 'Entebbe Concierge',
       headerSubtitle: 'Koppelt Oegandese gidsen & officiële UWA-tarieven',
       welcomeMessage:
-        'Oli otya! Welkom bij de Enganda Gidsenwijzer. Bij Enganda Safaris staat de gids centraal — vertel mij wat u in Oeganda wilt zien (berggorilla’s in Bwindi, chimpansees in Kibale, de schoenbekooievaar in Mabamba of leeuwen in Kidepo) en ik koppel u aan een Oegandese specialist en officiële UWA-vergunningstarieven.',
-      loadingMessage: 'Enganda gidsprofielen & UWA-vergunningstarieven raadplegen...',
+        'Oli otya! Welkom bij de WildLife Gidsenwijzer. Bij WildLife Safaris staat de gids centraal — vertel mij wat u in Oeganda wilt zien (berggorilla’s in Bwindi, chimpansees in Kibale, de schoenbekooievaar in Mabamba of leeuwen in Kidepo) en ik koppel u aan een Oegandese specialist en officiële UWA-vergunningstarieven.',
+      loadingMessage: 'WildLife gidsprofielen & UWA-vergunningstarieven raadplegen...',
       inputPlaceholder: 'Vraag over onze gidsen, Bwindi-vergunningen of een 7-daagse reis...',
       footerGuarantee: 'Persoonlijke bevestiging vanuit Entebbe binnen 12 uur',
       quickPrompts: [
@@ -1216,7 +1216,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
   de: {
     geoBanner: {
       detectedFrom: 'Besuch erkannt aus',
-      proposeSwitch: 'Möchten Sie Enganda Safaris auf',
+      proposeSwitch: 'Möchten Sie WildLife Safaris auf',
       switchButton: 'Auf Deutsch wechseln',
       keepCurrent: 'Aktuelle Sprache beibehalten',
       locateMe: 'Meinen Standort erkennen',
@@ -1247,7 +1247,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       heroBadge: 'Kuratiertes Ugandisches Guide-Kollektiv • Koordiniert aus Entebbe',
       heroTitle: 'Uganda, gezeigt von den Menschen, die es ihr Zuhause nennen.',
       heroParagraph:
-        'Bei Enganda Safaris steht der Guide im Mittelpunkt. Statt bei der Ankunft einem anonymen Fahrer zugewiesen zu werden, wählen und reisen Sie mit einem namentlich bekannten, lizenzierten ugandischen Spezialisten — von den Berggorillas in Bwindi und den Schimpansen in Kibale bis zum Schuhschnabel in Mabamba und den Löwen im Kidepo-Tal.',
+        'Bei WildLife Safaris steht der Guide im Mittelpunkt. Statt bei der Ankunft einem anonymen Fahrer zugewiesen zu werden, wählen und reisen Sie mit einem namentlich bekannten, lizenzierten ugandischen Spezialisten — von den Berggorillas in Bwindi und den Schimpansen in Kibale bis zum Schuhschnabel in Mabamba und den Löwen im Kidepo-Tal.',
       ctaMeetGuides: 'Unsere Guides und Partner entdecken',
       ctaPlanSafari: 'Meine Safari planen',
       ctaWhatsappDesk: 'WhatsApp Büro Entebbe',
@@ -1262,7 +1262,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       reserveSpot: 'Platz reservieren',
       left: 'frei',
       itineraryBtn: 'Reiseverlauf',
-      howItWorksTag: 'Wie Enganda funktioniert',
+      howItWorksTag: 'Wie WildLife funktioniert',
       howItWorksTitle: 'Von Ihrer ersten Anfrage bis zum Pfad im Regenwald',
       howItWorksLink: 'Mehr über unser Guide-Netzwerk & den Anzahlungsschutz erfahren',
       step1Tag: '01. Ihre Wünsche teilen',
@@ -1272,7 +1272,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       step2Tag: '02. Wir finden Ihren Guide',
       step2Title: 'Lernen Sie Ihren ugandischen Spezialisten vor der Buchung kennen',
       step2Desc:
-        'Innerhalb von 12 Stunden prüft unser Büro in Entebbe die Verfügbarkeit von UWA-Permits und Lodges und stellt Ihnen den passenden Enganda-Guide (inkl. deutschsprachiger Guides wie Grace Namukasa) vor.',
+        'Innerhalb von 12 Stunden prüft unser Büro in Entebbe die Verfügbarkeit von UWA-Permits und Lodges und stellt Ihnen den passenden WildLife-Guide (inkl. deutschsprachiger Guides wie Grace Namukasa) vor.',
       step3Tag: '03. Ihr Guide führt Ihre Safari',
       step3Title: 'Ein fester Ansprechpartner von Entebbe bis in jeden Nationalpark',
       step3Desc:
@@ -1280,7 +1280,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       guidesSectionTag: 'Der Guide macht den Unterschied',
       guidesSectionTitle: 'Unsere Guides und Partner kennenlernen',
       guidesSectionDesc:
-        'Jede Enganda-Safari wird von einem lizenzierten ugandischen Naturführer geleitet und mit geprüften Partner-Lodges, Hotels, Motels und Campsites in ganz Uganda kombiniert.',
+        'Jede WildLife-Safari wird von einem lizenzierten ugandischen Naturführer geleitet und mit geprüften Partner-Lodges, Hotels, Motels und Campsites in ganz Uganda kombiniert.',
       experiencesSectionTag: '100% Uganda • Privatreisen',
       experiencesSectionTitle: 'Ausgewählte Uganda-Safari-Erlebnisse',
       experiencesSectionDesc:
@@ -1332,12 +1332,12 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
     concierge: {
       launcherOpen: 'Guide-Berater fragen',
       launcherClose: 'Guide-Berater schließen',
-      headerTitle: 'Enganda Guide-Berater',
+      headerTitle: 'WildLife Guide-Berater',
       headerBadge: 'Entebbe Concierge',
       headerSubtitle: 'Vermittelt ugandische Guides & offizielle UWA-Permit-Tarife',
       welcomeMessage:
-        'Oli otya! Willkommen beim Enganda Guide-Berater. Bei Enganda Safaris steht der Guide im Mittelpunkt — verraten Sie mir, was Sie in Uganda erleben möchten (Berggorillas in Bwindi, Schimpansen in Kibale, den Schuhschnabel in Mabamba oder Löwen im Kidepo-Tal), und ich empfehle Ihnen den passenden ugandischen Guide samt offiziellen UWA-Permit-Tarifen.',
-      loadingMessage: 'Enganda-Guide-Profile & UWA-Permit-Tarife werden geprüft...',
+        'Oli otya! Willkommen beim WildLife Guide-Berater. Bei WildLife Safaris steht der Guide im Mittelpunkt — verraten Sie mir, was Sie in Uganda erleben möchten (Berggorillas in Bwindi, Schimpansen in Kibale, den Schuhschnabel in Mabamba oder Löwen im Kidepo-Tal), und ich empfehle Ihnen den passenden ugandischen Guide samt offiziellen UWA-Permit-Tarifen.',
+      loadingMessage: 'WildLife-Guide-Profile & UWA-Permit-Tarife werden geprüft...',
       inputPlaceholder: 'Fragen Sie nach Guides, Bwindi-Permits oder einer 7-Tage-Safari...',
       footerGuarantee: 'Persönliche Bestätigung aus Entebbe innerhalb von 12 Std.',
       quickPrompts: [

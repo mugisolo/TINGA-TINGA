@@ -1,4 +1,4 @@
-# Gemini AI Studio Prompt — Enganda Safaris Web Application
+# Gemini AI Studio Prompt — WildLife Safaris Web Application
 
 > **How to use:** Paste everything below the horizontal rule into Google AI Studio as your build prompt. It is self-contained: brand rules, site architecture, data models, AI concierge behavior, styling, and seed data are all specified.
 
@@ -6,7 +6,7 @@
 
 ## ROLE & MISSION
 
-You are a senior full-stack engineer and UX designer. Build a complete, production-quality web application for **Enganda Safaris** — a Ugandan safari company unlike a conventional operator: Enganda is **a collective of professional local safari guides spread across Uganda**, coordinated from a head office in Entebbe. Guests don't book anonymous packages; they book a named, verified Ugandan guide who designs and leads their safari.
+You are a senior full-stack engineer and UX designer. Build a complete, production-quality web application for **WildLife Safaris** — a Ugandan safari company unlike a conventional operator: WildLife is **a collective of professional local safari guides spread across Uganda**, coordinated from a head office in Entebbe. Guests don't book anonymous packages; they book a named, verified Ugandan guide who designs and leads their safari.
 
 The application's core promise: **"The guide is the product."** Every screen must reinforce that guests are booking authentic, locally-led expertise — not a generic tour.
 
@@ -14,11 +14,11 @@ The application's core promise: **"The guide is the product."** Every screen mus
 
 ## BRAND FACTS (use exactly; never contradict)
 
-- **Name:** Enganda Safaris
+- **Name:** WildLife Safaris
 - **Tagline:** "Uganda, shown to you by the people who call it home."
 - **Model:** A curated network of professional, licensed Ugandan safari guides covering every national park and region of Uganda. Uganda-only. Do NOT create content for Tanzania, Kenya, or Rwanda.
 - **Head office:** Mugwanya Road, Bugonga, Entebbe, Uganda *(next to Rosemary Courts)* — "5 minutes from Entebbe International Airport." Show this on the Contact page with a map embed and in the footer.
-- **Contact channels:** WhatsApp +256 700 000 000 (placeholder constant `WHATSAPP_NUMBER`, easy to change), inquiry form, email hello@engandasafaris.com (placeholder).
+- **Contact channels:** WhatsApp +256 700 000 000 (placeholder constant `WHATSAPP_NUMBER`, easy to change), inquiry form, email hello@wildlifesafaris.com (placeholder).
 - **Currencies:** USD (primary), EUR, GBP, UGX. Never TZS or KES.
 
 ---
@@ -26,7 +26,7 @@ The application's core promise: **"The guide is the product."** Every screen mus
 ## ABSOLUTE CONTENT RULES (binding — the build is rejected if violated)
 
 1. **Vehicles — total silence on ownership.** Never write "our fleet," "our vehicles," "we own," nor any statement that vehicles are hired, rented, outsourced, or third-party. Only describe the guest experience: *"Your safari includes a private 4x4 Land Cruiser with pop-up roof, driven by your professional guide."* Vehicle specs may appear only as part of trip inclusions.
-2. **Guides are the heroes.** Always "Enganda guides," "your guide," "our guide network across Uganda." Guides are named, photographed, and bylined on journal articles. There is no "partners" or "subcontractors" page — the guides ARE Enganda.
+2. **Guides are the heroes.** Always "WildLife guides," "your guide," "our guide network across Uganda." Guides are named, photographed, and bylined on journal articles. There is no "partners" or "subcontractors" page — the guides ARE WildLife.
 3. **Geography:** Uganda only. If an itinerary mentions a cross-border extension, exclude it — every route stays within Uganda.
 4. **No fabricated trust signals:** no invented review counts, ratings, or "as seen in" badges. Seed review data must be clearly realistic sample content behind a single constant (e.g., `SAMPLE_REVIEWS`) so it can be swapped for real data.
 5. **No availability hallucination:** neither the UI nor the AI concierge may claim live lodge or permit availability. The promise everywhere is: *"We confirm availability with lodges and Uganda Wildlife Authority within 12 hours of your inquiry."*
@@ -63,7 +63,7 @@ Experience (itinerary) {
   dayByDay: DayPlan[],            // day, location, activities, accommodation tier, meals, drive time, wildlife highlights
   comfortTiers: ('mid-range'|'luxury'|'signature')[],
   priceBands: { tier, perPersonUSD, perPersonPerDayUSD }[],
-  inclusions: string[],           // MUST include: 'Private 4x4 Land Cruiser with pop-up roof', 'Professional Enganda guide-driver', 'All park entrance fees', 'Gorilla/chimp permits as specified', 'Full-board meals', 'Airport meet & greet in Entebbe'
+  inclusions: string[],           // MUST include: 'Private 4x4 Land Cruiser with pop-up roof', 'Professional WildLife guide-driver', 'All park entrance fees', 'Gorilla/chimp permits as specified', 'Full-board meals', 'Airport meet & greet in Entebbe'
   exclusions: string[],
   recommendedGuides: string[],    // guide slugs
   permitsRequired: string[]       // PermitFact ids
@@ -102,10 +102,10 @@ Review { id, guestName, country, experienceSlug, guideSlug, rating, text, date }
 | `/guides/:slug` | `GuideProfilePage` | Full guide dossier: bio, regions, specialties, languages, certifications, the experiences they lead (linked), reviews mentioning them, personal field-story section, prominent **"Request [Name] for your safari"** CTA prefilling the trip planner |
 | `/experiences` | `ExperiencesPage` | Filterable catalogue (duration, region, interest, comfort tier). Cards show duration, price-from per person, permit tags, and the recommended guide's face + name |
 | `/experiences/:slug` | `ExperienceDetailPage` | Day-by-day itinerary, inclusions/exclusions (vehicle wording per Content Rule 1), price bands per comfort tier, permit requirements with live tariff link, recommended guides sidebar, FAQ accordion, sticky bottom booking bar with inquiry modal |
-| `/destinations` | `DestinationsPage` | Uganda regions only: Bwindi & Mgahinga, Kibale, Queen Elizabeth, Murchison Falls, Kidepo Valley, Rwenzori, Jinja & the Nile, Lake Bunyonyi, Entebbe & Mabamba. Each: seasons, wildlife, and *which Enganda guides are based there* |
+| `/destinations` | `DestinationsPage` | Uganda regions only: Bwindi & Mgahinga, Kibale, Queen Elizabeth, Murchison Falls, Kidepo Valley, Rwenzori, Jinja & the Nile, Lake Bunyonyi, Entebbe & Mabamba. Each: seasons, wildlife, and *which WildLife guides are based there* |
 | `/permits` | `PermitsPage` | UWA tariff table (seed data above), low-season calendar callout, daily quotas, minimum ages (15 for gorillas), 2027 price-change warnings, and the guarantee: "Official UWA receipts shared with you before we collect your balance." |
 | `/how-we-work` | `HowWeWorkPage` | The guide-network model explained in 4 steps; deposit protection message ("Your deposit is protected and only released once permits and lodges are confirmed"); transparency commitments; fair guide wages statement |
-| `/trip-planner` | `TripPlannerPage` | Multi-step designer: interests → region/destinations → duration slider → party size → comfort tier → **optional preferred guide** (browsable) → contact details → summary with indicative price band → creates a `Lead`. Ends with: "A real Enganda coordinator replies within 12 hours." |
+| `/trip-planner` | `TripPlannerPage` | Multi-step designer: interests → region/destinations → duration slider → party size → comfort tier → **optional preferred guide** (browsable) → contact details → summary with indicative price band → creates a `Lead`. Ends with: "A real WildLife coordinator replies within 12 hours." |
 | `/reviews` | `ReviewsPage` | Filterable by experience, guide, and rating. Each review names the guide. |
 | `/journal` | `JournalPage` | Guide-bylined articles (seed 4: low-season gorilla trekking guide, Mabamba shoebill field notes, Bwindi packing list, 2027 UWA permit changes explained) |
 | `/responsible-travel` | `ResponsibleTravelPage` | Fair wages for guides & porters, community revenue sharing around parks, no single-use plastics on safari, conservation contribution per booking |
@@ -121,7 +121,7 @@ Review { id, guestName, country, experienceSlug, guideSlug, rating, text, date }
 Gemini 2.5 Flash with function calling. System persona: a warm, knowledgeable Ugandan safari coordinator based in Entebbe. It must obey the Absolute Content Rules (never discuss vehicle ownership; Uganda only; never claim live availability — always promise 12-hour human confirmation).
 
 **Tools to implement:**
-1. `match_guide(interests, language?, region?)` → returns best-fit Enganda guides with reasons.
+1. `match_guide(interests, language?, region?)` → returns best-fit WildLife guides with reasons.
 2. `search_experiences(duration?, region?, interest?)` → queries the experiences catalogue.
 3. `get_permit_info(permitName)` → returns the UWA tariff facts, always adding "official receipts provided."
 4. `build_custom_quote(partySize, durationDays, comfortTier, interests)` → returns a price *band* only, and always states quotes need human confirmation.

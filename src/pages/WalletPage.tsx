@@ -36,8 +36,9 @@ import {
   PERMIT_FACTS,
   PARTNER_ACCOMMODATIONS,
   EXPERIENCES,
+  ENGANDA_AGENT_LOCATIONS,
 } from '../data/seedData';
-import { WalletPaymentRail, ComfortTier } from '../types';
+import { WalletPaymentRail, WithdrawalChannel, ComfortTier } from '../types';
 
 type ActiveWalletTab = 'topup' | 'escrow' | 'book' | 'withdraw';
 type LedgerFilter = 'all' | 'deposit' | 'permit' | 'booking' | 'withdrawal' | 'reward';
@@ -105,7 +106,7 @@ export const WalletPage: React.FC = () => {
     error: authError,
   } = useAuth();
 
-  const [demoPreviewActive, setDemoPreviewActive] = useState<boolean>(false);
+  const [demoPreviewActive, setDemoPreviewActive] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<ActiveWalletTab>('topup');
   const [banner, setBanner] = useState<{
     type: 'success' | 'error';
@@ -140,12 +141,34 @@ export const WalletPage: React.FC = () => {
   const [safariTier, setSafariTier] = useState<ComfortTier>('mid-range');
   const [safariDate, setSafariDate] = useState<string>('2026-12-20');
 
-  // Withdraw state
+  // Withdraw state (3 Channels: Bank Account, MoMo, Cash Withdrawal from Enganda Agent)
+  const [withdrawChannel, setWithdrawChannel] = useState<WithdrawalChannel>('bank_account');
   const [withdrawAmount, setWithdrawAmount] = useState<number>(250);
-  const [withdrawRail, setWithdrawRail] = useState<WalletPaymentRail>('Visa / Mastercard');
-  const [withdrawDestination, setWithdrawDestination] = useState<string>(
-    'Original Visa Card ending 4821'
+  // Bank Account fields
+  const [bankName, setBankName] = useState<string>('FINCA Uganda / Ecobank Partner Account');
+  const [bankAccountName, setBankAccountName] = useState<string>('Samuel Kato');
+  const [bankAccountNumber, setBankAccountNumber] = useState<string>('9030018492014');
+  // MoMo fields
+  const [momoProvider, setMomoProvider] = useState<'MTN Mobile Money Uganda' | 'Airtel Money Uganda'>('MTN Mobile Money Uganda');
+  const [momoNumber, setMomoNumber] = useState<string>('+256 772 841 920');
+  const [momoRecipientName, setMomoRecipientName] = useState<string>('Samuel Kato');
+  // Enganda Agent Cash Withdrawal fields
+  const [selectedAgentId, setSelectedAgentId] = useState<string>(
+    ENGANDA_AGENT_LOCATIONS[0]?.id || 'agent-entebbe-hq'
   );
+  const [agentRecipientName, setAgentRecipientName] = useState<string>('Samuel Kato');
+  const [agentIdDocument, setAgentIdDocument] = useState<string>('CM90018294UG');
+  const [latestCashVoucher, setLatestCashVoucher] = useState<{
+    code: string;
+    amountUSD: number;
+    agentName: string;
+    agentAddress: string;
+    agentPhone: string;
+    agentHours: string;
+    recipientName: string;
+    idDocument: string;
+    createdAt: string;
+  } | null>(null);
 
   // Ledger filter state
   const [ledgerFilter, setLedgerFilter] = useState<LedgerFilter>('all');
@@ -258,13 +281,79 @@ export const WalletPage: React.FC = () => {
     });
   };
 
+  const selectedAgent = useMemo(
+    () =>
+      ENGANDA_AGENT_LOCATIONS.find((a) => a.id === selectedAgentId) ||
+      ENGANDA_AGENT_LOCATIONS[0],
+    [selectedAgentId]
+  );
+
   const handleWithdrawSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const res = withdrawFunds(withdrawAmount, withdrawRail, withdrawDestination);
-    setBanner({
-      type: res.ok ? 'success' : 'error',
-      message: res.message,
-    });
+    if (withdrawChannel === 'bank_account') {
+      const res = withdrawFunds(
+        withdrawAmount,
+        'Bank Account Transfer',
+        `${bankName} • ${bankAccountNumber} (${bankAccountName})`,
+        {
+          channel: 'bank_account',
+          bankName,
+          accountName: bankAccountName,
+          accountNumber: bankAccountNumber,
+          recipientName: bankAccountName,
+        }
+      );
+      setBanner({
+        type: res.ok ? 'success' : 'error',
+        message: res.message,
+      });
+    } else if (withdrawChannel === 'momo') {
+      const res = withdrawFunds(
+        withdrawAmount,
+        momoProvider,
+        `${momoProvider} ${momoNumber} (${momoRecipientName})`,
+        {
+          channel: 'momo',
+          momoProvider,
+          momoNumber,
+          recipientName: momoRecipientName,
+        }
+      );
+      setBanner({
+        type: res.ok ? 'success' : 'error',
+        message: res.message,
+      });
+    } else {
+      const res = withdrawFunds(
+        withdrawAmount,
+        'Cash Withdrawal at Enganda Agent',
+        `${selectedAgent.name} (${selectedAgent.cityOrPark})`,
+        {
+          channel: 'enganda_agent',
+          agentLocationId: selectedAgent.id,
+          agentLocationName: selectedAgent.name,
+          recipientName: agentRecipientName,
+          idDocumentNumber: agentIdDocument,
+        }
+      );
+      setBanner({
+        type: res.ok ? 'success' : 'error',
+        message: res.message,
+      });
+      if (res.ok && res.cashPickupCode) {
+        setLatestCashVoucher({
+          code: res.cashPickupCode,
+          amountUSD: withdrawAmount,
+          agentName: selectedAgent.name,
+          agentAddress: selectedAgent.address,
+          agentPhone: selectedAgent.contactPhone,
+          agentHours: selectedAgent.hours,
+          recipientName: agentRecipientName,
+          idDocument: agentIdDocument,
+          createdAt: new Date().toISOString(),
+        });
+      }
+    }
   };
 
   const handleExportCSV = () => {
@@ -300,7 +389,7 @@ export const WalletPage: React.FC = () => {
     link.setAttribute('href', encodedUri);
     link.setAttribute(
       'download',
-      `enganda-safari-wallet-statement-${new Date().toISOString().slice(0, 10)}.csv`
+      `wildlife-safari-wallet-statement-${new Date().toISOString().slice(0, 10)}.csv`
     );
     document.body.appendChild(link);
     link.click();
@@ -308,7 +397,7 @@ export const WalletPage: React.FC = () => {
 
     setBanner({
       type: 'success',
-      message: 'Downloaded your Enganda Safari Wallet statement (.csv).',
+      message: 'Downloaded your WildLife Safari Wallet statement (.csv).',
     });
   };
 
@@ -316,7 +405,7 @@ export const WalletPage: React.FC = () => {
     <div className="min-h-screen bg-[#FAF7F2] text-[#1A1612] pb-20">
       <SEO
         title="Safari Wallet & UWA Permit Escrow"
-        description="Manage your Enganda Safari Wallet, hold Uganda Wildlife Authority gorilla and chimpanzee permits in escrow, and book partner lodges, hotels, motels, and camp sites."
+        description="Manage your WildLife Safari Wallet, hold Uganda Wildlife Authority gorilla and chimpanzee permits in escrow, and book partner lodges, hotels, motels, and camp sites."
         canonicalPath="/wallet"
       />
 
@@ -330,7 +419,7 @@ export const WalletPage: React.FC = () => {
                 <span>Entebbe Trust Account • UWA Permit Escrow & Partner Bookings</span>
               </div>
               <h1 className="font-serif text-4xl sm:text-5xl font-bold text-white">
-                Enganda Safari Wallet
+                WildLife Safari Wallet
               </h1>
               <p className="text-sm sm:text-base text-[#E4DCCF] leading-relaxed">
                 Fund your Uganda expedition in one place. Lock official UWA gorilla and chimpanzee permits in protected escrow until your receipt is verified, pay 30% safari deposits, or book partner lodges, hotels, motels, and camp sites directly.
@@ -1120,69 +1209,327 @@ export const WalletPage: React.FC = () => {
                 </div>
               )}
 
-              {/* TAB 4: WITHDRAW */}
+              {/* TAB 4: WITHDRAW (Bank Account, MoMo, or Cash Withdrawal from Enganda Agent) */}
               {activeTab === 'withdraw' && (
                 <form onSubmit={handleWithdrawSubmit} className="space-y-6">
                   <div>
                     <span className="font-mono text-xs uppercase tracking-wider text-[#C85A28] font-semibold">
-                      Instant Available Balance Refund
+                      Universal Wallet Payouts • Bank, MoMo &amp; Enganda Agent Cash
                     </span>
                     <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#1A1612] mt-1">
-                      Withdraw Unused Wallet Funds
+                      Withdraw Money from Your Safari Wallet
                     </h2>
                     <p className="text-xs sm:text-sm text-[#5A5248] mt-1">
-                      Transfer any unallocated funds from your Available Safari Balance ({formatPrice(availableBalanceUSD, currency)}) back to your card, Ugandan mobile money account, or bank wire.
+                      Available for all users (Clients, Guides, Partners &amp; Operators). Withdraw funds from your Available Safari Balance (<strong>{formatPrice(availableBalanceUSD, currency)}</strong>) directly to a <strong>Bank Account</strong>, <strong>Mobile Money (MoMo)</strong>, or collect <strong>Cash from an Official Enganda Agent</strong>.
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-[#1A1612] mb-1.5">
-                        Withdrawal Amount (USD)
-                      </label>
-                      <input
-                        type="number"
-                        min={10}
-                        max={availableBalanceUSD}
-                        value={withdrawAmount}
-                        onChange={(e) => setWithdrawAmount(Number(e.target.value))}
-                        className="w-full px-3.5 py-2.5 rounded-md bg-[#FAF7F2] border border-[#D6CEC2] font-mono text-base font-bold text-[#1A1612]"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-[#1A1612] mb-1.5">
-                        Destination Rail
-                      </label>
-                      <select
-                        value={withdrawRail}
-                        onChange={(e) =>
-                          setWithdrawRail(e.target.value as WalletPaymentRail)
-                        }
-                        className="w-full px-3.5 py-2.5 rounded-md bg-[#FAF7F2] border border-[#D6CEC2] text-sm text-[#1A1612]"
-                      >
-                        {PAYMENT_RAILS.map((r) => (
-                          <option key={r.id} value={r.id}>
-                            {r.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-[#1A1612] mb-1.5">
-                      Destination Account / Card / Mobile Number
+                  {/* 3-Channel Withdrawal Mode Selector */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-[#1A1612]">
+                      1. Select Withdrawal Channel
                     </label>
-                    <input
-                      type="text"
-                      required
-                      value={withdrawDestination}
-                      onChange={(e) => setWithdrawDestination(e.target.value)}
-                      placeholder="e.g. Visa ending 4821 or +256 772 000 000"
-                      className="w-full px-3.5 py-2.5 rounded-md bg-[#FAF7F2] border border-[#D6CEC2] text-sm text-[#1A1612]"
-                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => setWithdrawChannel('bank_account')}
+                        className={`p-3.5 rounded-lg border text-left transition-all cursor-pointer ${
+                          withdrawChannel === 'bank_account'
+                            ? 'bg-[#226B3E]/10 border-[#226B3E] shadow-xs'
+                            : 'bg-[#FAF7F2] border-[#E4DCCF] hover:border-[#226B3E]/50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <Landmark className="w-4 h-4 text-[#226B3E]" />
+                          <span className="font-mono text-[10px] uppercase text-[#C85A28] font-bold">
+                            RTGS / SWIFT
+                          </span>
+                        </div>
+                        <div className="text-xs font-bold text-[#1A1612] mt-2">
+                          Bank Account
+                        </div>
+                        <div className="text-[11px] text-[#5A5248] mt-0.5">
+                          FINCA, Ecobank, Stanbic, Centenary or International Wire
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setWithdrawChannel('momo')}
+                        className={`p-3.5 rounded-lg border text-left transition-all cursor-pointer ${
+                          withdrawChannel === 'momo'
+                            ? 'bg-[#226B3E]/10 border-[#226B3E] shadow-xs'
+                            : 'bg-[#FAF7F2] border-[#E4DCCF] hover:border-[#226B3E]/50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <Smartphone className="w-4 h-4 text-[#226B3E]" />
+                          <span className="font-mono text-[10px] uppercase text-[#226B3E] font-bold">
+                            RELWORX Instant
+                          </span>
+                        </div>
+                        <div className="text-xs font-bold text-[#1A1612] mt-2">
+                          Mobile Money (MoMo)
+                        </div>
+                        <div className="text-[11px] text-[#5A5248] mt-0.5">
+                          Instant MTN Mobile Money or Airtel Money Uganda payout
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setWithdrawChannel('enganda_agent')}
+                        className={`p-3.5 rounded-lg border text-left transition-all cursor-pointer ${
+                          withdrawChannel === 'enganda_agent'
+                            ? 'bg-[#226B3E]/10 border-[#226B3E] shadow-xs'
+                            : 'bg-[#FAF7F2] border-[#E4DCCF] hover:border-[#226B3E]/50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <Building2 className="w-4 h-4 text-[#C85A28]" />
+                          <span className="font-mono text-[10px] uppercase text-[#C85A28] font-bold">
+                            Over-The-Counter
+                          </span>
+                        </div>
+                        <div className="text-xs font-bold text-[#1A1612] mt-2">
+                          Cash from Enganda Agent
+                        </div>
+                        <div className="text-[11px] text-[#5A5248] mt-0.5">
+                          Collect physical USD or UGX cash at any Enganda Agent desk
+                        </div>
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Withdrawal Amount */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-[#1A1612]">
+                      2. Withdrawal Amount in USD (Equivalent: {formatPrice(withdrawAmount || 0, currency)})
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center">
+                      <div className="sm:col-span-6">
+                        <input
+                          type="number"
+                          min={10}
+                          max={Math.max(10, availableBalanceUSD)}
+                          value={withdrawAmount}
+                          onChange={(e) => setWithdrawAmount(Number(e.target.value))}
+                          className="w-full px-3.5 py-2.5 rounded-md bg-[#FAF7F2] border border-[#D6CEC2] font-mono text-base font-bold text-[#1A1612]"
+                        />
+                      </div>
+                      <div className="sm:col-span-6 flex flex-wrap gap-1.5">
+                        {[50, 150, 250, 500].map((amt) => (
+                          <button
+                            key={amt}
+                            type="button"
+                            onClick={() =>
+                              setWithdrawAmount(Math.min(amt, Math.max(10, availableBalanceUSD)))
+                            }
+                            className="px-2.5 py-1.5 rounded bg-[#FAF7F2] hover:bg-[#F3ECE1] border border-[#E4DCCF] font-mono text-xs font-semibold text-[#1A1612] cursor-pointer"
+                          >
+                            US${amt}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Channel-Specific Form Inputs */}
+                  {withdrawChannel === 'bank_account' && (
+                    <div className="bg-[#FAF7F2] border border-[#E4DCCF] rounded-lg p-4 space-y-4">
+                      <div className="font-mono text-[11px] uppercase tracking-wider text-[#226B3E] font-bold">
+                        Bank Account Transfer Details (FINCA • Ecobank • Commercial Banks)
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <div className="sm:col-span-2">
+                          <label className="block text-xs font-semibold text-[#1A1612] mb-1">
+                            Select Bank or Settlement Institution
+                          </label>
+                          <select
+                            value={bankName}
+                            onChange={(e) => setBankName(e.target.value)}
+                            className="w-full px-3 py-2 rounded-md bg-white border border-[#D6CEC2] text-xs font-medium text-[#1A1612]"
+                          >
+                            <option value="FINCA Uganda / Ecobank Partner Account">
+                              FINCA Uganda / Ecobank Partner Account (Zero Fee)
+                            </option>
+                            <option value="Ecobank Uganda Limited">
+                              Ecobank Uganda Limited
+                            </option>
+                            <option value="FINCA Uganda MDI">
+                              FINCA Uganda MDI
+                            </option>
+                            <option value="Stanbic Bank Uganda">
+                              Stanbic Bank Uganda
+                            </option>
+                            <option value="Centenary Bank Uganda">
+                              Centenary Bank Uganda
+                            </option>
+                            <option value="Equity Bank Uganda">
+                              Equity Bank Uganda
+                            </option>
+                            <option value="International SWIFT / IBAN Bank Wire">
+                              International SWIFT / IBAN Bank Wire
+                            </option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#1A1612] mb-1">
+                            Account Holder Name *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={bankAccountName}
+                            onChange={(e) => setBankAccountName(e.target.value)}
+                            placeholder="e.g. Samuel Kato"
+                            className="w-full px-3 py-2 rounded-md bg-white border border-[#D6CEC2] text-xs text-[#1A1612]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#1A1612] mb-1">
+                            Account Number / IBAN *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={bankAccountNumber}
+                            onChange={(e) => setBankAccountNumber(e.target.value)}
+                            placeholder="e.g. 9030018492014"
+                            className="w-full px-3 py-2 rounded-md bg-white border border-[#D6CEC2] font-mono text-xs text-[#1A1612]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {withdrawChannel === 'momo' && (
+                    <div className="bg-[#FAF7F2] border border-[#E4DCCF] rounded-lg p-4 space-y-4">
+                      <div className="font-mono text-[11px] uppercase tracking-wider text-[#226B3E] font-bold">
+                        Mobile Money (MoMo) Instant Payout via RELWORX
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                        <div className="sm:col-span-2">
+                          <label className="block text-xs font-semibold text-[#1A1612] mb-1">
+                            Mobile Money Operator
+                          </label>
+                          <select
+                            value={momoProvider}
+                            onChange={(e) =>
+                              setMomoProvider(
+                                e.target.value as
+                                  | 'MTN Mobile Money Uganda'
+                                  | 'Airtel Money Uganda'
+                              )
+                            }
+                            className="w-full px-3 py-2 rounded-md bg-white border border-[#D6CEC2] text-xs font-medium text-[#1A1612]"
+                          >
+                            <option value="MTN Mobile Money Uganda">
+                              MTN Mobile Money Uganda (+256 77 / 78 / 76)
+                            </option>
+                            <option value="Airtel Money Uganda">
+                              Airtel Money Uganda (+256 70 / 75 / 74)
+                            </option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#1A1612] mb-1">
+                            Mobile Money Phone Number *
+                          </label>
+                          <input
+                            type="tel"
+                            required
+                            value={momoNumber}
+                            onChange={(e) => setMomoNumber(e.target.value)}
+                            placeholder="+256 772 841 920"
+                            className="w-full px-3 py-2 rounded-md bg-white border border-[#D6CEC2] font-mono text-xs text-[#1A1612]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#1A1612] mb-1">
+                            Registered MoMo Name *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={momoRecipientName}
+                            onChange={(e) => setMomoRecipientName(e.target.value)}
+                            placeholder="e.g. Samuel Kato"
+                            className="w-full px-3 py-2 rounded-md bg-white border border-[#D6CEC2] text-xs text-[#1A1612]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {withdrawChannel === 'enganda_agent' && (
+                    <div className="bg-[#FAF7F2] border border-[#226B3E]/40 rounded-lg p-4 space-y-4">
+                      <div className="font-mono text-[11px] uppercase tracking-wider text-[#C85A28] font-bold">
+                        Cash Withdrawal from Official Enganda Agent Desk
+                      </div>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-[#1A1612] mb-1">
+                            Select Enganda Agent Branch / Safari Hub
+                          </label>
+                          <select
+                            value={selectedAgentId}
+                            onChange={(e) => setSelectedAgentId(e.target.value)}
+                            className="w-full px-3 py-2 rounded-md bg-white border border-[#D6CEC2] text-xs font-medium text-[#1A1612]"
+                          >
+                            {ENGANDA_AGENT_LOCATIONS.map((ag) => (
+                              <option key={ag.id} value={ag.id}>
+                                {ag.name} — {ag.cityOrPark} (Max Cash: US${ag.maxInstantCashUSD.toLocaleString()})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {selectedAgent && (
+                          <div className="p-3 rounded bg-white border border-[#E4DCCF] text-xs space-y-1">
+                            <div className="flex items-center justify-between font-mono text-[11px] text-[#226B3E] font-bold">
+                              <span>{selectedAgent.name}</span>
+                              <span>{selectedAgent.cityOrPark}</span>
+                            </div>
+                            <div className="text-[#5A5248]">{selectedAgent.address}</div>
+                            <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-[#1A1612] pt-1">
+                              <span>Hours: {selectedAgent.hours}</span>
+                              <span>Desk Tel: {selectedAgent.contactPhone}</span>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                          <div>
+                            <label className="block text-xs font-semibold text-[#1A1612] mb-1">
+                              Recipient Full Name (As on ID/Passport) *
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              value={agentRecipientName}
+                              onChange={(e) => setAgentRecipientName(e.target.value)}
+                              placeholder="e.g. Samuel Kato"
+                              className="w-full px-3 py-2 rounded-md bg-white border border-[#D6CEC2] text-xs text-[#1A1612]"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-[#1A1612] mb-1">
+                              National ID or Passport Number *
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              value={agentIdDocument}
+                              onChange={(e) => setAgentIdDocument(e.target.value)}
+                              placeholder="e.g. CM90018294UG or Passport #"
+                              className="w-full px-3 py-2 rounded-md bg-white border border-[#D6CEC2] font-mono text-xs text-[#1A1612]"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <button
                     type="submit"
@@ -1190,9 +1537,50 @@ export const WalletPage: React.FC = () => {
                   >
                     <ArrowUpRight className="w-4 h-4 text-[#D99B26]" />
                     <span>
-                      Withdraw {formatPrice(withdrawAmount || 0, currency)} Now
+                      {withdrawChannel === 'bank_account'
+                        ? `Withdraw ${formatPrice(withdrawAmount || 0, currency)} to Bank Account`
+                        : withdrawChannel === 'momo'
+                        ? `Withdraw ${formatPrice(withdrawAmount || 0, currency)} to ${momoProvider}`
+                        : `Generate Enganda Agent Cash Pickup Code (${formatPrice(withdrawAmount || 0, currency)})`}
                     </span>
                   </button>
+
+                  {/* Instant Enganda Agent Cash Pickup Voucher Display */}
+                  {latestCashVoucher && (
+                    <div className="bg-[#144225] text-[#FAF7F2] border-2 border-[#D99B26] rounded-xl p-5 space-y-3 shadow-md">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/15 pb-2.5">
+                        <div>
+                          <span className="font-mono text-[10px] uppercase tracking-wider text-[#D99B26] font-bold">
+                            Verified Over-The-Counter Cash Payout Voucher
+                          </span>
+                          <h4 className="font-serif text-lg font-bold text-white">
+                            Enganda Agent Cash Pickup Code: {latestCashVoucher.code}
+                          </h4>
+                        </div>
+                        <span className="px-3 py-1 rounded bg-[#D99B26] text-[#1A1612] font-mono text-sm font-bold">
+                          {formatPrice(latestCashVoucher.amountUSD, currency)} (US${latestCashVoucher.amountUSD})
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[#E4DCCF]">
+                        <div>
+                          <span className="text-[#D6CEC2] block font-mono text-[10px] uppercase">
+                            Enganda Agent Location
+                          </span>
+                          <strong className="text-white">{latestCashVoucher.agentName}</strong>
+                          <div className="text-[11px]">{latestCashVoucher.agentAddress}</div>
+                        </div>
+                        <div>
+                          <span className="text-[#D6CEC2] block font-mono text-[10px] uppercase">
+                            Authorized Recipient &amp; ID
+                          </span>
+                          <strong className="text-white">{latestCashVoucher.recipientName}</strong>
+                          <div className="text-[11px] font-mono">
+                            ID/Passport: {latestCashVoucher.idDocument} • Desk: {latestCashVoucher.agentPhone}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </form>
               )}
             </div>
