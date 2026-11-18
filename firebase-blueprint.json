@@ -2,7 +2,7 @@
   "entities": {
     "User": {
       "title": "User",
-      "description": "Authenticated traveler or staff member profile",
+      "description": "Authenticated traveler, specialist guide, partner lodge, operations staff, or executive admin profile",
       "type": "object",
       "properties": {
         "uid": { "type": "string", "maxLength": 128 },
@@ -10,7 +10,7 @@
         "displayName": { "type": "string", "maxLength": 128 },
         "photoURL": { "type": "string", "maxLength": 512 },
         "role": { "type": "string", "enum": ["client", "admin", "partner", "specialist", "staff", "traveler", "agent"] },
-        "createdAt": { "type": "string" }
+        "createdAt": { "type": "string", "maxLength": 64 }
       },
       "required": ["uid", "email", "createdAt"]
     },
@@ -47,7 +47,7 @@
         "webViewLink": { "type": "string", "maxLength": 512 },
         "category": { "type": "string", "enum": ["permit", "itinerary", "voucher", "passport", "invoice", "other"] },
         "userId": { "type": "string", "maxLength": 128 },
-        "createdAt": { "type": "string" }
+        "createdAt": { "type": "string", "maxLength": 64 }
       },
       "required": ["id", "driveFileId", "name", "userId", "createdAt"]
     },
@@ -71,11 +71,11 @@
         "status": { "type": "string", "enum": ["published", "archived"] },
         "authorId": { "type": "string", "maxLength": 128 }
       },
-      "required": ["id", "guestName", "country", "destination", "rating", "title", "text", "date", "status"]
+      "required": ["id", "guestName", "country", "destination", "rating", "title", "text", "date", "status", "authorId"]
     },
     "SavedItinerary": {
       "title": "SavedItinerary",
-      "description": "Custom multi-day Uganda safari plan tailored to traveler preferences and saved to user wallet",
+      "description": "Custom multi-day Uganda and East Africa safari plan tailored to traveler preferences and saved to user wallet",
       "type": "object",
       "properties": {
         "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
@@ -154,6 +154,64 @@
         "updatedAt": { "type": "string", "maxLength": 64 }
       },
       "required": ["id", "userId", "name", "subtitle", "logoUrl", "category", "active", "displayOrder", "updatedAt"]
+    },
+    "SafariLead": {
+      "title": "SafariLead",
+      "description": "Traveler safari inquiry, custom quote request, and Entebbe coordination lead",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 128 },
+        "email": { "type": "string", "maxLength": 256 },
+        "whatsapp": { "type": "string", "maxLength": 64 },
+        "partySize": { "type": "number" },
+        "targetDates": { "type": "string", "maxLength": 128 },
+        "budgetTier": { "type": "string", "enum": ["mid-range", "luxury", "signature"] },
+        "durationDays": { "type": "number" },
+        "preferredGuideSlug": { "type": "string", "maxLength": 128 },
+        "experienceSlug": { "type": "string", "maxLength": 128 },
+        "notes": { "type": "string", "maxLength": 2000 },
+        "status": { "type": "string", "enum": ["new", "contacted", "quote_sent", "confirmed"] },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "name", "email", "partySize", "targetDates", "budgetTier", "durationDays", "status", "createdAt"]
+    },
+    "UserWallet": {
+      "title": "UserWallet",
+      "description": "Per-user Safari Wallet balances, UWA permit escrow summary, and partner booking summary persisted in Firestore",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "availableBalanceUSD": { "type": "number" },
+        "escrowBalanceUSD": { "type": "number" },
+        "rewardCreditsUSD": { "type": "number" },
+        "permitHoldsCount": { "type": "number" },
+        "partnerBookingsCount": { "type": "number" },
+        "updatedAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["userId", "availableBalanceUSD", "escrowBalanceUSD", "rewardCreditsUSD", "updatedAt"]
+    },
+    "WalletTransactionRecord": {
+      "title": "WalletTransactionRecord",
+      "description": "Safari Wallet transaction including deposits, 3-channel withdrawals (Bank Account, Mobile Money MoMo, Enganda Agent Cash), UWA permit escrow holds, and safari deposits",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "maxLength": 128 },
+        "type": { "type": "string", "enum": ["deposit", "withdrawal", "permit_escrow", "permit_release", "partner_booking", "safari_deposit", "expedition_reward"] },
+        "title": { "type": "string", "maxLength": 256 },
+        "subtitle": { "type": "string", "maxLength": 512 },
+        "amountUSD": { "type": "number" },
+        "direction": { "type": "string", "enum": ["credit", "debit", "escrow_lock", "escrow_unlock"] },
+        "status": { "type": "string", "enum": ["completed", "escrow_held", "pending_verification", "refunded"] },
+        "paymentRail": { "type": "string", "maxLength": 128 },
+        "referenceCode": { "type": "string", "maxLength": 64 },
+        "withdrawalChannel": { "type": "string", "enum": ["bank_account", "momo", "enganda_agent"] },
+        "cashPickupCode": { "type": "string", "maxLength": 64 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "type", "title", "subtitle", "amountUSD", "direction", "status", "paymentRail", "referenceCode", "createdAt"]
     }
   },
   "firestore": {
@@ -188,7 +246,18 @@
     "/footer_logos/{logoId}": {
       "schema": "FooterLogo",
       "description": "Partner and institutional logos displayed in the website footer"
+    },
+    "/safari_leads/{leadId}": {
+      "schema": "SafariLead",
+      "description": "Safari inquiries, custom quotes, and Entebbe coordination leads"
+    },
+    "/user_wallets/{userId}": {
+      "schema": "UserWallet",
+      "description": "Per-user Safari Wallet balance and escrow summary"
+    },
+    "/wallet_transactions/{txId}": {
+      "schema": "WalletTransactionRecord",
+      "description": "Safari Wallet transactions including deposits, Bank/MoMo/Agent Cash withdrawals, and UWA permit escrow locks"
     }
   }
 }
-

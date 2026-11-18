@@ -20,6 +20,7 @@ import {
   doc,
   setDoc,
 } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 import { Review } from '../types';
 import { SAMPLE_REVIEWS, GUIDES, EXPERIENCES } from '../data/seedData';
 import {
@@ -66,11 +67,11 @@ export const ClientTestimonialsCarousel: React.FC = () => {
   const [submittingReview, setSubmittingReview] = useState<boolean>(false);
   const [submitFeedback, setSubmitFeedback] = useState<string | null>(null);
 
-  // Pull reviews from Firestore database + API
+  // Pull reviews from Firestore database + API and seed SAMPLE_REVIEWS when authenticated
   useEffect(() => {
     let isMounted = true;
 
-    async function loadDatabaseTestimonials() {
+    async function loadDatabaseTestimonials(uid?: string | null) {
       const mergedMap = new Map<string, Review>();
       SAMPLE_REVIEWS.forEach((r) => mergedMap.set(r.id, r));
 
@@ -85,29 +86,62 @@ export const ClientTestimonialsCarousel: React.FC = () => {
         // Fallback to seed data if API unreachable
       }
 
-      // 2. Pull user's published testimonials from Firestore database when authenticated
-      if (auth.currentUser?.uid) {
-        try {
-          const q = query(
-            collection(db, 'testimonials'),
-            where('authorId', '==', auth.currentUser.uid),
-            where('status', '==', 'published')
-          );
-          const snap = await getDocs(q);
-          if (!snap.empty) {
-            snap.forEach((docSnap) => {
-              const d = docSnap.data() as Review;
-              if (d && d.id && d.guestName) {
-                mergedMap.set(d.id, d);
-              }
-            });
-            if (isMounted) {
-              setDataSourceLabel(
-                `Live Firestore Database (${mergedMap.size} Verified Reviews)`
-              );
+      // 2. Pull published testimonials from Firestore database
+      try {
+        const q = query(
+          collection(db, 'testimonials'),
+          where('status', '==', 'published')
+        );
+        const snap = await getDocs(q);
+        const existingRemoteIds = new Set<string>();
+        if (!snap.empty) {
+          snap.forEach((docSnap) => {
+            const d = docSnap.data() as Review;
+            if (d && d.id && d.guestName) {
+              existingRemoteIds.add(String(d.id));
+              mergedMap.set(d.id, d);
+            }
+          });
+          if (isMounted) {
+            setDataSourceLabel(
+              `Live Firestore Database (${mergedMap.size} Verified Reviews)`
+            );
+          }
+        }
+
+        // Auto-seed sample reviews into Firestore when signed in so all reviews are stored in the database
+        if (uid) {
+          for (const seedRev of SAMPLE_REVIEWS) {
+            const cleanId = seedRev.id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 128);
+            if (!existingRemoteIds.has(cleanId) && !existingRemoteIds.has(seedRev.id)) {
+              const docPath = `testimonials/${cleanId}`;
+              await setDoc(doc(db, 'testimonials', cleanId), {
+                id: cleanId,
+                guestName: seedRev.guestName.slice(0, 128),
+                country: seedRev.country.slice(0, 100),
+                destination: resolveDestinationLabel(seedRev).slice(0, 160),
+                experienceSlug: (seedRev.experienceSlug || '7-day-best-of-uganda').slice(0, 128),
+                guideSlug: (seedRev.guideSlug || 'samuel-kato').slice(0, 128),
+                guideName: (seedRev.guideName || 'Samuel Kato').slice(0, 128),
+                rating: Math.max(1, Math.min(5, Number(seedRev.rating) || 5)),
+                title: seedRev.title.slice(0, 200),
+                text: seedRev.text.slice(0, 1500),
+                date: seedRev.date.slice(0, 64),
+                partyType: (seedRev.partyType || 'Verified Safari Guest').slice(0, 100),
+                status: 'published',
+                authorId: uid.slice(0, 128),
+              }).catch((err) => {
+                try {
+                  handleFirestoreError(err, OperationType.CREATE, docPath);
+                } catch {
+                  // Handled
+                }
+              });
             }
           }
-        } catch (err) {
+        }
+      } catch (err) {
+        if (uid) {
           try {
             handleFirestoreError(err, OperationType.LIST, 'testimonials');
           } catch {
@@ -121,10 +155,17 @@ export const ClientTestimonialsCarousel: React.FC = () => {
       }
     }
 
-    loadDatabaseTestimonials();
+    loadDatabaseTestimonials(auth.currentUser?.uid);
+
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser?.uid) {
+        loadDatabaseTestimonials(currentUser.uid);
+      }
+    });
 
     return () => {
       isMounted = false;
+      unsubscribe();
     };
   }, []);
 

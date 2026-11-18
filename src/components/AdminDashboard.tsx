@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Plus,
@@ -13,9 +13,18 @@ import {
   Layers,
   Calendar,
   Sparkles,
+  Database,
+  RefreshCw,
 } from 'lucide-react';
 import { useInquiry } from '../context/InquiryContext';
 import { useAuth } from '../context/AuthContext';
+import { useWallet } from '../context/WalletContext';
+import {
+  testFirestoreConnection,
+  DatabaseConnectionStatus,
+  resolvedDatabaseId,
+  firebaseConfig,
+} from '../lib/firebase';
 import {
   ConfirmedPackageEvent,
   EventDisplayPlacement,
@@ -91,14 +100,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onNotify,
 }) => {
   const { user, signInWithGoogle } = useAuth();
+  const { transactions, savedItineraries, savedChecklists } = useWallet();
   const {
     currency,
+    leads,
     safariEvents,
     carouselEvents,
     upcomingEvents,
     addSafariEvent,
+    updateSafariEvent,
     updateSafariEventPlacement,
     deleteSafariEvent,
+    resetSafariEventsToDefault,
     footerLogos,
     activeFooterLogos,
     poweredByText,
@@ -107,7 +120,41 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     updateFooterLogo,
     deleteFooterLogo,
     resetFooterLogosToDefault,
+    firestoreSyncStatus,
+    syncAllSystemDataToFirestore,
   } = useInquiry();
+
+  const [dbConnStatus, setDbConnStatus] = useState<DatabaseConnectionStatus | null>(null);
+  const [isTestingDb, setIsTestingDb] = useState<boolean>(false);
+
+  useEffect(() => {
+    let active = true;
+    testFirestoreConnection().then((res) => {
+      if (active) setDbConnStatus(res);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleVerifyAndSyncFirestore = async () => {
+    setIsTestingDb(true);
+    try {
+      const conn = await testFirestoreConnection();
+      setDbConnStatus(conn);
+      if (user) {
+        const syncRes = await syncAllSystemDataToFirestore();
+        notify(syncRes.ok ? 'success' : 'error', syncRes.message);
+      } else {
+        notify(
+          conn.connected ? 'success' : 'error',
+          `${conn.statusMessage} (${conn.latencyMs}ms). Sign in with Google to write & sync admin records to Firestore.`
+        );
+      }
+    } finally {
+      setIsTestingDb(false);
+    }
+  };
 
   const [localBanner, setLocalBanner] = useState<{
     type: 'success' | 'error';
@@ -125,7 +172,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
-  // --- Event & Trip Upload Form State ---
+  // --- Event & Trip Upload / Replace Form State ---
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [evtTitle, setEvtTitle] = useState('');
   const [evtShortTab, setEvtShortTab] = useState('');
   const [evtSubtitle, setEvtSubtitle] = useState('');
@@ -158,6 +206,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       : showOnCarousel
       ? 'carousel'
       : 'upcoming';
+
+  const startEditingEvent = (ev: ConfirmedPackageEvent) => {
+    setEditingEventId(ev.id);
+    setEvtTitle(ev.title);
+    setEvtShortTab(ev.shortTabLabel || ev.title.slice(0, 20));
+    setEvtSubtitle(ev.subtitle || '');
+    setEvtTag(ev.eventTag || 'CONFIRMED EXPEDITION');
+    setEvtCategory(ev.category);
+    setEvtDateWindow(ev.dateWindow);
+    setEvtDurationLabel(ev.durationLabel);
+    setEvtLocation(ev.location);
+    setEvtSpots(ev.spotsRemaining);
+    setEvtPriceUSD(ev.pricePerPersonUSD);
+    setEvtGuideSlug(ev.leadGuideSlug);
+    setEvtImage(ev.heroImage);
+    setEvtHighlightsText((ev.highlights || []).join('\n'));
+    const pl = ev.placement || 'both';
+    setShowOnCarousel(pl === 'carousel' || pl === 'both');
+    setShowOnUpcoming(pl === 'upcoming' || pl === 'both');
+  };
 
   // --- Footer Logo Form State ---
   const [logoName, setLogoName] = useState('');
@@ -196,7 +264,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       .map((line) => line.trim())
       .filter(Boolean);
 
-    const created = await addSafariEvent({
+    const payload = {
       title: evtTitle.trim(),
       shortTabLabel: evtShortTab.trim() || evtTitle.trim().slice(0, 20),
       subtitle:
@@ -227,21 +295,32 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           ? `Upcoming • ${evtSpots} Spots Open`
           : `Confirmed • ${evtSpots} Spots Left`,
       placement: computedPlacement,
-    });
+    };
+
+    if (editingEventId) {
+      await updateSafariEvent(editingEventId, payload);
+      notify(
+        'success',
+        `Replaced & updated "${payload.title}" in Firestore (/safari_events/${editingEventId}).`
+      );
+      setEditingEventId(null);
+    } else {
+      const created = await addSafariEvent(payload);
+      notify(
+        'success',
+        `Uploaded "${created.title}" to Firestore (${
+          computedPlacement === 'both'
+            ? 'Homepage Carousel & Upcoming Programs'
+            : computedPlacement === 'carousel'
+            ? 'Homepage Carousel Only'
+            : 'Upcoming Programs List Only'
+        }).`
+      );
+    }
 
     setEvtTitle('');
     setEvtShortTab('');
     setEvtSubtitle('');
-    notify(
-      'success',
-      `Uploaded "${created.title}" to Firestore (${
-        computedPlacement === 'both'
-          ? 'Homepage Carousel & Upcoming Programs'
-          : computedPlacement === 'carousel'
-          ? 'Homepage Carousel Only'
-          : 'Upcoming Programs List Only'
-      }).`
-    );
   };
 
   const handleToggleEventTarget = async (
@@ -350,6 +429,98 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </button>
         </div>
       )}
+
+      {/* ===================================================================== */}
+      {/* FIRESTORE DATABASE CONNECTION & SYSTEM DATA PERSISTENCE BAR           */}
+      {/* ===================================================================== */}
+      <div className="bg-[#1A1612] text-[#F5EFE6] border border-[#2D261F] rounded-lg p-4 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-lg bg-[#226B3E]/25 border border-[#226B3E] flex items-center justify-center shrink-0">
+              <Database className="w-4 h-4 text-[#4ADE80]" />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-[#E59A52] font-bold">
+                  Firestore Database &amp; Rules Verification
+                </span>
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${
+                    dbConnStatus?.connected !== false
+                      ? 'bg-[#226B3E]/30 text-[#4ADE80] border border-[#226B3E]'
+                      : 'bg-[#DC2626]/20 text-[#FCA5A5] border border-[#DC2626]'
+                  }`}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                  {dbConnStatus
+                    ? `${dbConnStatus.statusMessage} (${dbConnStatus.latencyMs}ms)`
+                    : 'Verifying Firestore connection...'}
+                </span>
+              </div>
+              <p className="text-xs text-[#C7B9A5] mt-1 font-mono">
+                Project: <span className="text-white">{firebaseConfig.projectId}</span> · Database ID:{' '}
+                <span className="text-[#4ADE80]">{resolvedDatabaseId}</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {!user && (
+              <button
+                type="button"
+                onClick={() => signInWithGoogle()}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#C85A28] hover:bg-[#B04B1D] text-white font-mono text-xs font-semibold transition-colors cursor-pointer"
+              >
+                <span>Sign In to Persist Records</span>
+              </button>
+            )}
+            <button
+              type="button"
+              disabled={isTestingDb || firestoreSyncStatus.isSyncing}
+              onClick={handleVerifyAndSyncFirestore}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded bg-[#226B3E] hover:bg-[#1A5230] disabled:opacity-50 text-white font-mono text-xs font-semibold transition-colors cursor-pointer"
+            >
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${
+                  isTestingDb || firestoreSyncStatus.isSyncing ? 'animate-spin' : ''
+                }`}
+              />
+              <span>
+                {isTestingDb || firestoreSyncStatus.isSyncing
+                  ? 'Verifying & Syncing...'
+                  : 'Verify & Sync All System Data to Firestore'}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 pt-2 border-t border-white/10 text-[11px] font-mono">
+          <div className="bg-white/5 rounded px-2.5 py-1.5">
+            <div className="text-[#9E9284] text-[10px]">/safari_events</div>
+            <div className="text-white font-bold">{safariEvents.length} Trips &amp; Events</div>
+          </div>
+          <div className="bg-white/5 rounded px-2.5 py-1.5">
+            <div className="text-[#9E9284] text-[10px]">/footer_logos</div>
+            <div className="text-white font-bold">{footerLogos.length} Partner Logos</div>
+          </div>
+          <div className="bg-white/5 rounded px-2.5 py-1.5">
+            <div className="text-[#9E9284] text-[10px]">/safari_leads</div>
+            <div className="text-white font-bold">{leads.length} Client Leads</div>
+          </div>
+          <div className="bg-white/5 rounded px-2.5 py-1.5">
+            <div className="text-[#9E9284] text-[10px]">/wallet_transactions</div>
+            <div className="text-white font-bold">{transactions.length} Ledger Entries</div>
+          </div>
+          <div className="bg-white/5 rounded px-2.5 py-1.5">
+            <div className="text-[#9E9284] text-[10px]">/saved_itineraries</div>
+            <div className="text-white font-bold">{savedItineraries.length} Custom Plans</div>
+          </div>
+          <div className="bg-white/5 rounded px-2.5 py-1.5">
+            <div className="text-[#9E9284] text-[10px]">/saved_checklists</div>
+            <div className="text-white font-bold">{savedChecklists.length} Checklists</div>
+          </div>
+        </div>
+      </div>
 
       {/* ===================================================================== */}
       {/* PART 1: UPLOAD EVENT & TRIP DATA TO FIRESTORE + CAROUSEL/UPCOMING     */}
@@ -653,18 +824,36 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </div>
 
               <div className="md:col-span-12 flex items-center justify-end gap-3 pt-1">
+                {editingEventId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingEventId(null);
+                      setEvtTitle('');
+                      setEvtShortTab('');
+                      setEvtSubtitle('');
+                    }}
+                    className="px-4 py-2.5 rounded-md bg-[#F3ECE1] hover:bg-[#E4DCCF] text-[#1A1612] font-mono text-xs font-semibold cursor-pointer"
+                  >
+                    Cancel Edit
+                  </button>
+                )}
                 <button
                   type="submit"
                   className="inline-flex items-center gap-2 bg-[#C85A28] hover:bg-[#B04B1D] text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-md transition-colors cursor-pointer shadow-xs"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Upload Event / Trip to Firestore</span>
+                  <span>
+                    {editingEventId
+                      ? 'Save Replacement to Firestore'
+                      : 'Upload Event / Trip to Firestore'}
+                  </span>
                 </button>
               </div>
             </form>
           </div>
 
-          {/* Live Inventory Table with Instant Carousel / Upcoming Toggle Buttons */}
+          {/* Live Inventory Table with Instant Carousel / Upcoming Toggle & Edit/Replace Buttons */}
           <div className="bg-white border border-[#E4DCCF] rounded-lg overflow-hidden">
             <div className="px-4 py-3 border-b border-[#E4DCCF] flex flex-wrap items-center justify-between gap-2">
               <div>
@@ -672,16 +861,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   Loaded Safari Events &amp; Programs ({safariEvents.length})
                 </h3>
                 <p className="text-xs text-[#5A5248]">
-                  Toggle any event or trip on or off the Homepage Carousel and Upcoming Programs list.
+                  Existing packages stay active in the system until replaced, edited, or removed by Admin.
                 </p>
               </div>
-              <div className="flex items-center gap-2 text-[11px] font-mono">
+              <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono">
                 <span className="px-2 py-0.5 rounded bg-[#226B3E]/15 text-[#226B3E] font-semibold">
                   Carousel Active: {carouselEvents.length}
                 </span>
                 <span className="px-2 py-0.5 rounded bg-[#C85A28]/15 text-[#C85A28] font-semibold">
                   Upcoming Active: {upcomingEvents.length}
                 </span>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await resetSafariEventsToDefault();
+                    notify(
+                      'success',
+                      'Restored default safari events & departures in Firestore.'
+                    );
+                  }}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#F3ECE1] hover:bg-[#E4DCCF] text-[#1A1612] border border-[#D6CEC2] font-semibold cursor-pointer"
+                >
+                  <RotateCcw className="w-3 h-3 text-[#226B3E]" />
+                  <span>Reset Default Events</span>
+                </button>
               </div>
             </div>
 
@@ -761,20 +964,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           </div>
                         </td>
                         <td className="py-2.5 px-3.5 text-right">
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              await deleteSafariEvent(ev.id);
-                              notify(
-                                'success',
-                                `Removed "${ev.title}" from schedule.`
-                              );
-                            }}
-                            className="p-1.5 rounded text-[#5A5248] hover:text-[#DC2626] hover:bg-[#DC2626]/10 cursor-pointer"
-                            title="Delete event"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          <div className="inline-flex items-center justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => startEditingEvent(ev)}
+                              className="px-2 py-1 rounded bg-[#F3ECE1] hover:bg-[#E4DCCF] text-[#1A1612] font-mono text-[10px] font-semibold cursor-pointer"
+                            >
+                              Edit / Replace
+                            </button>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                await deleteSafariEvent(ev.id);
+                                notify(
+                                  'success',
+                                  `Removed "${ev.title}" from schedule.`
+                                );
+                              }}
+                              className="p-1.5 rounded text-[#5A5248] hover:text-[#DC2626] hover:bg-[#DC2626]/10 cursor-pointer"
+                              title="Delete event"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );

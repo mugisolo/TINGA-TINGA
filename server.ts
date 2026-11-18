@@ -745,12 +745,21 @@ app.post('/api/chat', async (req, res) => {
 
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
-    const { createServer: createViteServer } = await import('vite');
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
+    const vitePromise = import('vite').then(({ createServer: createViteServer }) =>
+      createViteServer({
+        server: { middlewareMode: true },
+        appType: 'spa',
+      })
+    );
+
+    app.use(async (req, res, next) => {
+      try {
+        const vite = await vitePromise;
+        vite.middlewares(req, res, next);
+      } catch (err) {
+        next(err);
+      }
     });
-    app.use(vite.middlewares);
   } else {
     const distPath = fs.existsSync(path.resolve(process.cwd(), 'dist', 'index.html'))
       ? path.resolve(process.cwd(), 'dist')
@@ -765,6 +774,7 @@ async function startServer() {
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`[WildLife Safaris] Server running on http://0.0.0.0:${PORT}`);
+    console.log(`  ➜  Local:   http://localhost:${PORT}/`);
   });
 }
 

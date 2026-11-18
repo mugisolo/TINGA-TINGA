@@ -367,18 +367,24 @@ export const PortalsPage: React.FC = () => {
 
   // Operational Dispatches state (persisted locally + synced to Firestore /portal_dispatches)
   const [dispatches, setDispatches] = useState<PortalDispatch[]>(() => {
+    let deletedSet = new Set<string>();
     try {
+      const rawDel = localStorage.getItem('enganda_deleted_dispatch_ids_v1');
+      if (rawDel) {
+        const parsedDel = JSON.parse(rawDel);
+        if (Array.isArray(parsedDel)) deletedSet = new Set(parsedDel.map(String));
+      }
       const saved = localStorage.getItem(DISPATCH_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+          return parsed.filter((d: PortalDispatch) => !deletedSet.has(d.id));
         }
       }
     } catch {
       // ignore
     }
-    return INITIAL_DISPATCHES;
+    return INITIAL_DISPATCHES.filter((d) => !deletedSet.has(d.id));
   });
 
   // New Dispatch Form State
@@ -389,7 +395,7 @@ export const PortalsPage: React.FC = () => {
   const [newDispatchPriority, setNewDispatchPriority] = useState<'normal' | 'high' | 'urgent'>('normal');
   const [newDispatchNotes, setNewDispatchNotes] = useState('');
 
-  // Reset active section when portal role or query param changes
+  // Reset active section when portal role or query param changes & sync activePortalRole
   useEffect(() => {
     const def =
       PORTAL_DEFINITIONS.find((p) => p.role === currentRole) ||
@@ -402,7 +408,10 @@ export const PortalsPage: React.FC = () => {
     }
     setStatusFilter('all');
     setSearchQuery('');
-  }, [currentRole, searchParams]);
+    if (currentRole !== activePortalRole && canSwitchToRole(currentRole)) {
+      setActivePortalRole(currentRole);
+    }
+  }, [currentRole, searchParams, activePortalRole, canSwitchToRole, setActivePortalRole]);
 
   // Persist dispatches locally
   useEffect(() => {
@@ -413,25 +422,40 @@ export const PortalsPage: React.FC = () => {
     }
   }, [dispatches]);
 
-  // Load user's Firestore dispatches when authenticated
+  // Load and auto-seed Firestore dispatches when authenticated
   useEffect(() => {
     if (!user?.uid) return;
     let isMounted = true;
 
     const loadFirestoreDispatches = async () => {
+      let deletedSet = new Set<string>();
+      try {
+        const rawDel = localStorage.getItem('enganda_deleted_dispatch_ids_v1');
+        if (rawDel) {
+          const parsedDel = JSON.parse(rawDel);
+          if (Array.isArray(parsedDel)) deletedSet = new Set(parsedDel.map(String));
+        }
+      } catch {
+        // ignore
+      }
+
       try {
         const q = query(
           collection(db, 'portal_dispatches'),
           where('userId', '==', user.uid)
         );
         const snap = await getDocs(q);
-        if (!snap.empty && isMounted) {
-          const remote: PortalDispatch[] = [];
-          snap.forEach((docSnap) => {
-            const d = docSnap.data();
-            if (d && d.id && d.title) {
+        const existingRemoteIds = new Set<string>();
+        const remote: PortalDispatch[] = [];
+
+        snap.forEach((docSnap) => {
+          const d = docSnap.data();
+          if (d && d.id && d.title) {
+            const docId = String(d.id);
+            existingRemoteIds.add(docId);
+            if (!deletedSet.has(docId)) {
               remote.push({
-                id: String(d.id),
+                id: docId,
                 userId: String(d.userId),
                 authorName: String(d.authorName || 'Portal User'),
                 portalRole: (d.portalRole as PortalRole) || 'client',
@@ -445,14 +469,49 @@ export const PortalsPage: React.FC = () => {
                 createdAt: String(d.createdAt || new Date().toISOString()),
               });
             }
+          }
+        });
+
+        if (remote.length > 0 && isMounted) {
+          setDispatches((prev) => {
+            const map = new Map<string, PortalDispatch>();
+            prev
+              .filter((item) => !deletedSet.has(item.id))
+              .forEach((item) => map.set(item.id, item));
+            remote.forEach((item) => map.set(item.id, item));
+            return Array.from(map.values());
           });
-          if (remote.length > 0) {
-            setDispatches((prev) => {
-              const existingIds = new Set(prev.map((item) => item.id));
-              return [
-                ...remote.filter((r) => !existingIds.has(r.id)),
-                ...prev,
-              ];
+        }
+
+        // Seed INITIAL_DISPATCHES into Firestore so existing operational dispatches stay in the database
+        for (const seedDsp of INITIAL_DISPATCHES) {
+          const cleanId = seedDsp.id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 128);
+          if (
+            !deletedSet.has(cleanId) &&
+            !deletedSet.has(seedDsp.id) &&
+            !existingRemoteIds.has(cleanId) &&
+            !existingRemoteIds.has(seedDsp.id)
+          ) {
+            const docPath = `portal_dispatches/${cleanId}`;
+            await setDoc(doc(db, 'portal_dispatches', cleanId), {
+              id: cleanId,
+              userId: user.uid.slice(0, 128),
+              authorName: seedDsp.authorName.slice(0, 128),
+              portalRole: seedDsp.portalRole,
+              category: seedDsp.category.slice(0, 64),
+              title: seedDsp.title.slice(0, 200),
+              region: seedDsp.region.slice(0, 160),
+              status: seedDsp.status,
+              priority: seedDsp.priority,
+              notes: (seedDsp.notes || '').slice(0, 1500),
+              referenceCode: seedDsp.referenceCode.slice(0, 64),
+              createdAt: seedDsp.createdAt.slice(0, 64),
+            }).catch((err) => {
+              try {
+                handleFirestoreError(err, OperationType.CREATE, docPath);
+              } catch {
+                // Handled
+              }
             });
           }
         }
@@ -564,18 +623,33 @@ export const PortalsPage: React.FC = () => {
     const target = dispatches.find((d) => d.id === dispatchId);
     if (!target) return;
 
-    const updated: PortalDispatch = { ...target, status: nextStatus };
+    const updated: PortalDispatch = {
+      ...target,
+      status: nextStatus,
+      userId: user?.uid || target.userId,
+    };
     setDispatches((prev) =>
       prev.map((d) => (d.id === dispatchId ? updated : d))
     );
     notify('success', `Updated ${target.referenceCode} status to ${nextStatus.replace('_', ' ')}.`);
 
-    if (user?.uid && target.userId === user.uid) {
-      const docPath = `portal_dispatches/${dispatchId}`;
+    if (user?.uid) {
+      const cleanId = dispatchId.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 128);
+      const docPath = `portal_dispatches/${cleanId}`;
       try {
-        await setDoc(doc(db, 'portal_dispatches', dispatchId), {
-          ...updated,
-          notes: updated.notes || '',
+        await setDoc(doc(db, 'portal_dispatches', cleanId), {
+          id: cleanId,
+          userId: user.uid.slice(0, 128),
+          authorName: updated.authorName.slice(0, 128),
+          portalRole: updated.portalRole,
+          category: updated.category.slice(0, 64),
+          title: updated.title.slice(0, 200),
+          region: updated.region.slice(0, 160),
+          status: updated.status,
+          priority: updated.priority,
+          notes: (updated.notes || '').slice(0, 1500),
+          referenceCode: updated.referenceCode.slice(0, 64),
+          createdAt: updated.createdAt.slice(0, 64),
         });
       } catch (err) {
         try {
@@ -589,14 +663,28 @@ export const PortalsPage: React.FC = () => {
 
   const handleDeleteDispatch = async (dispatchId: string) => {
     const target = dispatches.find((d) => d.id === dispatchId);
+    try {
+      const rawDel = localStorage.getItem('enganda_deleted_dispatch_ids_v1');
+      const arr = rawDel ? JSON.parse(rawDel) : [];
+      const setObj = new Set<string>(Array.isArray(arr) ? arr.map(String) : []);
+      setObj.add(dispatchId);
+      setObj.add(dispatchId.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 128));
+      localStorage.setItem(
+        'enganda_deleted_dispatch_ids_v1',
+        JSON.stringify(Array.from(setObj))
+      );
+    } catch {
+      // ignore
+    }
     setDispatches((prev) => prev.filter((d) => d.id !== dispatchId));
     if (target) {
       notify('success', `Removed dispatch ${target.referenceCode}.`);
     }
-    if (user?.uid && target?.userId === user.uid) {
-      const docPath = `portal_dispatches/${dispatchId}`;
+    if (user?.uid) {
+      const cleanId = dispatchId.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 128);
+      const docPath = `portal_dispatches/${cleanId}`;
       try {
-        await deleteDoc(doc(db, 'portal_dispatches', dispatchId));
+        await deleteDoc(doc(db, 'portal_dispatches', cleanId));
       } catch (err) {
         try {
           handleFirestoreError(err, OperationType.DELETE, docPath);

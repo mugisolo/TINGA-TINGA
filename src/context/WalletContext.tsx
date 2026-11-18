@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
   doc,
+  getDoc,
   setDoc,
   deleteDoc,
   collection,
@@ -240,13 +241,185 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [state]);
 
-  // Sync per-user saved_itineraries & saved_checklists from Firestore under active security rules
+  // Helper to persist user's wallet summary to /user_wallets/{uid}
+  const syncWalletSummaryToFirestore = useCallback(
+    async (
+      availableBalanceUSD: number,
+      escrowBalanceUSD: number,
+      rewardCreditsUSD: number,
+      permitHoldsCount: number,
+      partnerBookingsCount: number,
+      op: OperationType = OperationType.WRITE
+    ) => {
+      if (!auth.currentUser?.uid) return;
+      const uid = auth.currentUser.uid.slice(0, 128);
+      const docPath = `user_wallets/${uid}`;
+      try {
+        await setDoc(doc(db, 'user_wallets', uid), {
+          userId: uid,
+          availableBalanceUSD: Math.max(0, Math.round(Number(availableBalanceUSD) || 0)),
+          escrowBalanceUSD: Math.max(0, Math.round(Number(escrowBalanceUSD) || 0)),
+          rewardCreditsUSD: Math.max(0, Math.round(Number(rewardCreditsUSD) || 0)),
+          permitHoldsCount: Math.max(0, Math.min(200, Number(permitHoldsCount) || 0)),
+          partnerBookingsCount: Math.max(0, Math.min(200, Number(partnerBookingsCount) || 0)),
+          updatedAt: new Date().toISOString().slice(0, 64),
+        });
+      } catch (err) {
+        try {
+          handleFirestoreError(err, op, docPath);
+        } catch {
+          // Logged by handleFirestoreError
+        }
+      }
+    },
+    []
+  );
+
+  // Helper to persist a wallet transaction to /wallet_transactions/{txId}
+  const syncTransactionToFirestore = useCallback(
+    async (tx: WalletTransaction, op: OperationType = OperationType.CREATE) => {
+      if (!auth.currentUser?.uid) return;
+      const uid = auth.currentUser.uid.slice(0, 128);
+      const rawId = `${uid}_${tx.id}`.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 128);
+      const docPath = `wallet_transactions/${rawId}`;
+      try {
+        const payload: Record<string, unknown> = {
+          id: rawId,
+          userId: uid,
+          type: tx.type,
+          title: tx.title.slice(0, 256),
+          subtitle: (tx.subtitle || '').slice(0, 512),
+          amountUSD: Math.max(0, Math.min(1000000, Number(tx.amountUSD) || 0)),
+          direction: tx.direction,
+          status: tx.status,
+          paymentRail: String(tx.paymentRail || 'Visa / Mastercard').slice(0, 128),
+          referenceCode: String(tx.referenceCode || 'ENG-TX').slice(0, 64),
+          createdAt: (tx.createdAt || new Date().toISOString()).slice(0, 64),
+        };
+        if (tx.metadata?.withdrawalChannel) {
+          payload.withdrawalChannel = tx.metadata.withdrawalChannel;
+        }
+        if (tx.metadata?.cashPickupCode) {
+          payload.cashPickupCode = tx.metadata.cashPickupCode.slice(0, 64);
+        }
+        await setDoc(doc(db, 'wallet_transactions', rawId), payload);
+      } catch (err) {
+        try {
+          handleFirestoreError(err, op, docPath);
+        } catch {
+          // Logged by handleFirestoreError
+        }
+      }
+    },
+    []
+  );
+
+  // Sync per-user user_wallets, wallet_transactions, saved_itineraries & saved_checklists from Firestore
   useEffect(() => {
     let isMounted = true;
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (!currentUser) return;
 
-      // 1. Load user's saved checklists from Firestore
+      // 1. Load or seed user's wallet summary (/user_wallets/{uid})
+      try {
+        const walletRef = doc(db, 'user_wallets', currentUser.uid);
+        const walletSnap = await getDoc(walletRef);
+        if (walletSnap.exists() && isMounted) {
+          const wd = walletSnap.data();
+          if (wd && typeof wd.availableBalanceUSD === 'number') {
+            setState((prev) => ({
+              ...prev,
+              availableBalanceUSD: Number(wd.availableBalanceUSD),
+              escrowBalanceUSD: Number(wd.escrowBalanceUSD ?? prev.escrowBalanceUSD),
+              rewardCreditsUSD: Number(wd.rewardCreditsUSD ?? prev.rewardCreditsUSD),
+            }));
+          }
+        } else {
+          // Seed current wallet summary to Firestore on first sign-in
+          await syncWalletSummaryToFirestore(
+            state.availableBalanceUSD,
+            state.escrowBalanceUSD,
+            state.rewardCreditsUSD,
+            state.permitHolds.length,
+            state.partnerBookings.length,
+            OperationType.CREATE
+          );
+        }
+      } catch (err) {
+        try {
+          handleFirestoreError(err, OperationType.GET, `user_wallets/${currentUser.uid}`);
+        } catch {
+          // Logged by handleFirestoreError
+        }
+      }
+
+      // 2. Load or seed user's wallet transactions (/wallet_transactions)
+      try {
+        const txQuery = query(
+          collection(db, 'wallet_transactions'),
+          where('userId', '==', currentUser.uid)
+        );
+        const txSnap = await getDocs(txQuery);
+        if (!txSnap.empty && isMounted) {
+          const remoteTxs: WalletTransaction[] = [];
+          txSnap.forEach((docSnap) => {
+            const d = docSnap.data();
+            if (d && d.id && d.title) {
+              remoteTxs.push({
+                id: String(d.id),
+                type: (d.type as WalletTransaction['type']) || 'deposit',
+                title: String(d.title),
+                subtitle: String(d.subtitle || ''),
+                amountUSD: Number(d.amountUSD) || 0,
+                direction:
+                  (d.direction as WalletTransaction['direction']) || 'credit',
+                status: (d.status as WalletTransaction['status']) || 'completed',
+                paymentRail:
+                  (d.paymentRail as WalletPaymentRail) || 'Visa / Mastercard',
+                referenceCode: String(d.referenceCode || 'ENG-TX'),
+                createdAt: String(d.createdAt || new Date().toISOString()),
+                metadata:
+                  d.withdrawalChannel || d.cashPickupCode
+                    ? {
+                        withdrawalChannel: d.withdrawalChannel as WithdrawalChannel,
+                        cashPickupCode: d.cashPickupCode
+                          ? String(d.cashPickupCode)
+                          : undefined,
+                      }
+                    : undefined,
+              });
+            }
+          });
+          if (remoteTxs.length > 0) {
+            setState((prev) => {
+              const existingRefs = new Set(
+                prev.transactions.map((t) => t.referenceCode)
+              );
+              const merged = [
+                ...remoteTxs.filter((rt) => !existingRefs.has(rt.referenceCode)),
+                ...prev.transactions,
+              ].sort(
+                (a, b) =>
+                  new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+              );
+              return { ...prev, transactions: merged };
+            });
+          }
+        } else {
+          // Seed initial transactions into Firestore so ledger is persisted
+          for (const seedTx of state.transactions) {
+            await syncTransactionToFirestore(seedTx, OperationType.CREATE);
+          }
+        }
+      } catch (err) {
+        try {
+          handleFirestoreError(err, OperationType.LIST, 'wallet_transactions');
+        } catch {
+          // Logged by handleFirestoreError
+        }
+      }
+
+      // 3. Load user's saved checklists from Firestore
       try {
         const chkQuery = query(
           collection(db, 'saved_checklists'),
@@ -291,7 +464,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       }
 
-      // 2. Load user's saved itineraries from Firestore
+      // 4. Load user's saved itineraries from Firestore
       try {
         const itinQuery = query(
           collection(db, 'saved_itineraries'),
@@ -398,11 +571,22 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       createdAt: new Date().toISOString(),
     };
 
+    const nextAvailable = state.availableBalanceUSD + cleanAmount;
     setState((prev) => ({
       ...prev,
       availableBalanceUSD: prev.availableBalanceUSD + cleanAmount,
       transactions: [tx, ...prev.transactions],
     }));
+
+    syncTransactionToFirestore(tx, OperationType.CREATE);
+    syncWalletSummaryToFirestore(
+      nextAvailable,
+      state.escrowBalanceUSD,
+      state.rewardCreditsUSD,
+      state.permitHolds.length,
+      state.partnerBookings.length,
+      OperationType.UPDATE
+    );
 
     return {
       ok: true,
@@ -501,11 +685,22 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       },
     };
 
+    const nextAvailable = state.availableBalanceUSD - cleanAmount;
     setState((prev) => ({
       ...prev,
       availableBalanceUSD: prev.availableBalanceUSD - cleanAmount,
       transactions: [tx, ...prev.transactions],
     }));
+
+    syncTransactionToFirestore(tx, OperationType.CREATE);
+    syncWalletSummaryToFirestore(
+      nextAvailable,
+      state.escrowBalanceUSD,
+      state.rewardCreditsUSD,
+      state.permitHolds.length,
+      state.partnerBookings.length,
+      OperationType.UPDATE
+    );
 
     return {
       ok: true,
@@ -579,6 +774,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       },
     };
 
+    const nextAvailable = state.availableBalanceUSD - totalCostUSD;
+    const nextEscrow = state.escrowBalanceUSD + totalCostUSD;
     setState((prev) => ({
       ...prev,
       availableBalanceUSD: prev.availableBalanceUSD - totalCostUSD,
@@ -586,6 +783,16 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       permitHolds: [hold, ...prev.permitHolds],
       transactions: [tx, ...prev.transactions],
     }));
+
+    syncTransactionToFirestore(tx, OperationType.CREATE);
+    syncWalletSummaryToFirestore(
+      nextAvailable,
+      nextEscrow,
+      state.rewardCreditsUSD,
+      state.permitHolds.length + 1,
+      state.partnerBookings.length,
+      OperationType.UPDATE
+    );
 
     return {
       ok: true,
@@ -620,6 +827,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       createdAt: new Date().toISOString(),
     };
 
+    const nextAvailable = state.availableBalanceUSD + existing.amountHeldUSD;
+    const nextEscrow = Math.max(0, state.escrowBalanceUSD - existing.amountHeldUSD);
     setState((prev) => ({
       ...prev,
       availableBalanceUSD: prev.availableBalanceUSD + existing.amountHeldUSD,
@@ -629,6 +838,16 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       ),
       transactions: [tx, ...prev.transactions],
     }));
+
+    syncTransactionToFirestore(tx, OperationType.CREATE);
+    syncWalletSummaryToFirestore(
+      nextAvailable,
+      nextEscrow,
+      state.rewardCreditsUSD,
+      state.permitHolds.length,
+      state.partnerBookings.length,
+      OperationType.UPDATE
+    );
 
     return {
       ok: true,
@@ -694,12 +913,23 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       },
     };
 
+    const nextAvailable = state.availableBalanceUSD - totalCostUSD;
     setState((prev) => ({
       ...prev,
       availableBalanceUSD: prev.availableBalanceUSD - totalCostUSD,
       partnerBookings: [booking, ...prev.partnerBookings],
       transactions: [tx, ...prev.transactions],
     }));
+
+    syncTransactionToFirestore(tx, OperationType.CREATE);
+    syncWalletSummaryToFirestore(
+      nextAvailable,
+      state.escrowBalanceUSD,
+      state.rewardCreditsUSD,
+      state.permitHolds.length,
+      state.partnerBookings.length + 1,
+      OperationType.UPDATE
+    );
 
     return {
       ok: true,
@@ -751,11 +981,22 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       },
     };
 
+    const nextAvailable = state.availableBalanceUSD - depositUSD;
     setState((prev) => ({
       ...prev,
       availableBalanceUSD: prev.availableBalanceUSD - depositUSD,
       transactions: [tx, ...prev.transactions],
     }));
+
+    syncTransactionToFirestore(tx, OperationType.CREATE);
+    syncWalletSummaryToFirestore(
+      nextAvailable,
+      state.escrowBalanceUSD,
+      state.rewardCreditsUSD,
+      state.permitHolds.length,
+      state.partnerBookings.length,
+      OperationType.UPDATE
+    );
 
     return {
       ok: true,
@@ -824,6 +1065,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       createdAt: nowIso,
     };
 
+    const nextAvailable = state.availableBalanceUSD + rewardUSD;
+    const nextRewards = state.rewardCreditsUSD + rewardUSD;
     setState((prev) => ({
       ...prev,
       availableBalanceUSD: prev.availableBalanceUSD + rewardUSD,
@@ -831,6 +1074,16 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       newsletterSubscriptions: [newSub, ...prev.newsletterSubscriptions],
       transactions: [rewardTx, ...prev.transactions],
     }));
+
+    syncTransactionToFirestore(rewardTx, OperationType.CREATE);
+    syncWalletSummaryToFirestore(
+      nextAvailable,
+      state.escrowBalanceUSD,
+      nextRewards,
+      state.permitHolds.length,
+      state.partnerBookings.length,
+      OperationType.UPDATE
+    );
 
     return {
       ok: true,
@@ -884,7 +1137,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         region: savedItem.region.slice(0, 200),
         budgetTier: savedItem.budgetTier,
         activityFocus: savedItem.activityFocus.slice(0, 200),
-        durationDays: savedItem.durationDays,
+        durationDays: Math.max(1, Math.min(60, Number(savedItem.durationDays) || 7)),
         estimatedPerPersonUSD: savedItem.estimatedPerPersonUSD,
         depositAmountUSD: savedItem.depositAmountUSD,
         matchedGuideName: savedItem.matchedGuideName.slice(0, 128),
@@ -950,6 +1203,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       },
     };
 
+    const nextAvailable = state.availableBalanceUSD - depositUSD;
     setState((prev) => ({
       ...prev,
       availableBalanceUSD: prev.availableBalanceUSD - depositUSD,
@@ -958,6 +1212,16 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
       ),
       transactions: [tx, ...prev.transactions],
     }));
+
+    syncTransactionToFirestore(tx, OperationType.CREATE);
+    syncWalletSummaryToFirestore(
+      nextAvailable,
+      state.escrowBalanceUSD,
+      state.rewardCreditsUSD,
+      state.permitHolds.length,
+      state.partnerBookings.length,
+      OperationType.UPDATE
+    );
 
     if (auth.currentUser) {
       const docPath = `saved_itineraries/${target.id}`;
@@ -968,7 +1232,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         region: target.region.slice(0, 200),
         budgetTier: target.budgetTier,
         activityFocus: target.activityFocus.slice(0, 200),
-        durationDays: target.durationDays,
+        durationDays: Math.max(1, Math.min(60, Number(target.durationDays) || 7)),
         estimatedPerPersonUSD: target.estimatedPerPersonUSD,
         depositAmountUSD: target.depositAmountUSD,
         matchedGuideName: target.matchedGuideName.slice(0, 128),
@@ -1095,6 +1359,14 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const resetWalletToDefault = () => {
     setState(INITIAL_WALLET_STATE);
+    syncWalletSummaryToFirestore(
+      INITIAL_WALLET_STATE.availableBalanceUSD,
+      INITIAL_WALLET_STATE.escrowBalanceUSD,
+      INITIAL_WALLET_STATE.rewardCreditsUSD,
+      INITIAL_WALLET_STATE.permitHolds.length,
+      INITIAL_WALLET_STATE.partnerBookings.length,
+      OperationType.UPDATE
+    );
   };
 
   return (

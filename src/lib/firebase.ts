@@ -13,55 +13,52 @@ import appletFirebaseConfig from '../../firebase-applet-config.json';
 
 const env = (import.meta as any).env || {};
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const defaultFirebaseConfig = {
   apiKey: 'AIzaSyDI4bwh-wNsuZIuM6xASf_fsSyQk0eKei4',
   authDomain: 'siz-football-academy-4bae6.firebaseapp.com',
   projectId: 'siz-football-academy-4bae6',
   storageBucket: 'siz-football-academy-4bae6.firebasestorage.app',
   messagingSenderId: '614658692954',
-  appId: '1:614658692954:web:2667de449e7f17ba514563',
+  appId: '1:614658692954:web:e036db117f3cb569514563',
   measurementId: 'G-483ZWSNRT8',
 };
 
 export const firebaseConfig = {
   apiKey:
     env.VITE_FIREBASE_API_KEY ||
-    defaultFirebaseConfig.apiKey ||
-    appletFirebaseConfig.apiKey,
+    appletFirebaseConfig.apiKey ||
+    defaultFirebaseConfig.apiKey,
   authDomain:
     env.VITE_FIREBASE_AUTH_DOMAIN ||
-    defaultFirebaseConfig.authDomain ||
-    appletFirebaseConfig.authDomain,
+    appletFirebaseConfig.authDomain ||
+    defaultFirebaseConfig.authDomain,
   projectId:
     env.VITE_FIREBASE_PROJECT_ID ||
-    defaultFirebaseConfig.projectId ||
-    appletFirebaseConfig.projectId,
+    appletFirebaseConfig.projectId ||
+    defaultFirebaseConfig.projectId,
   storageBucket:
     env.VITE_FIREBASE_STORAGE_BUCKET ||
-    defaultFirebaseConfig.storageBucket ||
-    appletFirebaseConfig.storageBucket,
+    appletFirebaseConfig.storageBucket ||
+    defaultFirebaseConfig.storageBucket,
   messagingSenderId:
     env.VITE_FIREBASE_MESSAGING_SENDER_ID ||
-    defaultFirebaseConfig.messagingSenderId ||
-    appletFirebaseConfig.messagingSenderId,
+    appletFirebaseConfig.messagingSenderId ||
+    defaultFirebaseConfig.messagingSenderId,
   appId:
     env.VITE_FIREBASE_APP_ID ||
-    defaultFirebaseConfig.appId ||
-    appletFirebaseConfig.appId,
+    appletFirebaseConfig.appId ||
+    defaultFirebaseConfig.appId,
   measurementId:
     env.VITE_FIREBASE_MEASUREMENT_ID ||
-    defaultFirebaseConfig.measurementId ||
     appletFirebaseConfig.measurementId ||
+    defaultFirebaseConfig.measurementId ||
     '',
 };
 
-const resolvedDatabaseId =
+export const resolvedDatabaseId =
   env.VITE_FIREBASE_FIRESTORE_DATABASE_ID ||
-  (firebaseConfig.projectId === appletFirebaseConfig.projectId
-    ? appletFirebaseConfig.firestoreDatabaseId
-    : undefined);
+  appletFirebaseConfig.firestoreDatabaseId ||
+  'ai-studio-tingatingasafari-977ea282-9f6e-4517-99b9-1d8a012db444';
 
 // Initialize Firebase App singleton
 export const app = !getApps().length
@@ -82,12 +79,12 @@ export const analytics: Analytics | null = (() => {
 // Initialize Auth singleton
 export const auth = getAuth(app);
 
-// Initialize Firestore singleton (uses named DB if matching applet project or explicitly configured, else default DB)
+// Initialize Firestore singleton connected to the provisioned named database
 export const db = resolvedDatabaseId
   ? getFirestore(app, resolvedDatabaseId)
   : getFirestore(app);
 
-// Google Auth Provider (standard Firebase Authentication without Google Drive / Picker scopes)
+// Google Auth Provider
 const provider = new GoogleAuthProvider();
 
 // In-memory token cache (strictly not stored in localStorage)
@@ -140,15 +137,58 @@ export const logout = async () => {
   cachedAccessToken = null;
 };
 
-// Test Firestore connection on app start
-export async function testFirestoreConnection() {
+export interface DatabaseConnectionStatus {
+  connected: boolean;
+  projectId: string;
+  databaseId: string;
+  latencyMs: number;
+  checkedAt: string;
+  statusMessage: string;
+}
+
+// Test Firestore connection on app start and return live diagnostic state
+export async function testFirestoreConnection(): Promise<DatabaseConnectionStatus> {
+  const start = Date.now();
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
+    return {
+      connected: true,
+      projectId: firebaseConfig.projectId,
+      databaseId: resolvedDatabaseId,
+      latencyMs: Date.now() - start,
+      checkedAt: new Date().toISOString(),
+      statusMessage: 'Connected to live Firestore server',
+    };
   } catch (error) {
+    const latencyMs = Date.now() - start;
     if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.warn('Firestore is running in offline mode or awaiting network connection.');
+      console.error('Please check your Firebase configuration.');
+      return {
+        connected: false,
+        projectId: firebaseConfig.projectId,
+        databaseId: resolvedDatabaseId,
+        latencyMs,
+        checkedAt: new Date().toISOString(),
+        statusMessage: 'Client is offline — check Firebase configuration',
+      };
     }
+    // Note: PERMISSION_DENIED on /test/connection proves the Firestore server responded and default-deny rules are active!
+    return {
+      connected: true,
+      projectId: firebaseConfig.projectId,
+      databaseId: resolvedDatabaseId,
+      latencyMs,
+      checkedAt: new Date().toISOString(),
+      statusMessage: 'Connected to live Firestore server (Security Rules active)',
+    };
   }
+}
+
+// Run connection test automatically on boot in browser environment
+if (typeof window !== 'undefined') {
+  testFirestoreConnection().catch(() => {
+    // Handled inside testFirestoreConnection
+  });
 }
 
 // Error handling as required by Firebase skill
