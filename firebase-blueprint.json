@@ -212,6 +212,57 @@
         "createdAt": { "type": "string", "maxLength": 64 }
       },
       "required": ["id", "userId", "type", "title", "subtitle", "amountUSD", "direction", "status", "paymentRail", "referenceCode", "createdAt"]
+    },
+    "PartnerHotelRoom": {
+      "title": "PartnerHotelRoom",
+      "description": "Hotel and motel rooms and per-room nightly tariffs uploaded by partner property owners",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "partnerSlug": { "type": "string", "maxLength": 128 },
+        "partnerName": { "type": "string", "maxLength": 200 },
+        "partnerCategory": { "type": "string", "enum": ["hotel", "motel", "campsite", "lodge"] },
+        "roomName": { "type": "string", "maxLength": 200 },
+        "roomType": { "type": "string", "maxLength": 128 },
+        "ratePerNightUSD": { "type": "number" },
+        "boardBasis": { "type": "string", "enum": ["Bed & Breakfast", "Half Board", "Full Board", "Room Only"] },
+        "maxOccupancy": { "type": "number" },
+        "bedConfiguration": { "type": "string", "maxLength": 128 },
+        "totalRoomsAvailable": { "type": "number" },
+        "imageUrl": { "type": "string", "maxLength": 350000 },
+        "amenities": { "type": "array" },
+        "uploadedByOwnerName": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "partnerSlug", "partnerName", "partnerCategory", "roomName", "roomType", "ratePerNightUSD", "boardBasis", "maxOccupancy", "bedConfiguration", "totalRoomsAvailable", "imageUrl", "uploadedByOwnerName", "createdAt"]
+    },
+    "DriverFleetVehicle": {
+      "title": "DriverFleetVehicle",
+      "description": "Safari 4x4 fleet vehicles and daily hire rates uploaded by verified Enganda drivers",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "userId": { "type": "string", "maxLength": 128 },
+        "driverName": { "type": "string", "maxLength": 128 },
+        "driverSlug": { "type": "string", "maxLength": 128 },
+        "driverLicenseAndBadge": { "type": "string", "maxLength": 200 },
+        "driverPhone": { "type": "string", "maxLength": 64 },
+        "driverPhotoUrl": { "type": "string", "maxLength": 350000 },
+        "vehicleName": { "type": "string", "maxLength": 200 },
+        "vehicleCategory": { "type": "string", "enum": ["4x4 Extended Land Cruiser", "4x4 Land Cruiser Prado", "4x4 Pop-Up Safari Van", "Executive Group Coaster", "Luxury Overland Truck"] },
+        "registrationPlate": { "type": "string", "maxLength": 64 },
+        "passengerCapacity": { "type": "number" },
+        "ratePerDayUSD": { "type": "number" },
+        "rateIncludes": { "type": "string", "maxLength": 400 },
+        "homeBaseRegion": { "type": "string", "maxLength": 200 },
+        "regionsCovered": { "type": "array" },
+        "vehicleImageUrl": { "type": "string", "maxLength": 350000 },
+        "features": { "type": "array" },
+        "availableStatus": { "type": "string", "enum": ["Available Now", "On Charter", "Advance Booking"] },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "driverName", "driverLicenseAndBadge", "driverPhone", "driverPhotoUrl", "vehicleName", "vehicleCategory", "registrationPlate", "passengerCapacity", "ratePerDayUSD", "rateIncludes", "homeBaseRegion", "vehicleImageUrl", "availableStatus", "createdAt"]
     }
   },
   "firestore": {
@@ -258,6 +309,14 @@
     "/wallet_transactions/{txId}": {
       "schema": "WalletTransactionRecord",
       "description": "Safari Wallet transactions including deposits, Bank/MoMo/Agent Cash withdrawals, and UWA permit escrow locks"
+    },
+    "/partner_hotel_rooms/{roomId}": {
+      "schema": "PartnerHotelRoom",
+      "description": "Partner hotel and motel rooms and per-room nightly rates uploaded by hotel and motel owners"
+    },
+    "/driver_fleet_vehicles/{vehicleId}": {
+      "schema": "DriverFleetVehicle",
+      "description": "4x4 safari fleet vehicles and daily hire rates uploaded by verified Enganda drivers"
     }
   }
 }

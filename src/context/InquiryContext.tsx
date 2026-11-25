@@ -8,12 +8,16 @@ import {
   ConfirmedPackageEvent,
   EventDisplayPlacement,
   FooterPartnerLogo,
+  PartnerHotelRoom,
+  DriverFleetVehicle,
 } from '../types';
-import { CURRENCY_RATES, fetchLiveCurrencyRates } from '../lib/currency';
+import { CURRENCY_RATES, fetchLiveCurrencyRates, formatPrice as formatCurrencyPrice } from '../lib/currency';
 import {
   CONFIRMED_PACKAGES_AND_EVENTS,
   INITIAL_FOOTER_LOGOS,
   DEFAULT_POWERED_BY_TEXT,
+  INITIAL_PARTNER_HOTEL_ROOMS,
+  INITIAL_DRIVER_FLEET_VEHICLES,
   drivePhotoUrl,
 } from '../data/seedData';
 import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
@@ -47,9 +51,12 @@ interface InquiryContextValue {
   updateLeadStatus: (leadId: string, status: Lead['status'], preferredGuideSlug?: string) => void;
   deleteLead: (leadId: string) => Promise<void>;
   safariEvents: ConfirmedPackageEvent[];
+  packageEvents: ConfirmedPackageEvent[];
   carouselEvents: ConfirmedPackageEvent[];
   upcomingEvents: ConfirmedPackageEvent[];
   addSafariEvent: (eventInput: Omit<ConfirmedPackageEvent, 'id'>) => Promise<ConfirmedPackageEvent>;
+  addPackageEvent: (eventInput: Omit<ConfirmedPackageEvent, 'id'> | ConfirmedPackageEvent) => Promise<ConfirmedPackageEvent>;
+  formatPrice: (amountUSD: number) => string;
   updateSafariEvent: (id: string, updates: Partial<ConfirmedPackageEvent>) => Promise<void>;
   updateSafariEventPlacement: (id: string, placement: EventDisplayPlacement) => Promise<void>;
   deleteSafariEvent: (id: string) => Promise<void>;
@@ -62,6 +69,12 @@ interface InquiryContextValue {
   updateFooterLogo: (id: string, updates: Partial<FooterPartnerLogo>) => Promise<void>;
   deleteFooterLogo: (id: string) => Promise<void>;
   resetFooterLogosToDefault: () => Promise<void>;
+  partnerHotelRooms: PartnerHotelRoom[];
+  addPartnerHotelRoom: (roomInput: Omit<PartnerHotelRoom, 'id' | 'createdAt'>) => Promise<PartnerHotelRoom>;
+  deletePartnerHotelRoom: (id: string) => Promise<void>;
+  driverFleetVehicles: DriverFleetVehicle[];
+  addDriverFleetVehicle: (vehicleInput: Omit<DriverFleetVehicle, 'id' | 'createdAt'>) => Promise<DriverFleetVehicle>;
+  deleteDriverFleetVehicle: (id: string) => Promise<void>;
   firestoreSyncStatus: FirestoreSyncSummary;
   syncAllSystemDataToFirestore: () => Promise<{ ok: boolean; message: string }>;
   isInquiryModalOpen: boolean;
@@ -72,12 +85,16 @@ interface InquiryContextValue {
 
 const STORAGE_KEY = 'enganda_safaris_leads_v1';
 const CURRENCY_STORAGE_KEY = 'enganda_safaris_currency_v1';
-const EVENTS_STORAGE_KEY = 'enganda_safaris_events_v4';
-const FOOTER_LOGOS_STORAGE_KEY = 'enganda_safaris_footer_logos_v2';
-const POWERED_BY_STORAGE_KEY = 'enganda_safaris_powered_by_v2';
+const EVENTS_STORAGE_KEY = 'enganda_safaris_events_v7';
+const FOOTER_LOGOS_STORAGE_KEY = 'enganda_safaris_footer_logos_v5';
+const POWERED_BY_STORAGE_KEY = 'enganda_safaris_powered_by_v4';
+const PARTNER_ROOMS_STORAGE_KEY = 'enganda_safaris_partner_rooms_v1';
+const DRIVER_FLEET_STORAGE_KEY = 'enganda_safaris_driver_fleet_v1';
 const DELETED_EVENTS_KEY = 'enganda_deleted_event_ids_v1';
 const DELETED_LOGOS_KEY = 'enganda_deleted_logo_ids_v1';
 const DELETED_LEADS_KEY = 'enganda_deleted_lead_ids_v1';
+const DELETED_ROOMS_KEY = 'enganda_deleted_room_ids_v1';
+const DELETED_FLEET_KEY = 'enganda_deleted_fleet_ids_v1';
 
 function readStringSet(key: string): Set<string> {
   try {
@@ -206,7 +223,14 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.filter((ev: ConfirmedPackageEvent) => !deleted.has(ev.id));
+          const map = new Map<string, ConfirmedPackageEvent>();
+          CONFIRMED_PACKAGES_AND_EVENTS.filter((ev) => !deleted.has(ev.id)).forEach((ev) =>
+            map.set(ev.id, ev)
+          );
+          parsed
+            .filter((ev: ConfirmedPackageEvent) => !deleted.has(ev.id))
+            .forEach((ev: ConfirmedPackageEvent) => map.set(ev.id, { ...map.get(ev.id), ...ev }));
+          return Array.from(map.values());
         }
       }
     } catch {
@@ -241,6 +265,52 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // ignore
     }
     return DEFAULT_POWERED_BY_TEXT;
+  });
+
+  const [partnerHotelRooms, setPartnerHotelRooms] = useState<PartnerHotelRoom[]>(() => {
+    const deleted = readStringSet(DELETED_ROOMS_KEY);
+    try {
+      const saved = localStorage.getItem(PARTNER_ROOMS_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const map = new Map<string, PartnerHotelRoom>();
+          INITIAL_PARTNER_HOTEL_ROOMS.filter((rm) => !deleted.has(rm.id)).forEach((rm) =>
+            map.set(rm.id, rm)
+          );
+          parsed
+            .filter((rm: PartnerHotelRoom) => !deleted.has(rm.id))
+            .forEach((rm: PartnerHotelRoom) => map.set(rm.id, { ...map.get(rm.id), ...rm }));
+          return Array.from(map.values());
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return INITIAL_PARTNER_HOTEL_ROOMS.filter((rm) => !deleted.has(rm.id));
+  });
+
+  const [driverFleetVehicles, setDriverFleetVehicles] = useState<DriverFleetVehicle[]>(() => {
+    const deleted = readStringSet(DELETED_FLEET_KEY);
+    try {
+      const saved = localStorage.getItem(DRIVER_FLEET_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const map = new Map<string, DriverFleetVehicle>();
+          INITIAL_DRIVER_FLEET_VEHICLES.filter((v) => !deleted.has(v.id)).forEach((v) =>
+            map.set(v.id, v)
+          );
+          parsed
+            .filter((v: DriverFleetVehicle) => !deleted.has(v.id))
+            .forEach((v: DriverFleetVehicle) => map.set(v.id, { ...map.get(v.id), ...v }));
+          return Array.from(map.values());
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return INITIAL_DRIVER_FLEET_VEHICLES.filter((v) => !deleted.has(v.id));
   });
 
   const [firestoreSyncStatus, setFirestoreSyncStatus] = useState<FirestoreSyncSummary>({
@@ -312,6 +382,22 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // ignore
     }
   }, [footerLogos]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(PARTNER_ROOMS_STORAGE_KEY, JSON.stringify(partnerHotelRooms));
+    } catch {
+      // ignore
+    }
+  }, [partnerHotelRooms]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(DRIVER_FLEET_STORAGE_KEY, JSON.stringify(driverFleetVehicles));
+    } catch {
+      // ignore
+    }
+  }, [driverFleetVehicles]);
 
   const syncSafariEventToFirestore = useCallback(
     async (eventObj: ConfirmedPackageEvent, op: OperationType) => {
@@ -425,6 +511,82 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     []
   );
 
+  const syncPartnerRoomToFirestore = useCallback(
+    async (roomObj: PartnerHotelRoom, op: OperationType) => {
+      if (!auth.currentUser?.uid) return;
+      const cleanId = roomObj.id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 128);
+      const docPath = `partner_hotel_rooms/${cleanId}`;
+      try {
+        await setDoc(doc(db, 'partner_hotel_rooms', cleanId), {
+          id: cleanId,
+          userId: auth.currentUser.uid.slice(0, 128),
+          partnerSlug: (roomObj.partnerSlug || 'igongo-country-hotel-and-cultural-centre').slice(0, 128),
+          partnerName: (roomObj.partnerName || 'Igongo Country Hotel & Cultural Centre').slice(0, 200),
+          partnerCategory: roomObj.partnerCategory || 'hotel',
+          roomName: (roomObj.roomName || 'Deluxe Room').slice(0, 200),
+          roomType: (roomObj.roomType || 'Deluxe Double').slice(0, 128),
+          ratePerNightUSD: Math.max(0, Math.min(50000, Number(roomObj.ratePerNightUSD) || 140)),
+          boardBasis: roomObj.boardBasis || 'Bed & Breakfast',
+          maxOccupancy: Math.max(1, Math.min(30, Number(roomObj.maxOccupancy) || 2)),
+          bedConfiguration: (roomObj.bedConfiguration || '1 King or 2 Twin Beds').slice(0, 128),
+          totalRoomsAvailable: Math.max(1, Math.min(500, Number(roomObj.totalRoomsAvailable) || 5)),
+          imageUrl: (roomObj.imageUrl || '/assets/aistudio/cow_b5a75acc.jpg').slice(0, 350000),
+          amenities: (roomObj.amenities || []).slice(0, 20).map((a) => String(a).slice(0, 300)),
+          uploadedByOwnerName: (roomObj.uploadedByOwnerName || 'Hotel Partner Owner').slice(0, 128),
+          createdAt: (roomObj.createdAt || new Date().toISOString()).slice(0, 64),
+        });
+      } catch (err) {
+        try {
+          handleFirestoreError(err, op, docPath);
+        } catch {
+          // Handled
+        }
+      }
+    },
+    []
+  );
+
+  const syncDriverFleetToFirestore = useCallback(
+    async (vehicleObj: DriverFleetVehicle, op: OperationType) => {
+      if (!auth.currentUser?.uid) return;
+      const cleanId = vehicleObj.id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 128);
+      const docPath = `driver_fleet_vehicles/${cleanId}`;
+      try {
+        const payload: Record<string, unknown> = {
+          id: cleanId,
+          userId: auth.currentUser.uid.slice(0, 128),
+          driverName: (vehicleObj.driverName || 'Enganda Driver-Guide').slice(0, 128),
+          driverLicenseAndBadge: (vehicleObj.driverLicenseAndBadge || 'UTB Licensed Driver-Guide').slice(0, 200),
+          driverPhone: (vehicleObj.driverPhone || '+256 700 000 000').slice(0, 64),
+          driverPhotoUrl: (vehicleObj.driverPhotoUrl || '/assets/aistudio/cow_b5a75acc.jpg').slice(0, 350000),
+          vehicleName: (vehicleObj.vehicleName || '4x4 Safari Land Cruiser').slice(0, 200),
+          vehicleCategory: vehicleObj.vehicleCategory || '4x4 Extended Land Cruiser',
+          registrationPlate: (vehicleObj.registrationPlate || 'UBF 842Q').slice(0, 64),
+          passengerCapacity: Math.max(1, Math.min(60, Number(vehicleObj.passengerCapacity) || 7)),
+          ratePerDayUSD: Math.max(0, Math.min(25000, Number(vehicleObj.ratePerDayUSD) || 220)),
+          rateIncludes: (vehicleObj.rateIncludes || 'Driver-Guide, Pop-Up Roof & Insurance').slice(0, 400),
+          homeBaseRegion: (vehicleObj.homeBaseRegion || 'Entebbe & Western Circuit').slice(0, 200),
+          regionsCovered: (vehicleObj.regionsCovered || []).slice(0, 20).map((r) => String(r).slice(0, 200)),
+          vehicleImageUrl: (vehicleObj.vehicleImageUrl || '/assets/aistudio/cow_b5a75acc.jpg').slice(0, 350000),
+          features: (vehicleObj.features || []).slice(0, 20).map((f) => String(f).slice(0, 300)),
+          availableStatus: vehicleObj.availableStatus || 'Available Now',
+          createdAt: (vehicleObj.createdAt || new Date().toISOString()).slice(0, 64),
+        };
+        if (vehicleObj.driverSlug) {
+          payload.driverSlug = vehicleObj.driverSlug.slice(0, 128);
+        }
+        await setDoc(doc(db, 'driver_fleet_vehicles', cleanId), payload);
+      } catch (err) {
+        try {
+          handleFirestoreError(err, op, docPath);
+        } catch {
+          // Handled
+        }
+      }
+    },
+    []
+  );
+
   // Sync safari_events, footer_logos, and safari_leads with Firestore across public & authenticated sessions
   useEffect(() => {
     let isMounted = true;
@@ -446,28 +608,63 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
             const docId = String(d.id);
             existingRemoteIds.add(docId);
             if (!deletedEvents.has(docId)) {
+              const matchingSeed = CONFIRMED_PACKAGES_AND_EVENTS.find(
+                (s) => s.id === docId || s.id.replace(/[^a-zA-Z0-9_-]/g, '_') === docId
+              );
+              const rawSubtitle = String(d.subtitle || matchingSeed?.subtitle || '')
+                .replace(/Recommended by Administrator/gi, 'Enganda Verified')
+                .replace(/Admin Recommended/gi, 'Enganda Verified');
+              const rawEventTag = String(d.eventTag || matchingSeed?.eventTag || 'CONFIRMED DEPARTURE')
+                .replace(/ADMIN RECOMMENDED/gi, 'ENGANDA VERIFIED')
+                .replace(/RECOMMENDED BY ADMINISTRATOR/gi, 'ENGANDA VERIFIED');
+              const rawStatusLabel = String(d.statusLabel || matchingSeed?.statusLabel || 'Confirmed Departure')
+                .replace(/Admin Recommended/gi, 'Enganda Verified')
+                .replace(/Recommended by Administrator/gi, 'Enganda Verified');
+              const rawHighlights = (
+                Array.isArray(d.highlights) ? d.highlights.map(String) : matchingSeed?.highlights || []
+              ).map((h) =>
+                h
+                  .replace(/Recommended by Administrator/gi, 'Enganda Verified')
+                  .replace(/Admin Recommended/gi, 'Enganda Verified')
+              );
+
               remoteList.push({
-                id: docId,
+                ...matchingSeed,
+                id: matchingSeed?.id || docId,
                 title: String(d.title),
-                shortTabLabel: d.shortTabLabel ? String(d.shortTabLabel) : undefined,
-                subtitle: String(d.subtitle || ''),
-                eventTag: String(d.eventTag || 'CONFIRMED DEPARTURE'),
+                shortTabLabel: d.shortTabLabel ? String(d.shortTabLabel) : matchingSeed?.shortTabLabel,
+                subtitle: rawSubtitle,
+                eventTag: rawEventTag,
                 category:
                   (d.category as ConfirmedPackageEvent['category']) ||
+                  matchingSeed?.category ||
                   'Guaranteed Primate Departure',
-                dateWindow: String(d.dateWindow || 'Upcoming 2026/2027'),
-                durationLabel: String(d.durationLabel || '4 Days / 3 Nights'),
-                location: String(d.location || 'Uganda'),
+                dateWindow: String(d.dateWindow || matchingSeed?.dateWindow || 'Upcoming 2026/2027'),
+                durationLabel: String(d.durationLabel || matchingSeed?.durationLabel || '4 Days / 3 Nights'),
+                location: String(d.location || matchingSeed?.location || 'Uganda'),
                 spotsRemaining: Number(d.spotsRemaining) || 4,
                 pricePerPersonUSD: Number(d.pricePerPersonUSD) || 1950,
                 leadGuideSlug: String(d.leadGuideSlug || 'samuel-kato'),
-                experienceSlug: d.experienceSlug ? String(d.experienceSlug) : undefined,
+                experienceSlug: d.experienceSlug ? String(d.experienceSlug) : matchingSeed?.experienceSlug,
                 heroImage: String(
-                  d.heroImage || drivePhotoUrl('1LwS0m-x4TsmxpgBaeByqmJkI-e_UPjiE')
+                  d.heroImage || matchingSeed?.heroImage || drivePhotoUrl('1LwS0m-x4TsmxpgBaeByqmJkI-e_UPjiE')
                 ),
-                highlights: Array.isArray(d.highlights) ? d.highlights.map(String) : [],
-                statusLabel: String(d.statusLabel || 'Confirmed Departure'),
-                placement: (d.placement as EventDisplayPlacement) || 'both',
+                highlights: rawHighlights,
+                statusLabel: rawStatusLabel,
+                placement:
+                  docId === 'pkg-mabamba-shoebill-kibale-primates' ||
+                  docId === 'pkg_mabamba_shoebill_kibale_primates'
+                    ? 'upcoming'
+                    : (d.placement as EventDisplayPlacement) || matchingSeed?.placement || 'both',
+                carouselSlotNumber: matchingSeed?.carouselSlotNumber,
+                isStandbySlot: matchingSeed?.isStandbySlot,
+                operatorLogoUrl: matchingSeed?.operatorLogoUrl,
+                utbLicenseNumber: matchingSeed?.utbLicenseNumber,
+                uwaAccreditationId: matchingSeed?.uwaAccreditationId,
+                adminRecommended:
+                  matchingSeed?.adminRecommended ||
+                  rawEventTag.toUpperCase().includes('ENGANDA VERIFIED') ||
+                  String(d.eventTag || '').toUpperCase().includes('ADMIN RECOMMENDED'),
               });
             }
           }
@@ -484,17 +681,17 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
           });
         }
 
-        // Auto-seed any non-deleted system events into Firestore when signed in so all packages stay in the database until replaced by Admin
+        // Auto-seed any non-deleted system events into Firestore when signed in so all packages stay in the database
         if (uid) {
           for (const seedEvent of CONFIRMED_PACKAGES_AND_EVENTS) {
             const cleanSeedId = seedEvent.id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 128);
-            if (
-              !deletedEvents.has(cleanSeedId) &&
-              !deletedEvents.has(seedEvent.id) &&
-              !existingRemoteIds.has(cleanSeedId) &&
-              !existingRemoteIds.has(seedEvent.id)
-            ) {
-              await syncSafariEventToFirestore(seedEvent, OperationType.CREATE);
+            if (!deletedEvents.has(cleanSeedId) && !deletedEvents.has(seedEvent.id)) {
+              const isExisting =
+                existingRemoteIds.has(cleanSeedId) || existingRemoteIds.has(seedEvent.id);
+              await syncSafariEventToFirestore(
+                seedEvent,
+                isExisting ? OperationType.UPDATE : OperationType.CREATE
+              );
             }
           }
         }
@@ -513,11 +710,16 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const logoSnap = await getDocs(collection(db, 'footer_logos'));
         const remoteLogos: FooterPartnerLogo[] = [];
         const existingLogoIds = new Set<string>();
+        let hasDeprecatedPluInFirestore = false;
 
         logoSnap.forEach((docSnap) => {
           const d = docSnap.data();
           if (d && d.id && d.name && d.logoUrl) {
             const docId = String(d.id);
+            if (docId === 'logo_plu' || String(d.name).trim().toUpperCase() === 'PLU') {
+              hasDeprecatedPluInFirestore = true;
+              return;
+            }
             existingLogoIds.add(docId);
             if (!deletedLogos.has(docId)) {
               remoteLogos.push({
@@ -539,7 +741,12 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
           setFooterLogos((prev) => {
             const map = new Map<string, FooterPartnerLogo>();
             prev
-              .filter((item) => !deletedLogos.has(item.id))
+              .filter(
+                (item) =>
+                  !deletedLogos.has(item.id) &&
+                  item.id !== 'logo_plu' &&
+                  item.name.trim().toUpperCase() !== 'PLU'
+              )
               .forEach((item) => map.set(item.id, item));
             remoteLogos.forEach((item) => map.set(item.id, item));
             return Array.from(map.values()).sort(
@@ -548,8 +755,15 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
           });
         }
 
-        // Auto-seed any non-deleted footer logos into Firestore when signed in
+        // Auto-remove deprecated logo_plu and seed any non-deleted footer logos (including ECO Bank) into Firestore when signed in
         if (uid) {
+          if (hasDeprecatedPluInFirestore) {
+            try {
+              await deleteDoc(doc(db, 'footer_logos', 'logo_plu'));
+            } catch {
+              // ignore if already removed
+            }
+          }
           for (const seedLogo of INITIAL_FOOTER_LOGOS) {
             const cleanLogoId = seedLogo.id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 128);
             if (
@@ -648,6 +862,141 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       }
 
+      // 4. Load partner_hotel_rooms (publicly readable)
+      const deletedRooms = readStringSet(DELETED_ROOMS_KEY);
+      try {
+        const roomSnap = await getDocs(collection(db, 'partner_hotel_rooms'));
+        const remoteRooms: PartnerHotelRoom[] = [];
+        const existingRoomIds = new Set<string>();
+
+        roomSnap.forEach((docSnap) => {
+          const d = docSnap.data();
+          if (d && d.id && d.roomName && d.partnerName) {
+            const docId = String(d.id);
+            existingRoomIds.add(docId);
+            if (!deletedRooms.has(docId)) {
+              remoteRooms.push({
+                id: docId,
+                partnerSlug: String(d.partnerSlug || 'igongo-country-hotel-and-cultural-centre'),
+                partnerName: String(d.partnerName),
+                partnerCategory: (d.partnerCategory as PartnerHotelRoom['partnerCategory']) || 'hotel',
+                roomName: String(d.roomName),
+                roomType: String(d.roomType || 'Deluxe Room'),
+                ratePerNightUSD: Number(d.ratePerNightUSD) || 140,
+                boardBasis: (d.boardBasis as PartnerHotelRoom['boardBasis']) || 'Bed & Breakfast',
+                maxOccupancy: Number(d.maxOccupancy) || 2,
+                bedConfiguration: String(d.bedConfiguration || '1 King or 2 Twin Beds'),
+                totalRoomsAvailable: Number(d.totalRoomsAvailable) || 5,
+                imageUrl: String(d.imageUrl || '/assets/aistudio/cow_b5a75acc.jpg'),
+                amenities: Array.isArray(d.amenities) ? d.amenities.map(String) : [],
+                uploadedByOwnerName: String(d.uploadedByOwnerName || 'Partner Owner'),
+                createdAt: String(d.createdAt || new Date().toISOString()),
+              });
+            }
+          }
+        });
+
+        if (remoteRooms.length > 0 && isMounted) {
+          setPartnerHotelRooms((prev) => {
+            const map = new Map<string, PartnerHotelRoom>();
+            prev.filter((r) => !deletedRooms.has(r.id)).forEach((r) => map.set(r.id, r));
+            remoteRooms.forEach((r) => map.set(r.id, r));
+            return Array.from(map.values());
+          });
+        }
+
+        if (uid) {
+          for (const seedRoom of INITIAL_PARTNER_HOTEL_ROOMS) {
+            const cleanRoomId = seedRoom.id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 128);
+            if (
+              !deletedRooms.has(cleanRoomId) &&
+              !deletedRooms.has(seedRoom.id) &&
+              !existingRoomIds.has(cleanRoomId) &&
+              !existingRoomIds.has(seedRoom.id)
+            ) {
+              await syncPartnerRoomToFirestore(seedRoom, OperationType.CREATE);
+            }
+          }
+        }
+      } catch (err) {
+        if (uid) {
+          try {
+            handleFirestoreError(err, OperationType.LIST, 'partner_hotel_rooms');
+          } catch {
+            // Handled
+          }
+        }
+      }
+
+      // 5. Load driver_fleet_vehicles (publicly readable)
+      const deletedFleet = readStringSet(DELETED_FLEET_KEY);
+      try {
+        const fleetSnap = await getDocs(collection(db, 'driver_fleet_vehicles'));
+        const remoteFleet: DriverFleetVehicle[] = [];
+        const existingFleetIds = new Set<string>();
+
+        fleetSnap.forEach((docSnap) => {
+          const d = docSnap.data();
+          if (d && d.id && d.driverName && d.vehicleName) {
+            const docId = String(d.id);
+            existingFleetIds.add(docId);
+            if (!deletedFleet.has(docId)) {
+              remoteFleet.push({
+                id: docId,
+                driverName: String(d.driverName),
+                driverSlug: d.driverSlug ? String(d.driverSlug) : undefined,
+                driverLicenseAndBadge: String(d.driverLicenseAndBadge || 'UTB Licensed Driver-Guide'),
+                driverPhone: String(d.driverPhone || '+256 700 000 000'),
+                driverPhotoUrl: String(d.driverPhotoUrl || '/assets/aistudio/cow_b5a75acc.jpg'),
+                vehicleName: String(d.vehicleName),
+                vehicleCategory: (d.vehicleCategory as DriverFleetVehicle['vehicleCategory']) || '4x4 Extended Land Cruiser',
+                registrationPlate: String(d.registrationPlate || 'UBF 842Q'),
+                passengerCapacity: Number(d.passengerCapacity) || 7,
+                ratePerDayUSD: Number(d.ratePerDayUSD) || 220,
+                rateIncludes: String(d.rateIncludes || 'Driver-Guide, Pop-Up Roof & Insurance'),
+                homeBaseRegion: String(d.homeBaseRegion || 'Entebbe & Western Circuit'),
+                regionsCovered: Array.isArray(d.regionsCovered) ? d.regionsCovered.map(String) : [],
+                vehicleImageUrl: String(d.vehicleImageUrl || '/assets/aistudio/cow_b5a75acc.jpg'),
+                features: Array.isArray(d.features) ? d.features.map(String) : [],
+                availableStatus: (d.availableStatus as DriverFleetVehicle['availableStatus']) || 'Available Now',
+                createdAt: String(d.createdAt || new Date().toISOString()),
+              });
+            }
+          }
+        });
+
+        if (remoteFleet.length > 0 && isMounted) {
+          setDriverFleetVehicles((prev) => {
+            const map = new Map<string, DriverFleetVehicle>();
+            prev.filter((v) => !deletedFleet.has(v.id)).forEach((v) => map.set(v.id, v));
+            remoteFleet.forEach((v) => map.set(v.id, v));
+            return Array.from(map.values());
+          });
+        }
+
+        if (uid) {
+          for (const seedVehicle of INITIAL_DRIVER_FLEET_VEHICLES) {
+            const cleanVehicleId = seedVehicle.id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 128);
+            if (
+              !deletedFleet.has(cleanVehicleId) &&
+              !deletedFleet.has(seedVehicle.id) &&
+              !existingFleetIds.has(cleanVehicleId) &&
+              !existingFleetIds.has(seedVehicle.id)
+            ) {
+              await syncDriverFleetToFirestore(seedVehicle, OperationType.CREATE);
+            }
+          }
+        }
+      } catch (err) {
+        if (uid) {
+          try {
+            handleFirestoreError(err, OperationType.LIST, 'driver_fleet_vehicles');
+          } catch {
+            // Handled
+          }
+        }
+      }
+
       if (isMounted) {
         setFirestoreSyncStatus((prev) => ({
           ...prev,
@@ -671,7 +1020,13 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       isMounted = false;
       unsubscribe();
     };
-  }, [syncSafariEventToFirestore, syncFooterLogoToFirestore, syncLeadToFirestore]);
+  }, [
+    syncSafariEventToFirestore,
+    syncFooterLogoToFirestore,
+    syncLeadToFirestore,
+    syncPartnerRoomToFirestore,
+    syncDriverFleetToFirestore,
+  ]);
 
   const syncAllSystemDataToFirestore = useCallback(async (): Promise<{
     ok: boolean;
@@ -695,6 +1050,12 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       for (const lead of leads) {
         await syncLeadToFirestore(lead, OperationType.UPDATE);
       }
+      for (const rm of partnerHotelRooms) {
+        await syncPartnerRoomToFirestore(rm, OperationType.UPDATE);
+      }
+      for (const fl of driverFleetVehicles) {
+        await syncDriverFleetToFirestore(fl, OperationType.UPDATE);
+      }
       const nowIso = new Date().toISOString();
       setFirestoreSyncStatus({
         lastSyncedAt: nowIso,
@@ -705,7 +1066,7 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       });
       return {
         ok: true,
-        message: `Synced ${safariEvents.length} Safari Events/Trips, ${footerLogos.length} Footer Partner Logos, and ${leads.length} Safari Leads to Firestore database.`,
+        message: `Synced ${safariEvents.length} Safari Events/Trips, ${footerLogos.length} Footer Partner Logos, ${partnerHotelRooms.length} Hotel Rooms, ${driverFleetVehicles.length} Fleet Vehicles, and ${leads.length} Safari Leads to Firestore database.`,
       };
     } catch (err) {
       setFirestoreSyncStatus((prev) => ({ ...prev, isSyncing: false }));
@@ -718,21 +1079,38 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     safariEvents,
     footerLogos,
     leads,
+    partnerHotelRooms,
+    driverFleetVehicles,
     syncSafariEventToFirestore,
     syncFooterLogoToFirestore,
     syncLeadToFirestore,
+    syncPartnerRoomToFirestore,
+    syncDriverFleetToFirestore,
   ]);
 
   const carouselEvents = useMemo(() => {
-    const filtered = safariEvents.filter(
-      (ev) => !ev.placement || ev.placement === 'carousel' || ev.placement === 'both'
-    );
-    return filtered.length > 0 ? filtered : safariEvents.slice(0, 4);
+    const activeCarouselItems = safariEvents
+      .filter(
+        (ev) =>
+          !ev.isStandbySlot &&
+          (!ev.placement || ev.placement === 'carousel' || ev.placement === 'both')
+      )
+      .sort((a, b) => (a.carouselSlotNumber ?? 99) - (b.carouselSlotNumber ?? 99));
+
+    // If fewer than 10 active paid slots exist, rotate in standby slot 011 (Shoebill & Chimps)
+    if (activeCarouselItems.length < 10) {
+      const standbyItems = safariEvents.filter((ev) => ev.isStandbySlot);
+      const combined = [...activeCarouselItems, ...standbyItems];
+      return combined.slice(0, 10);
+    }
+
+    // Strict 10-Slot Paid-Tier Cap
+    return activeCarouselItems.slice(0, 10);
   }, [safariEvents]);
 
   const upcomingEvents = useMemo(() => {
     const filtered = safariEvents.filter(
-      (ev) => ev.placement === 'upcoming' || ev.placement === 'both'
+      (ev) => ev.placement === 'upcoming' || ev.placement === 'both' || ev.isStandbySlot
     );
     return filtered.length > 0 ? filtered : safariEvents;
   }, [safariEvents]);
@@ -966,6 +1344,78 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const addPartnerHotelRoom = async (
+    roomInput: Omit<PartnerHotelRoom, 'id' | 'createdAt'>
+  ): Promise<PartnerHotelRoom> => {
+    const newId = `room_custom_${Date.now()}`;
+    const created: PartnerHotelRoom = {
+      ...roomInput,
+      id: newId,
+      createdAt: new Date().toISOString(),
+    };
+    setPartnerHotelRooms((prev) => [created, ...prev]);
+    await syncPartnerRoomToFirestore(created, OperationType.CREATE);
+    return created;
+  };
+
+  const deletePartnerHotelRoom = async (id: string): Promise<void> => {
+    const deleted = readStringSet(DELETED_ROOMS_KEY);
+    deleted.add(id);
+    const cleanId = id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 128);
+    deleted.add(cleanId);
+    saveStringSet(DELETED_ROOMS_KEY, deleted);
+
+    setPartnerHotelRooms((prev) => prev.filter((item) => item.id !== id));
+    if (auth.currentUser?.uid) {
+      const docPath = `partner_hotel_rooms/${cleanId}`;
+      try {
+        await deleteDoc(doc(db, 'partner_hotel_rooms', cleanId));
+      } catch (err) {
+        try {
+          handleFirestoreError(err, OperationType.DELETE, docPath);
+        } catch {
+          // Handled
+        }
+      }
+    }
+  };
+
+  const addDriverFleetVehicle = async (
+    vehicleInput: Omit<DriverFleetVehicle, 'id' | 'createdAt'>
+  ): Promise<DriverFleetVehicle> => {
+    const newId = `fleet_custom_${Date.now()}`;
+    const created: DriverFleetVehicle = {
+      ...vehicleInput,
+      id: newId,
+      createdAt: new Date().toISOString(),
+    };
+    setDriverFleetVehicles((prev) => [created, ...prev]);
+    await syncDriverFleetToFirestore(created, OperationType.CREATE);
+    return created;
+  };
+
+  const deleteDriverFleetVehicle = async (id: string): Promise<void> => {
+    const deleted = readStringSet(DELETED_FLEET_KEY);
+    deleted.add(id);
+    const cleanId = id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 128);
+    deleted.add(cleanId);
+    saveStringSet(DELETED_FLEET_KEY, deleted);
+
+    setDriverFleetVehicles((prev) => prev.filter((item) => item.id !== id));
+    if (auth.currentUser?.uid) {
+      const docPath = `driver_fleet_vehicles/${cleanId}`;
+      try {
+        await deleteDoc(doc(db, 'driver_fleet_vehicles', cleanId));
+      } catch (err) {
+        try {
+          handleFirestoreError(err, OperationType.DELETE, docPath);
+        } catch {
+          // Handled
+        }
+      }
+    }
+  };
+
   return (
     <InquiryContext.Provider
       value={{
@@ -981,9 +1431,12 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
         updateLeadStatus,
         deleteLead,
         safariEvents,
+        packageEvents: safariEvents,
         carouselEvents,
         upcomingEvents,
         addSafariEvent,
+        addPackageEvent: (input) => addSafariEvent(input),
+        formatPrice: (amountUSD: number) => formatCurrencyPrice(amountUSD, currency),
         updateSafariEvent,
         updateSafariEventPlacement,
         deleteSafariEvent,
@@ -996,6 +1449,12 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
         updateFooterLogo,
         deleteFooterLogo,
         resetFooterLogosToDefault,
+        partnerHotelRooms,
+        addPartnerHotelRoom,
+        deletePartnerHotelRoom,
+        driverFleetVehicles,
+        addDriverFleetVehicle,
+        deleteDriverFleetVehicle,
         firestoreSyncStatus,
         syncAllSystemDataToFirestore,
         isInquiryModalOpen,

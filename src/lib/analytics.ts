@@ -2,7 +2,6 @@ export type AnalyticsEvent =
   | 'planner_start'
   | 'planner_complete'
   | 'lead_created'
-  | 'waba_conversation_started'
   | 'quote_requested'
   | 'deposit_modal_opened'
   | 'itinerary_viewed'

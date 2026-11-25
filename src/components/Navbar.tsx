@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Menu,
   X,
-  Compass,
   ArrowUpRight,
   Wallet,
   Globe,
@@ -15,6 +14,16 @@ import {
   ShieldCheck,
   Lock,
   Search,
+  Heart,
+  Users,
+  Award,
+  Building2,
+  BookOpen,
+  CreditCard,
+  Smartphone,
+  Landmark,
+  History,
+  ArrowRight,
 } from 'lucide-react';
 import { Currency, PortalRole } from '../types';
 import { useInquiry } from '../context/InquiryContext';
@@ -31,7 +40,7 @@ import { SocialStrip } from './SocialLinks';
 import { GeoLanguageBanner } from './GeoLanguageBanner';
 import { GlobalSearchModal } from './GlobalSearchModal';
 
-const CURRENCIES: Currency[] = ['USD', 'EUR', 'GBP', 'UGX'];
+const CURRENCIES: Currency[] = ['UGX', 'USD', 'EUR', 'GBP'];
 
 const PORTAL_MENU_ITEMS: {
   role: PortalRole;
@@ -93,7 +102,12 @@ export const Navbar: React.FC = () => {
     isRefreshingRates,
     refreshExchangeRates,
   } = useInquiry();
-  const { availableBalanceUSD } = useWallet();
+  const {
+    availableBalanceUSD,
+    escrowBalanceUSD,
+    rewardCreditsUSD,
+    transactions,
+  } = useWallet();
   const {
     user,
     activePortalRole,
@@ -113,31 +127,79 @@ export const Navbar: React.FC = () => {
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [exploreMenuOpen, setExploreMenuOpen] = useState(false);
+  const [walletDrawerOpen, setWalletDrawerOpen] = useState(false);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
-  const [currencyMenuOpen, setCurrencyMenuOpen] = useState(false);
   const [portalMenuOpen, setPortalMenuOpen] = useState(false);
+
+  const exploreMenuRef = useRef<HTMLDivElement>(null);
+  const walletDrawerRef = useRef<HTMLDivElement>(null);
   const langMenuRef = useRef<HTMLDivElement>(null);
-  const currencyMenuRef = useRef<HTMLDivElement>(null);
   const portalMenuRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
 
-  const navLinks = [
-    { label: t.nav.ourGuides, shortLabel: 'Guides', path: '/guides' },
-    { label: t.nav.experiences, shortLabel: 'Experiences', path: '/experiences' },
+  // Primary Single-Row Top Navigation Links (Concise so all items fit on 1 row without wrapping)
+  const primaryNavLinks = [
+    { label: t.nav.ourGuides, shortLabel: 'Guides & Vendors', path: '/guides' },
+    { label: t.nav.experiences, shortLabel: 'Safaris', path: '/experiences' },
     { label: t.nav.destinations, shortLabel: 'Destinations', path: '/destinations' },
-    { label: 'Safari Essentials', shortLabel: 'Essentials', path: '/safari-essentials' },
-    { label: t.nav.journal, shortLabel: 'Journal', path: '/journal' },
-    { label: t.nav.about, shortLabel: 'About', path: '/about' },
-    { label: t.nav.contact, shortLabel: 'Contact', path: '/contact' },
+    { label: t.nav.tripPlanner, shortLabel: 'Planner', path: '/trip-planner' },
+  ];
+
+  // Grouped Secondary Links under "Explore & Impact" Dropdown
+  const exploreImpactItems = [
+    {
+      label: 'Tingatinga Safaris Showcase',
+      desc: '2026 Portfolio (T1–T5 & 8-Day Signature) • UTB/TO/2026/0418',
+      path: '/tingatinga-safaris',
+      badge: 'Flagship Partner',
+      icon: Award,
+    },
+    {
+      label: 'Volunteer Programs',
+      desc: 'UWA Wildlife Veterinary, Bwindi Community & Kibale Reforestation',
+      path: '/volunteer-programs',
+      badge: 'UWA Accredited',
+      icon: Users,
+    },
+    {
+      label: 'Conservation Fundraisers',
+      desc: 'Gorilla Snare Removal, Batwa Homesteads & Nile Source Mangroves',
+      path: '/fundraisers',
+      badge: '100% Escrow',
+      icon: Heart,
+    },
+    {
+      label: 'UTB & UWA Verification Info',
+      desc: 'Multi-Vendor Marketplace Licensing & Regulatory Audit Registry',
+      path: '/utb-uwa-verification',
+      badge: 'Verified Registry',
+      icon: ShieldCheck,
+    },
+    {
+      label: 'Vendor Onboarding (Hotels & Fleet)',
+      desc: 'Upload Partner Hotel Rooms, Rates & 4x4 Safari Driver Fleet',
+      path: '/guides?section=partners',
+      badge: 'Join Marketplace',
+      icon: Building2,
+    },
+    {
+      label: t.nav.journal,
+      desc: 'Field Dispatches, UWA Permit Advisories & Cultural Stories',
+      path: '/journal',
+      badge: 'Dispatches',
+      icon: BookOpen,
+    },
   ];
 
   useEffect(() => {
     setMobileOpen(false);
+    setExploreMenuOpen(false);
+    setWalletDrawerOpen(false);
     setLangMenuOpen(false);
-    setCurrencyMenuOpen(false);
     setPortalMenuOpen(false);
-  }, [location.pathname]);
+  }, [location.pathname, location.search]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -146,23 +208,30 @@ export const Navbar: React.FC = () => {
         setSearchModalOpen((prev) => !prev);
       } else if (e.key === 'Escape') {
         setMobileOpen(false);
+        setExploreMenuOpen(false);
+        setWalletDrawerOpen(false);
         setLangMenuOpen(false);
-        setCurrencyMenuOpen(false);
         setPortalMenuOpen(false);
       }
     };
     const handleClickOutside = (e: MouseEvent) => {
       if (
+        exploreMenuRef.current &&
+        !exploreMenuRef.current.contains(e.target as Node)
+      ) {
+        setExploreMenuOpen(false);
+      }
+      if (
+        walletDrawerRef.current &&
+        !walletDrawerRef.current.contains(e.target as Node)
+      ) {
+        setWalletDrawerOpen(false);
+      }
+      if (
         langMenuRef.current &&
         !langMenuRef.current.contains(e.target as Node)
       ) {
         setLangMenuOpen(false);
-      }
-      if (
-        currencyMenuRef.current &&
-        !currencyMenuRef.current.contains(e.target as Node)
-      ) {
-        setCurrencyMenuOpen(false);
       }
       if (
         portalMenuRef.current &&
@@ -184,13 +253,23 @@ export const Navbar: React.FC = () => {
     return location.pathname.startsWith(path);
   };
 
+  const isExploreImpactActive =
+    isActive('/explore-impact') ||
+    isActive('/tingatinga-safaris') ||
+    isActive('/volunteer-programs') ||
+    isActive('/fundraisers') ||
+    isActive('/utb-uwa-verification') ||
+    isActive('/journal') ||
+    isActive('/about') ||
+    isActive('/contact');
+
   return (
     <header className="sticky top-0 z-40 w-full bg-[#FAF7F2]/95 backdrop-blur-md border-b border-[#E4DCCF] print:hidden">
       {/* Automatic Geolocation & Language Proposal Strip */}
       <GeoLanguageBanner />
 
-      <div className="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-10 h-16 sm:h-[70px] flex items-center justify-between gap-2 min-w-0">
-        {/* Cropped & Resized Enganda Safaris Official Logo Lockup */}
+      <div className="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-10 h-16 sm:h-[70px] flex items-center justify-between gap-2 xl:gap-4 min-w-0 flex-nowrap">
+        {/* Official Enganda Safaris Logo Lockup */}
         <Link
           to="/"
           aria-label="Enganda Safaris — Your Gateway to the Wild (Home)"
@@ -200,54 +279,151 @@ export const Navbar: React.FC = () => {
             <img
               src="/assets/aistudio/enganda-logo-header.png"
               alt="Enganda Safaris — Your Gateway to the Wild"
-              className="h-9 sm:h-11 xl:h-12 w-auto object-contain select-none"
+              className="h-9 sm:h-10 xl:h-11 w-auto object-contain select-none"
             />
           </div>
         </Link>
 
-        {/* Primary Desktop Navigation (Fits cleanly within lg+ viewport boundary) */}
+        {/* Single-Row Primary Desktop Navigation + "Explore & Impact" Dropdown */}
         <nav
-          className="hidden lg:flex items-center gap-2 xl:gap-4 min-w-0"
+          className="hidden lg:flex items-center gap-2.5 xl:gap-5 min-w-0 flex-nowrap shrink-0"
           aria-label="Primary Navigation"
         >
-          {navLinks.map((link) => (
+          {primaryNavLinks.map((link) => (
             <Link
               key={link.path}
               to={link.path}
-              className={`text-xs xl:text-sm font-medium transition-colors py-1 border-b-2 whitespace-nowrap ${
+              className={`text-xs xl:text-sm font-medium transition-colors py-1 border-b-2 whitespace-nowrap shrink-0 ${
                 isActive(link.path)
                   ? 'text-[#226B3E] border-[#C85A28] font-semibold'
                   : 'text-[#5A5248] border-transparent hover:text-[#1A1612]'
               }`}
             >
-              <span className="hidden 2xl:inline">{link.label}</span>
-              <span className="2xl:hidden">{link.shortLabel}</span>
+              {link.shortLabel}
             </Link>
           ))}
+
+          {/* "Explore & Impact" Dropdown Menu (Houses Volunteers, Fundraisers, UTB/UWA Verification, Vendor Onboarding, Tingatinga, Journal, About, Contact) */}
+          <div className="relative shrink-0" ref={exploreMenuRef}>
+            <button
+              type="button"
+              onClick={() => setExploreMenuOpen((prev) => !prev)}
+              aria-expanded={exploreMenuOpen}
+              className={`inline-flex items-center gap-1 text-xs xl:text-sm font-medium transition-colors py-1 border-b-2 whitespace-nowrap cursor-pointer ${
+                isExploreImpactActive || exploreMenuOpen
+                  ? 'text-[#226B3E] border-[#C85A28] font-semibold'
+                  : 'text-[#5A5248] border-transparent hover:text-[#1A1612]'
+              }`}
+            >
+              <span>Explore &amp; Impact</span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform ${
+                  exploreMenuOpen ? 'rotate-180 text-[#C85A28]' : ''
+                }`}
+              />
+            </button>
+
+            {exploreMenuOpen && (
+              <div className="absolute left-0 mt-2.5 w-[390px] max-w-[calc(100vw-2rem)] bg-white border border-[#E4DCCF] rounded-xl shadow-2xl p-4 space-y-3 z-50">
+                <div className="flex items-center justify-between border-b border-[#E4DCCF] pb-2.5">
+                  <div>
+                    <span className="block font-mono text-[10px] uppercase tracking-wider text-[#226B3E] font-bold">
+                      UTB &amp; UWA Verified Ecosystem
+                    </span>
+                    <span className="text-xs text-[#5A5248]">
+                      Marketplace Impact, Verification &amp; Onboarding
+                    </span>
+                  </div>
+                  <Link
+                    to="/explore-impact"
+                    onClick={() => setExploreMenuOpen(false)}
+                    className="font-mono text-[10px] font-bold text-[#C85A28] hover:underline"
+                  >
+                    View All →
+                  </Link>
+                </div>
+
+                <div className="space-y-1.5">
+                  {exploreImpactItems.map((item) => {
+                    const IconComp = item.icon;
+                    return (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        onClick={() => setExploreMenuOpen(false)}
+                        className="group flex items-start gap-3 p-2.5 rounded-lg hover:bg-[#FAF7F2] border border-transparent hover:border-[#E4DCCF] transition-all"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-[#FAF7F2] group-hover:bg-[#226B3E] text-[#226B3E] group-hover:text-white border border-[#E4DCCF] flex items-center justify-center shrink-0 mt-0.5 transition-colors">
+                          <IconComp className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-bold text-[#1A1612] group-hover:text-[#226B3E] truncate">
+                              {item.label}
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded bg-[#FAF7F2] border border-[#E4DCCF] font-mono text-[9px] font-bold text-[#C85A28] shrink-0">
+                              {item.badge}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-[#5A5248] leading-snug mt-0.5">
+                            {item.desc}
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {/* Secondary Footer Links inside Explore & Impact */}
+                <div className="pt-2.5 border-t border-[#E4DCCF] flex items-center justify-between gap-2 text-xs font-semibold">
+                  <Link
+                    to="/how-we-work"
+                    onClick={() => setExploreMenuOpen(false)}
+                    className="text-[#5A5248] hover:text-[#226B3E]"
+                  >
+                    {t.nav.howWeWork}
+                  </Link>
+                  <span className="text-[#E4DCCF]">•</span>
+                  <Link
+                    to="/about"
+                    onClick={() => setExploreMenuOpen(false)}
+                    className="text-[#5A5248] hover:text-[#226B3E]"
+                  >
+                    {t.nav.about}
+                  </Link>
+                  <span className="text-[#E4DCCF]">•</span>
+                  <Link
+                    to="/contact"
+                    onClick={() => setExploreMenuOpen(false)}
+                    className="text-[#5A5248] hover:text-[#226B3E]"
+                  >
+                    {t.nav.contact}
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
         </nav>
 
-        {/* Desktop Right Controls (lg+ only: never collides with mobile menu button) */}
-        <div className="hidden lg:flex items-center gap-1.5 xl:gap-2 shrink-0">
+        {/* Desktop Right Controls (Single Row, Clean, Currency Nested Under Wallet Drawer) */}
+        <div className="hidden lg:flex items-center gap-1.5 xl:gap-2 shrink-0 flex-nowrap">
           {/* Global Search Trigger Button */}
           <button
             type="button"
             onClick={() => setSearchModalOpen(true)}
             aria-label="Search safari experiences and guide profiles"
             title="Search Safari Experiences & Guide Profiles (Ctrl+K)"
-            className="inline-flex items-center gap-1.5 bg-white hover:bg-[#F3ECE1] border border-[#E4DCCF] hover:border-[#226B3E] text-[#1A1612] text-xs font-medium rounded-md px-2.5 py-1.5 transition-colors cursor-pointer whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 bg-white hover:bg-[#F3ECE1] border border-[#E4DCCF] hover:border-[#226B3E] text-[#1A1612] text-xs font-medium rounded-md px-2.5 py-1.5 transition-colors cursor-pointer whitespace-nowrap shrink-0"
           >
             <Search className="w-3.5 h-3.5 text-[#226B3E] shrink-0" />
-            <span className="hidden xl:inline text-[#5A5248]">
-              Search Safaris &amp; Guides
-            </span>
-            <span className="xl:hidden text-[#5A5248]">Search</span>
+            <span className="text-[#5A5248]">Search</span>
             <kbd className="hidden 2xl:inline-block font-mono text-[10px] px-1 py-0.5 rounded bg-[#F3ECE1] text-[#5A5248] border border-[#E4DCCF]">
               ⌘K
             </kbd>
           </button>
 
-          {/* 5-Role Portals Popover Menu (Aligned with Firestore RBAC Rules) */}
-          <div className="relative" ref={portalMenuRef}>
+          {/* 5-Role Portals Popover Menu */}
+          <div className="relative shrink-0" ref={portalMenuRef}>
             <button
               type="button"
               onClick={() => setPortalMenuOpen((prev) => !prev)}
@@ -260,7 +436,7 @@ export const Navbar: React.FC = () => {
             >
               <ShieldCheck className="w-3.5 h-3.5 text-[#D99B26] shrink-0" />
               <span>Portals</span>
-              <span className="hidden xl:inline text-[10px] uppercase opacity-80">
+              <span className="hidden 2xl:inline text-[10px] uppercase opacity-80">
                 · {activePortalRole}
               </span>
               <ChevronDown className="w-3 h-3 opacity-75 shrink-0" />
@@ -288,7 +464,6 @@ export const Navbar: React.FC = () => {
                   </Link>
                 </div>
 
-                {/* Active Role Security Scope */}
                 <div className="px-2.5 py-1.5 rounded bg-[#F3ECE1] border border-[#E4DCCF] text-[10px] font-mono text-[#5A5248]">
                   <strong className="text-[#226B3E]">Active Rights:</strong>{' '}
                   {currentRoleRights.firestoreScope}
@@ -336,13 +511,6 @@ export const Navbar: React.FC = () => {
                           >
                             {item.desc}
                           </div>
-                          <div
-                            className={`text-[9px] font-mono mt-0.5 ${
-                              active ? 'text-[#D99B26]' : 'text-[#226B3E]'
-                            }`}
-                          >
-                            Rule: {item.ruleRequirement}
-                          </div>
                         </div>
                         <ArrowUpRight className="w-3.5 h-3.5 shrink-0 opacity-75" />
                       </button>
@@ -354,7 +522,7 @@ export const Navbar: React.FC = () => {
           </div>
 
           {/* Language & Geolocation Selector Popover */}
-          <div className="relative" ref={langMenuRef}>
+          <div className="relative shrink-0" ref={langMenuRef}>
             <button
               type="button"
               onClick={() => setLangMenuOpen((prev) => !prev)}
@@ -379,7 +547,6 @@ export const Navbar: React.FC = () => {
                   </span>
                 </div>
 
-                {/* 6 Supported Languages Grid */}
                 <div className="grid grid-cols-2 gap-1.5">
                   {SUPPORTED_LANGUAGES.map((lang) => {
                     const active = language === lang.code;
@@ -415,29 +582,13 @@ export const Navbar: React.FC = () => {
                         </div>
                         {active ? (
                           <Check className="w-3.5 h-3.5 text-[#D99B26] shrink-0" />
-                        ) : isGeoSuggested ? (
-                          <span className="font-mono text-[9px] uppercase px-1 py-0.5 rounded bg-[#D99B26]/20 text-[#C85A28]">
-                            Geo
-                          </span>
                         ) : null}
                       </button>
                     );
                   })}
                 </div>
 
-                {/* Geolocation Controls */}
                 <div className="pt-2 border-t border-[#E4DCCF] space-y-2">
-                  <div className="flex items-center justify-between text-[11px] text-[#5A5248]">
-                    <span>
-                      {t.geoBanner.detectedFrom}:{' '}
-                      <strong className="text-[#1A1612]">
-                        {geoDetection.city
-                          ? `${geoDetection.city}, ${geoDetection.countryName}`
-                          : geoDetection.countryName}
-                      </strong>
-                    </span>
-                  </div>
-
                   <button
                     type="button"
                     onClick={() => {
@@ -450,158 +601,290 @@ export const Navbar: React.FC = () => {
                     <span>{t.geoBanner.locateMe}</span>
                   </button>
 
-                  {/* Region Proposal Preview Chips */}
-                  <div className="space-y-1 pt-1">
-                    <span className="block font-mono text-[10px] uppercase text-[#5A5248]">
-                      {t.geoBanner.testGeoLabel}
+                  <div className="flex flex-wrap gap-1">
+                    {SUPPORTED_LANGUAGES.filter((l) => l.code !== 'en').map(
+                      (l) => (
+                        <button
+                          key={l.code}
+                          type="button"
+                          onClick={() => {
+                            simulateGeoLocation(l.code);
+                            setLangMenuOpen(false);
+                          }}
+                          className="px-2 py-0.5 rounded bg-white hover:bg-[#226B3E] hover:text-white text-[#5A5248] border border-[#E4DCCF] font-mono text-[10px] transition-colors cursor-pointer"
+                        >
+                          {l.sampleCity} ({l.shortLabel})
+                        </button>
+                      )
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Unified Wallet Dropdown / Drawer (Nests Currency Selector UGX, USD, EUR, GBP + Balance + Payment Methods + Transaction History) */}
+          <div className="relative shrink-0" ref={walletDrawerRef}>
+            <button
+              type="button"
+              onClick={() => setWalletDrawerOpen((prev) => !prev)}
+              aria-expanded={walletDrawerOpen}
+              title="Open Safari Wallet, Currency Switcher (UGX/USD/EUR/GBP), Payment Methods & Transactions"
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs font-mono font-semibold transition-colors cursor-pointer whitespace-nowrap ${
+                isActive('/wallet') || walletDrawerOpen
+                  ? 'bg-[#144225] text-white border-[#144225]'
+                  : 'bg-white hover:bg-[#F3ECE1] text-[#1A1612] border-[#E4DCCF]'
+              }`}
+            >
+              <Wallet className="w-3.5 h-3.5 text-[#226B3E] shrink-0" />
+              <span className="tabular-nums font-bold">
+                {formatPrice(availableBalanceUSD, currency)}
+              </span>
+              <span className="px-1.5 py-0.2 rounded bg-[#226B3E]/15 text-[#226B3E] text-[10px] font-bold">
+                {currency}
+              </span>
+              <ChevronDown className="w-3 h-3 opacity-75 shrink-0" />
+            </button>
+
+            {walletDrawerOpen && (
+              <div className="absolute right-0 mt-2.5 w-[380px] max-w-[calc(100vw-2rem)] bg-white border border-[#E4DCCF] rounded-2xl shadow-2xl p-4 space-y-4 z-50">
+                {/* 1. Wallet Balance & Escrow Summary Header */}
+                <div className="bg-[#144225] text-white rounded-xl p-3.5 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-[#D99B26] font-bold">
+                      Enganda Safari Wallet &amp; UWA Escrow
                     </span>
-                    <div className="flex flex-wrap gap-1">
-                      {SUPPORTED_LANGUAGES.filter((l) => l.code !== 'en').map(
-                        (l) => (
-                          <button
-                            key={l.code}
-                            type="button"
-                            onClick={() => {
-                              simulateGeoLocation(l.code);
-                              setLangMenuOpen(false);
-                            }}
-                            className="px-2 py-0.5 rounded bg-white hover:bg-[#226B3E] hover:text-white text-[#5A5248] border border-[#E4DCCF] font-mono text-[10px] transition-colors cursor-pointer"
-                            title={`Propose ${l.nativeName} (${l.sampleCity}, ${l.sampleCountry})`}
-                          >
-                            {l.sampleCity} ({l.shortLabel})
-                          </button>
-                        )
-                      )}
+                    <Link
+                      to="/wallet"
+                      onClick={() => setWalletDrawerOpen(false)}
+                      className="font-mono text-[10px] text-white hover:text-[#D99B26] underline"
+                    >
+                      Full Wallet →
+                    </Link>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-mono text-[#E4DCCF] uppercase">
+                      Total Available Purchasing Power ({currency})
+                    </div>
+                    <div className="font-mono text-2xl font-bold text-white tabular-nums">
+                      {formatPrice(availableBalanceUSD, currency)}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1.5 pt-2 border-t border-white/15 font-mono text-[10px]">
+                    <div>
+                      <span className="block text-[#D6CEC2]">Cash Balance</span>
+                      <strong className="text-white">
+                        {formatPrice(availableBalanceUSD, currency)}
+                      </strong>
+                    </div>
+                    <div>
+                      <span className="block text-[#D6CEC2]">UWA Escrow</span>
+                      <strong className="text-[#D99B26]">
+                        {formatPrice(escrowBalanceUSD, currency)}
+                      </strong>
+                    </div>
+                    <div>
+                      <span className="block text-[#D6CEC2]">Rewards</span>
+                      <strong className="text-emerald-300">
+                        {formatPrice(rewardCreditsUSD, currency)}
+                      </strong>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
 
-          {/* Live Currency Switcher Popover (USD, EUR, GBP, UGX) */}
-          <div className="relative" ref={currencyMenuRef}>
-            <button
-              type="button"
-              onClick={() => setCurrencyMenuOpen((prev) => !prev)}
-              aria-expanded={currencyMenuOpen}
-              aria-label={t.nav.currencyLabel}
-              title={`Active Currency: ${currency} (${formatExchangeRateSummary(currency)})`}
-              className="inline-flex items-center gap-1 bg-[#F3ECE1] hover:bg-[#E4DCCF] border border-[#E4DCCF] text-[#1A1612] text-xs font-mono font-semibold rounded-md px-2 py-1.5 transition-colors cursor-pointer whitespace-nowrap"
-            >
-              <span>{currency}</span>
-              <ChevronDown className="w-3 h-3 text-[#5A5248] shrink-0" />
-            </button>
-
-            {currencyMenuOpen && (
-              <div className="absolute right-0 mt-2 w-72 max-w-[calc(100vw-2rem)] bg-[#FAF7F2] border border-[#E4DCCF] rounded-lg shadow-xl p-3.5 space-y-3 z-50">
-                <div className="flex items-center justify-between border-b border-[#E4DCCF] pb-2">
-                  <div>
-                    <span className="block font-mono text-[10px] uppercase tracking-wider text-[#226B3E] font-bold">
-                      Live Currency Switcher
+                {/* 2. Nested Currency Selector (UGX, USD, EUR, GBP) inside Wallet Drawer */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-[#226B3E] font-bold">
+                      Wallet &amp; Site Currency (UGX • USD • EUR • GBP)
                     </span>
-                    <span className="text-[11px] text-[#5A5248]">
-                      Updates all safari & permit tariffs
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => refreshExchangeRates()}
-                    disabled={isRefreshingRates}
-                    title="Refresh live exchange rates"
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded bg-[#F3ECE1] hover:bg-[#E4DCCF] text-[#1A1612] border border-[#D6CEC2] font-mono text-[10px] transition-colors cursor-pointer disabled:opacity-50"
-                  >
-                    <RefreshCw
-                      className={`w-3 h-3 text-[#226B3E] ${
-                        isRefreshingRates ? 'animate-spin' : ''
-                      }`}
-                    />
-                    <span>{isRefreshingRates ? 'Syncing' : 'Live'}</span>
-                  </button>
-                </div>
-
-                <div className="space-y-1.5">
-                  {CURRENCIES.map((cur) => {
-                    const active = currency === cur;
-                    const info = CURRENCY_RATES[cur];
-                    const liveRate = exchangeRates[cur] ?? info.rate;
-                    return (
-                      <button
-                        key={cur}
-                        type="button"
-                        onClick={() => {
-                          setCurrency(cur);
-                          setCurrencyMenuOpen(false);
-                        }}
-                        className={`w-full p-2.5 rounded-md border text-left transition-colors cursor-pointer flex items-center justify-between ${
-                          active
-                            ? 'bg-[#226B3E] text-white border-[#226B3E]'
-                            : 'bg-white text-[#1A1612] border-[#E4DCCF] hover:border-[#226B3E]'
+                    <button
+                      type="button"
+                      onClick={() => refreshExchangeRates()}
+                      disabled={isRefreshingRates}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#FAF7F2] hover:bg-[#F3ECE1] text-[#1A1612] border border-[#E4DCCF] font-mono text-[10px] cursor-pointer disabled:opacity-50"
+                    >
+                      <RefreshCw
+                        className={`w-2.5 h-2.5 text-[#226B3E] ${
+                          isRefreshingRates ? 'animate-spin' : ''
                         }`}
-                      >
-                        <div>
-                          <div className="text-xs font-bold flex items-center gap-1.5">
-                            <span>{cur}</span>
-                            <span
-                              className={`font-normal text-[11px] ${
+                      />
+                      <span>
+                        {isRefreshingRates
+                          ? 'Syncing'
+                          : ratesSource === 'live_api'
+                          ? 'Live FX'
+                          : 'Entebbe FX'}
+                      </span>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {CURRENCIES.map((cur) => {
+                      const active = currency === cur;
+                      const info = CURRENCY_RATES[cur];
+                      const liveRate = exchangeRates[cur] ?? info.rate;
+                      return (
+                        <button
+                          key={cur}
+                          type="button"
+                          onClick={() => setCurrency(cur)}
+                          className={`p-2 rounded-lg border text-left transition-all cursor-pointer flex items-center justify-between ${
+                            active
+                              ? 'bg-[#1A1612] text-white border-[#1A1612] shadow-2xs'
+                              : 'bg-[#FAF7F2] text-[#1A1612] border-[#E4DCCF] hover:border-[#226B3E]'
+                          }`}
+                        >
+                          <div className="min-w-0">
+                            <div className="text-xs font-mono font-bold flex items-center gap-1">
+                              <span>{cur}</span>
+                              <span
+                                className={`text-[10px] font-normal truncate ${
+                                  active ? 'text-[#D99B26]' : 'text-[#5A5248]'
+                                }`}
+                              >
+                                {info.symbol}
+                              </span>
+                            </div>
+                            <div
+                              className={`text-[9px] font-mono tabular-nums truncate ${
                                 active ? 'text-[#E4DCCF]' : 'text-[#5A5248]'
                               }`}
                             >
-                              • {info.name}
-                            </span>
+                              {cur === 'USD'
+                                ? '1 USD = $1.00'
+                                : cur === 'UGX'
+                                ? `1 USD = ${Math.round(liveRate).toLocaleString()} UGX`
+                                : `1 USD = ${info.symbol}${liveRate.toFixed(3)}`}
+                            </div>
                           </div>
-                          <div
-                            className={`text-[10px] font-mono tabular-nums mt-0.5 ${
-                              active ? 'text-[#D99B26]' : 'text-[#5A5248]'
-                            }`}
-                          >
-                            {cur === 'USD'
-                              ? 'Base Tariff (1 USD = US$1.00)'
-                              : cur === 'UGX'
-                              ? `1 USD = UGX ${Math.round(liveRate).toLocaleString()}`
-                              : `1 USD = ${info.symbol}${liveRate.toFixed(4)}`}
-                          </div>
-                        </div>
-                        {active && (
-                          <Check className="w-4 h-4 text-[#D99B26] shrink-0" />
-                        )}
-                      </button>
-                    );
-                  })}
+                          {active && (
+                            <Check className="w-3.5 h-3.5 text-[#D99B26] shrink-0" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                <div className="pt-2 border-t border-[#E4DCCF] flex items-center justify-between text-[10px] font-mono text-[#5A5248]">
-                  <span>
-                    Feed:{' '}
-                    <strong className="text-[#226B3E]">
-                      {ratesSource === 'live_api'
-                        ? 'Live FX Market'
-                        : 'Entebbe Desk'}
-                    </strong>
-                  </span>
-                  <span className="tabular-nums">
-                    {new Date(ratesUpdatedAt).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </span>
+                {/* 3. Linked Payment Methods inside Wallet Drawer */}
+                <div className="space-y-1.5 pt-2 border-t border-[#E4DCCF]">
+                  <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-[#5A5248] font-bold">
+                    <span>Active Settlement Methods (Relworx &amp; Cards)</span>
+                    <span>3 Linked</span>
+                  </div>
+                  <div className="space-y-1">
+                    {[
+                      {
+                        id: 'pm-relworx-momo',
+                        type: 'mobile_money',
+                        label: 'Relworx MTN & Airtel Mobile Money',
+                        detail: 'Instant UGX / USD Settlement',
+                        isDefault: true,
+                      },
+                      {
+                        id: 'pm-card-visa',
+                        type: 'card',
+                        label: 'Visa / Mastercard 3DS Escrow',
+                        detail: 'Multi-Currency Card Rail',
+                        isDefault: false,
+                      },
+                      {
+                        id: 'pm-bank-ecobank',
+                        type: 'bank',
+                        label: 'Ecobank & FINCA Uganda Wire',
+                        detail: 'UWA Permit Escrow Settlement',
+                        isDefault: false,
+                      },
+                    ].map((m) => (
+                      <div
+                        key={m.id}
+                        className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-[#FAF7F2] border border-[#E4DCCF] text-xs"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          {m.type === 'mobile_money' ? (
+                            <Smartphone className="w-3.5 h-3.5 text-[#C85A28] shrink-0" />
+                          ) : m.type === 'card' ? (
+                            <CreditCard className="w-3.5 h-3.5 text-[#226B3E] shrink-0" />
+                          ) : (
+                            <Landmark className="w-3.5 h-3.5 text-[#1A1612] shrink-0" />
+                          )}
+                          <div className="min-w-0">
+                            <div className="font-semibold text-[#1A1612] text-[11px] truncate">
+                              {m.label}
+                            </div>
+                            <div className="font-mono text-[10px] text-[#5A5248] truncate">
+                              {m.detail}
+                            </div>
+                          </div>
+                        </div>
+                        {m.isDefault && (
+                          <span className="px-1.5 py-0.5 rounded bg-[#226B3E]/10 text-[#226B3E] font-mono text-[9px] font-bold shrink-0">
+                            Default
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
+
+                {/* 4. Recent Transaction History inside Wallet Drawer */}
+                <div className="space-y-1.5 pt-2 border-t border-[#E4DCCF]">
+                  <div className="flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-[#5A5248] font-bold">
+                    <span className="inline-flex items-center gap-1">
+                      <History className="w-3 h-3 text-[#226B3E]" />
+                      <span>Recent Wallet Ledger</span>
+                    </span>
+                    <span className="text-[9px] text-[#5A5248]">
+                      Updated{' '}
+                      {new Date(ratesUpdatedAt).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                  </div>
+                  <div className="space-y-1 max-h-28 overflow-y-auto">
+                    {transactions.slice(0, 3).map((tx) => (
+                      <div
+                        key={tx.id}
+                        className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-[#FAF7F2] border border-[#E4DCCF] text-[11px]"
+                      >
+                        <div className="min-w-0">
+                          <div className="font-semibold text-[#1A1612] truncate">
+                            {tx.title}
+                          </div>
+                          <div className="font-mono text-[9px] text-[#5A5248]">
+                            {tx.referenceCode} • {tx.paymentRail}
+                          </div>
+                        </div>
+                        <span
+                          className={`font-mono font-bold shrink-0 tabular-nums ${
+                            tx.direction === 'credit'
+                              ? 'text-[#226B3E]'
+                              : 'text-[#1A1612]'
+                          }`}
+                        >
+                          {tx.direction === 'credit' ? '+' : '-'}
+                          {formatPrice(tx.amountUSD, currency)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 5. Open Full Safari Wallet & Top Up Button */}
+                <Link
+                  to="/wallet"
+                  onClick={() => setWalletDrawerOpen(false)}
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#226B3E] hover:bg-[#194E2D] text-white text-xs font-bold transition-colors"
+                >
+                  <Wallet className="w-3.5 h-3.5 text-[#D99B26]" />
+                  <span>Open Safari Wallet, Top-Up &amp; Escrow Ledger</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
               </div>
             )}
           </div>
-
-          <Link
-            to="/wallet"
-            title={t.nav.safariWallet}
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs font-mono font-semibold transition-colors whitespace-nowrap ${
-              isActive('/wallet')
-                ? 'bg-[#144225] text-white border-[#144225]'
-                : 'bg-[#F3ECE1] hover:bg-[#E4DCCF] text-[#1A1612] border-[#E4DCCF]'
-            }`}
-          >
-            <Wallet className="w-3.5 h-3.5 text-[#226B3E] shrink-0" />
-            <span className="tabular-nums">{formatPrice(availableBalanceUSD, currency)}</span>
-          </Link>
 
           <Link
             to="/trip-planner"
@@ -612,7 +895,7 @@ export const Navbar: React.FC = () => {
           </Link>
         </div>
 
-        {/* Mobile & Tablet Bar (< lg): Fits strictly inside screen boundaries */}
+        {/* Mobile & Tablet Bar (< lg) */}
         <div className="flex items-center gap-1.5 lg:hidden shrink-0">
           <button
             type="button"
@@ -621,22 +904,14 @@ export const Navbar: React.FC = () => {
             className="inline-flex items-center gap-1 bg-white hover:bg-[#F3ECE1] border border-[#E4DCCF] text-[#1A1612] text-xs font-medium rounded-md px-2.5 py-1.5 whitespace-nowrap cursor-pointer"
           >
             <Search className="w-3.5 h-3.5 text-[#226B3E] shrink-0" />
-            <span className="hidden sm:inline">Search</span>
           </button>
 
           <Link
-            to="/portals"
-            className="inline-flex items-center gap-1 bg-[#226B3E] text-white text-xs font-mono font-semibold rounded-md px-2.5 py-1.5 whitespace-nowrap"
+            to="/wallet"
+            className="inline-flex items-center gap-1 bg-[#144225] text-white text-xs font-mono font-semibold rounded-md px-2.5 py-1.5 whitespace-nowrap"
           >
-            <ShieldCheck className="w-3.5 h-3.5 text-[#D99B26] shrink-0" />
-            <span>Portals</span>
-          </Link>
-
-          <Link
-            to="/trip-planner"
-            className="hidden sm:inline-flex items-center gap-1 bg-[#C85A28] text-white text-xs font-semibold rounded-md px-2.5 py-1.5 whitespace-nowrap"
-          >
-            <span>{t.nav.planMySafari}</span>
+            <Wallet className="w-3.5 h-3.5 text-[#D99B26] shrink-0" />
+            <span>{currency}</span>
           </Link>
 
           <button
@@ -654,78 +929,97 @@ export const Navbar: React.FC = () => {
       {/* Mobile & Tablet Navigation Drawer */}
       {mobileOpen && (
         <div className="lg:hidden border-t border-[#E4DCCF] bg-[#FAF7F2] px-4 pt-4 pb-6 space-y-4 shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto">
-          {/* Mobile Search Bar Trigger */}
-          <button
-            type="button"
-            onClick={() => {
-              setMobileOpen(false);
-              setSearchModalOpen(true);
-            }}
-            className="w-full flex items-center justify-between gap-2 bg-white border border-[#D6CEC2] rounded-md px-3 py-2.5 text-xs text-[#5A5248] cursor-pointer"
-          >
-            <span className="inline-flex items-center gap-2">
-              <Search className="w-4 h-4 text-[#226B3E]" />
-              <span>Search safari experiences, guides, gorillas, birding...</span>
-            </span>
-            <span className="font-mono text-[10px] text-[#226B3E] font-semibold">
-              Search
-            </span>
-          </button>
-
-          {/* Mobile 5-Portal Quick Strip with RBAC Status */}
-          <div className="pb-3 border-b border-[#E4DCCF] space-y-2">
+          {/* Mobile Wallet & Nested Currency Card */}
+          <div className="bg-white border border-[#E4DCCF] rounded-xl p-3.5 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="font-mono text-[10px] uppercase tracking-wider text-[#226B3E] font-bold">
-                Firestore Role Portals
-              </span>
-              <span className="font-mono text-[10px] text-[#5A5248]">
-                Active: <strong className="text-[#1A1612] uppercase">{activePortalRole}</strong>
-              </span>
+              <div>
+                <span className="block font-mono text-[10px] uppercase text-[#226B3E] font-bold">
+                  Safari Wallet &amp; Currency
+                </span>
+                <span className="font-mono text-lg font-bold text-[#1A1612]">
+                  {formatPrice(availableBalanceUSD, currency)}
+                </span>
+              </div>
+              <Link
+                to="/wallet"
+                className="px-3 py-1.5 rounded-md bg-[#226B3E] text-white font-mono text-xs font-bold"
+              >
+                Open Wallet
+              </Link>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
-              {PORTAL_MENU_ITEMS.map((item) => {
-                const allowed = canSwitchToRole(item.role);
-                return (
+
+            <div className="pt-2 border-t border-[#E4DCCF]">
+              <div className="flex items-center justify-between text-[11px] font-mono text-[#5A5248] mb-1.5">
+                <span>Wallet Currency ({formatExchangeRateSummary(currency)})</span>
+                <button
+                  type="button"
+                  onClick={() => refreshExchangeRates()}
+                  className="inline-flex items-center gap-1 text-[#226B3E] font-semibold"
+                >
+                  <RefreshCw
+                    className={`w-3 h-3 ${isRefreshingRates ? 'animate-spin' : ''}`}
+                  />
+                  <span>Refresh</span>
+                </button>
+              </div>
+              <div className="grid grid-cols-4 gap-1.5">
+                {CURRENCIES.map((cur) => (
                   <button
-                    key={item.role}
+                    key={cur}
                     type="button"
-                    onClick={async () => {
-                      if (allowed) {
-                        await setActivePortalRole(item.role);
-                      }
-                      setMobileOpen(false);
-                      navigate(`/portals/${item.slug}`);
-                    }}
-                    className={`px-2.5 py-2 rounded text-xs font-semibold border text-left flex items-center justify-between ${
-                      activePortalRole === item.role
-                        ? 'bg-[#226B3E] text-white border-[#226B3E]'
-                        : 'bg-white border-[#E4DCCF] hover:border-[#226B3E] text-[#1A1612]'
+                    onClick={() => setCurrency(cur)}
+                    className={`py-1.5 rounded text-xs font-mono font-bold border ${
+                      currency === cur
+                        ? 'bg-[#1A1612] text-[#D99B26] border-[#1A1612]'
+                        : 'bg-[#FAF7F2] text-[#1A1612] border-[#E4DCCF]'
                     }`}
                   >
-                    <span>{item.shortLabel}</span>
-                    {allowed ? (
-                      <ArrowUpRight className="w-3 h-3 text-[#D99B26]" />
-                    ) : (
-                      <Lock className="w-3 h-3 text-[#C85A28]" />
-                    )}
+                    {cur}
                   </button>
-                );
-              })}
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Mobile Language & Live Currency Strip */}
-          <div className="space-y-3 pb-3 border-t-0 border-b border-[#E4DCCF]">
-            <div className="flex items-center justify-between text-xs font-mono text-[#5A5248]">
-              <span>{t.geoBanner.selectLanguagePrompt}</span>
-              <button
-                type="button"
-                onClick={() => detectUserLocation(true)}
-                className="inline-flex items-center gap-1 text-[#226B3E] font-semibold"
-              >
-                <Navigation className="w-3 h-3" />
-                <span>{t.geoBanner.locateMe}</span>
-              </button>
+          {/* Primary + Explore & Impact Links */}
+          <div className="space-y-2">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-[#5A5248] font-bold">
+              Marketplace Navigation
+            </div>
+            <nav className="grid grid-cols-2 gap-2" aria-label="Mobile Navigation">
+              {primaryNavLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`px-3 py-2.5 rounded-md text-xs font-semibold border ${
+                    isActive(link.path)
+                      ? 'bg-[#226B3E] text-[#FAF7F2] border-[#226B3E]'
+                      : 'bg-white text-[#1A1612] border-[#E4DCCF]'
+                  }`}
+                >
+                  {link.shortLabel}
+                </Link>
+              ))}
+              {exploreImpactItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`px-3 py-2.5 rounded-md text-xs font-semibold border ${
+                    isActive(item.path)
+                      ? 'bg-[#226B3E] text-[#FAF7F2] border-[#226B3E]'
+                      : 'bg-white text-[#1A1612] border-[#E4DCCF]'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          {/* Mobile Language Selector */}
+          <div className="space-y-2 pt-2 border-t border-[#E4DCCF]">
+            <div className="font-mono text-[10px] uppercase text-[#5A5248] font-bold">
+              {t.geoBanner.selectLanguagePrompt}
             </div>
             <div className="grid grid-cols-3 gap-1.5">
               {SUPPORTED_LANGUAGES.map((lang) => (
@@ -743,79 +1037,7 @@ export const Navbar: React.FC = () => {
                 </button>
               ))}
             </div>
-
-            {/* Mobile Live Currency Switcher */}
-            <div className="pt-2 border-t border-[#E4DCCF]/60">
-              <div className="flex items-center justify-between text-[11px] font-mono text-[#5A5248] mb-1.5">
-                <span>Live Currency ({formatExchangeRateSummary(currency)})</span>
-                <button
-                  type="button"
-                  onClick={() => refreshExchangeRates()}
-                  className="inline-flex items-center gap-1 text-[#226B3E] font-semibold"
-                >
-                  <RefreshCw className={`w-3 h-3 ${isRefreshingRates ? 'animate-spin' : ''}`} />
-                  <span>Refresh Rates</span>
-                </button>
-              </div>
-              <div className="grid grid-cols-4 gap-1.5">
-                {CURRENCIES.map((cur) => (
-                  <button
-                    key={cur}
-                    type="button"
-                    onClick={() => setCurrency(cur)}
-                    className={`py-1.5 rounded text-xs font-mono font-bold border ${
-                      currency === cur
-                        ? 'bg-[#226B3E] text-white border-[#226B3E]'
-                        : 'bg-white text-[#1A1612] border-[#E4DCCF]'
-                    }`}
-                  >
-                    {cur}
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
-
-          <nav className="grid grid-cols-2 gap-2" aria-label="Mobile Navigation">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`px-3 py-2.5 rounded-md text-sm font-medium border ${
-                  isActive(link.path)
-                    ? 'bg-[#226B3E] text-[#FAF7F2] border-[#226B3E]'
-                    : 'bg-[#F3ECE1]/60 text-[#1A1612] border-[#E4DCCF] hover:bg-[#F3ECE1]'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-            <Link
-              to="/wallet"
-              className={`px-3 py-2.5 rounded-md text-sm font-medium border flex items-center justify-between ${
-                isActive('/wallet')
-                  ? 'bg-[#226B3E] text-[#FAF7F2] border-[#226B3E]'
-                  : 'bg-[#F3ECE1]/60 text-[#1A1612] border-[#E4DCCF]'
-              }`}
-            >
-              <span>{t.nav.safariWallet}</span>
-              <span className="font-mono text-xs font-bold tabular-nums">
-                {formatPrice(availableBalanceUSD, currency)}
-              </span>
-            </Link>
-            <Link
-              to="/how-we-work"
-              className="px-3 py-2.5 rounded-md text-sm font-medium border bg-[#F3ECE1]/60 text-[#1A1612] border-[#E4DCCF]"
-            >
-              {t.nav.howWeWork}
-            </Link>
-            <Link
-              to="/reviews"
-              className="px-3 py-2.5 rounded-md text-sm font-medium border bg-[#F3ECE1]/60 text-[#1A1612] border-[#E4DCCF]"
-            >
-              {t.nav.reviews}
-            </Link>
-          </nav>
 
           <div className="pt-2 border-t border-[#E4DCCF] space-y-3">
             <Link
@@ -832,7 +1054,7 @@ export const Navbar: React.FC = () => {
         </div>
       )}
 
-      {/* Global Search Modal for Safari Experiences, Guides & Scheduled Trips */}
+      {/* Global Search Modal */}
       <GlobalSearchModal
         isOpen={searchModalOpen}
         onClose={() => setSearchModalOpen(false)}

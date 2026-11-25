@@ -4,23 +4,25 @@ import { MapPin, Calendar, Compass, ArrowRight, Mountain, Clock } from 'lucide-r
 import { DESTINATIONS, GUIDES, EXPERIENCES } from '../data/seedData';
 import { SmartImage } from '../components/SmartImage';
 import { SEO } from '../components/SEO';
-import { UgandaParksMap } from '../components/UgandaParksMap';
 import { useInquiry } from '../context/InquiryContext';
 
 export const DestinationsPage: React.FC = () => {
   const { openInquiryModal } = useInquiry();
   const [selectedSlug, setSelectedSlug] = useState<string>('all');
+  const [selectedCountry, setSelectedCountry] = useState<string>('ALL');
 
-  const visibleDestinations =
-    selectedSlug === 'all'
-      ? DESTINATIONS
-      : DESTINATIONS.filter((d) => d.slug === selectedSlug);
+  const visibleDestinations = DESTINATIONS.filter((d) => {
+    const matchesCountry =
+      selectedCountry === 'ALL' || (d.country || 'Uganda') === selectedCountry;
+    const matchesSlug = selectedSlug === 'all' || d.slug === selectedSlug;
+    return matchesCountry && matchesSlug;
+  });
 
   return (
     <div className="bg-[#FAF7F2] min-h-screen py-12 sm:py-16">
       <SEO
-        title="Uganda Safari Destinations & Regions | WildLife Safaris"
-        description="Explore all 9 Ugandan safari regions — Bwindi & Mgahinga, Kibale Forest, Queen Elizabeth NP, Murchison Falls NP, Kidepo Valley NP, Rwenzori Mountains, Jinja, Lake Bunyonyi, and Entebbe & Mabamba Swamp."
+        title="East Africa Safari Destinations (Uganda, Tanzania, Kenya, Rwanda) | Enganda Safaris"
+        description="Explore 12 iconic East African safari destinations across Uganda, Tanzania (Serengeti & Ngorongoro), Kenya (Maasai Mara & Amboseli), and Rwanda (Volcanoes, Nyungwe & Akagera) — all operated by accredited Enganda Members."
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
@@ -29,23 +31,39 @@ export const DestinationsPage: React.FC = () => {
           <div className="max-w-3xl space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#1B5632] border border-[#D99B26]/40 text-xs font-mono text-[#D99B26]">
               <Compass className="w-3.5 h-3.5" />
-              <span>9 Iconic Ugandan Regions • Matched With Local Guides</span>
+              <span>12 Iconic East African Regions • Operated by Accredited Enganda Members</span>
             </div>
             <h1 className="font-serif text-4xl sm:text-5xl font-bold text-white">
-              Where Our Guides Call Home Across Uganda
+              Entire East Africa — Operated by Enganda Members
             </h1>
             <p className="text-sm sm:text-base text-[#D6CEC2] leading-relaxed">
-              From the glacial peaks of the Rwenzori Mountains and the montane rainforest of Bwindi to the papyrus channels of Mabamba Swamp on Lake Victoria, explore Uganda’s nine core safari regions and see which WildLife guides specialize in each landscape.
+              From Mountain Gorillas in Bwindi and Volcanoes National Park to the Great Migration across the Serengeti, Ngorongoro Crater, and Maasai Mara — explore all 12 East African destinations across Uganda, Tanzania, Kenya, and Rwanda operated directly by Enganda Member specialists (Enganda Safaris, Tingatinga Safaris, and Shuma Africa Safaris).
             </p>
           </div>
         </div>
 
-        {/* Interactive D3 Map of Major Uganda National Parks */}
-        <div className="-mx-4 sm:-mx-6 lg:-mx-8">
-          <UgandaParksMap
-            compactHeader
-            onSelectDestinationSlug={(slug) => setSelectedSlug(slug)}
-          />
+        {/* Country Filter Pills */}
+        <div className="flex flex-wrap items-center gap-2 border-b border-[#E4DCCF] pb-4">
+          <span className="font-mono text-xs uppercase tracking-wider text-[#5A5248] mr-1">
+            East Africa Country:
+          </span>
+          {['ALL', 'Uganda', 'Tanzania', 'Kenya', 'Rwanda'].map((country) => (
+            <button
+              key={country}
+              type="button"
+              onClick={() => {
+                setSelectedCountry(country);
+                setSelectedSlug('all');
+              }}
+              className={`px-3.5 py-1.5 rounded-md text-xs font-mono font-semibold border transition-colors cursor-pointer ${
+                selectedCountry === country
+                  ? 'bg-[#1A1612] text-[#D99B26] border-[#1A1612]'
+                  : 'bg-white text-[#1A1612] border-[#E4DCCF] hover:bg-[#F3ECE1]'
+              }`}
+            >
+              {country === 'ALL' ? `All East Africa (${DESTINATIONS.length})` : country}
+            </button>
+          ))}
         </div>
 
         {/* Region Filter Tabs */}
@@ -59,7 +77,7 @@ export const DestinationsPage: React.FC = () => {
                 : 'bg-white text-[#1A1612] border-[#E4DCCF] hover:bg-[#F3ECE1]'
             }`}
           >
-            All 9 Uganda Regions
+            All {DESTINATIONS.length} East Africa Destinations
           </button>
           {DESTINATIONS.map((dest) => (
             <button
@@ -100,6 +118,14 @@ export const DestinationsPage: React.FC = () => {
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#1A1612]/80 via-transparent to-transparent" />
+                  <div className="absolute top-4 left-4 right-4 flex flex-wrap items-center justify-between gap-2">
+                    <span className="px-2.5 py-1 rounded bg-[#1A1612]/85 text-[#D99B26] font-mono text-xs font-bold uppercase">
+                      {dest.country || 'Uganda'}
+                    </span>
+                    <span className="px-2.5 py-1 rounded bg-[#226B3E]/90 text-white font-mono text-[11px] font-semibold">
+                      {dest.operatedBy || 'Operated by Enganda Members'}
+                    </span>
+                  </div>
                   <div className="absolute bottom-4 left-4 right-4 text-white space-y-1">
                     {dest.parkElevation && (
                       <div className="text-xs font-mono text-[#D99B26] flex items-center gap-1">
@@ -221,13 +247,13 @@ export const DestinationsPage: React.FC = () => {
                         type="button"
                         onClick={() =>
                           openInquiryModal({
-                            defaultNotes: `Interested in visiting ${dest.name} with an WildLife guide.`,
+                            defaultNotes: `Direct booking for ${dest.name} (${dest.country || 'Uganda'}) operated by Enganda Members.`,
                           })
                         }
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-[#226B3E] hover:bg-[#194E2D] text-[#FAF7F2] text-xs font-semibold transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-[#C85A28] hover:bg-[#A8481D] text-[#FAF7F2] text-xs font-semibold transition-colors cursor-pointer"
                       >
-                        <MapPin className="w-3.5 h-3.5 text-[#D99B26]" />
-                        <span>Plan a Trip to {dest.name}</span>
+                        <MapPin className="w-3.5 h-3.5 text-[#FAF7F2]" />
+                        <span>Pay &amp; Book {dest.name} Directly</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </div>

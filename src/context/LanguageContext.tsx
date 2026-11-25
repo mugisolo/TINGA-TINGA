@@ -22,6 +22,7 @@ interface LanguageContextValue {
   language: SupportedLanguage;
   setLanguage: (lang: SupportedLanguage) => void;
   t: TranslationDictionary;
+  translateText: (englishText: string) => string;
   currentLanguageMeta: LanguageMetadata;
   dir: 'ltr' | 'rtl';
   geoDetection: GeoDetectionResult;
@@ -33,8 +34,115 @@ interface LanguageContextValue {
   simulateGeoLocation: (targetLang: SupportedLanguage) => void;
 }
 
-const LANGUAGE_STORAGE_KEY = 'wildlife_language_v1';
+const LANGUAGE_STORAGE_KEY = 'enganda_language_v1';
+const LEGACY_LANGUAGE_STORAGE_KEY = 'wildlife_language_v1';
 const GEO_DISMISSED_KEY = 'wildlife_geo_banner_dismissed_v1';
+
+const DYNAMIC_PHRASE_TRANSLATIONS: Record<SupportedLanguage, Record<string, string>> = {
+  en: {},
+  fr: {
+    'Operated by Enganda Members': 'Opéré par les Membres Enganda',
+    'Guaranteed Primate Departure': 'Départ Primates Garanti',
+    'Seasonal Migration & Savanna': 'Migration Saisonnière & Savane',
+    'Cultural & Music Event': 'Événement Culturel & Musical',
+    'Ornithology Special': 'Spécial Ornithologie',
+    'Mountain Gorillas': 'Gorilles des Montagnes',
+    'Chimpanzee Tracking': 'Pistage des Chimpanzés',
+    'Specialist Birding': 'Ornithologie Spécialisée',
+    'Savanna Big Game': 'Grand Gibier de Savane',
+    'Community & Culture': 'Communauté & Culture',
+    'Alpine & Volcano Hiking': 'Randonnée Alpine & Volcans',
+    'Wildlife Photography': 'Photographie Animalière',
+    'Pay & Book Directly': 'Payer & Réserver en Direct',
+    'Pay 30% Deposit Directly': 'Régler 30% d’Acompte en Direct',
+    'Pay Full Package Directly': 'Régler 100% du Forfait en Direct',
+  },
+  es: {
+    'Operated by Enganda Members': 'Operado por Miembros de Enganda',
+    'Guaranteed Primate Departure': 'Salida Garantizada de Primates',
+    'Seasonal Migration & Savanna': 'Migración Estacional y Sabana',
+    'Cultural & Music Event': 'Evento Cultural y Musical',
+    'Ornithology Special': 'Especial de Ornitología',
+    'Mountain Gorillas': 'Gorilas de Montaña',
+    'Chimpanzee Tracking': 'Rastreo de Chimpancés',
+    'Specialist Birding': 'Observación de Aves',
+    'Savanna Big Game': 'Gran Fauna de Sabana',
+    'Community & Culture': 'Comunidad y Cultura',
+    'Alpine & Volcano Hiking': 'Senderismo Alpino y Volcanes',
+    'Wildlife Photography': 'Fotografía de Naturaleza',
+    'Pay & Book Directly': 'Pagar y Reservar Directo',
+    'Pay 30% Deposit Directly': 'Pagar 30% de Depósito Directo',
+    'Pay Full Package Directly': 'Pagar 100% del Paquete Directo',
+  },
+  de: {
+    'Operated by Enganda Members': 'Durchgeführt von Enganda-Mitgliedern',
+    'Guaranteed Primate Departure': 'Garantierte Primaten-Abreise',
+    'Seasonal Migration & Savanna': 'Saisonale Migration & Savanne',
+    'Cultural & Music Event': 'Kultur- & Musik-Event',
+    'Ornithology Special': 'Ornithologie-Spezial',
+    'Mountain Gorillas': 'Berggorillas',
+    'Chimpanzee Tracking': 'Schimpansen-Tracking',
+    'Specialist Birding': 'Vogelbeobachtung',
+    'Savanna Big Game': 'Großwild-Savanne',
+    'Community & Culture': 'Gemeinschaft & Kultur',
+    'Alpine & Volcano Hiking': 'Alpin- & Vulkanwandern',
+    'Wildlife Photography': 'Tierfotografie',
+    'Pay & Book Directly': 'Direkt buchen & bezahlen',
+    'Pay 30% Deposit Directly': '30% Anzahlung direkt zahlen',
+    'Pay Full Package Directly': 'Gesamtpaket direkt zahlen',
+  },
+  ar: {
+    'Operated by Enganda Members': 'بإدارة أعضاء إنغاندا المعتمدين',
+    'Guaranteed Primate Departure': 'رحلة رئيسيات مؤكدة',
+    'Seasonal Migration & Savanna': 'الهجرة الموسمية والسافانا',
+    'Cultural & Music Event': 'فعالية ثقافية وموسيقية',
+    'Ornithology Special': 'رحلة خاصة لمراقبة الطيور',
+    'Mountain Gorillas': 'غوريلا الجبال',
+    'Chimpanzee Tracking': 'تتبع الشمبانزي',
+    'Specialist Birding': 'مراقبة الطيور المتخصصة',
+    'Savanna Big Game': 'الحياة البرية الكبرى في السافانا',
+    'Community & Culture': 'المجتمع والثقافة',
+    'Alpine & Volcano Hiking': 'تسلق الجبال والبراكين',
+    'Wildlife Photography': 'تصوير الحياة البرية',
+    'Pay & Book Directly': 'احجز وادفع مباشرة',
+    'Pay 30% Deposit Directly': 'ادفع عربون 30% مباشرة',
+    'Pay Full Package Directly': 'ادفع كامل الباقة مباشرة',
+  },
+  zh: {
+    'Operated by Enganda Members': '由 Enganda 认证成员机构运营',
+    'Guaranteed Primate Departure': '灵长类追踪保证发团',
+    'Seasonal Migration & Savanna': '大迁徙与草原猎游',
+    'Cultural & Music Event': '文化与音乐盛典',
+    'Ornithology Special': '专业观鸟专线',
+    'Mountain Gorillas': '山地大猩猩',
+    'Chimpanzee Tracking': '黑猩猩追踪',
+    'Specialist Birding': '专业观鸟',
+    'Savanna Big Game': '草原大型野生动物',
+    'Community & Culture': '社区与文化体验',
+    'Alpine & Volcano Hiking': '高山与火山徒步',
+    'Wildlife Photography': '野生动物摄影',
+    'Pay & Book Directly': '直接预订并支付',
+    'Pay 30% Deposit Directly': '直接支付 30% 定金',
+    'Pay Full Package Directly': '直接全额支付套餐',
+  },
+  nl: {
+    'Operated by Enganda Members': 'Uitgevoerd door Enganda-leden',
+    'Guaranteed Primate Departure': 'Gegarandeerd Primatenvertrek',
+    'Seasonal Migration & Savanna': 'Seizoensmigratie & Savanne',
+    'Cultural & Music Event': 'Cultureel & Muziekevenement',
+    'Ornithology Special': 'Vogelspecial',
+    'Mountain Gorillas': 'Berggorilla’s',
+    'Chimpanzee Tracking': 'Chimpansee-tracking',
+    'Specialist Birding': 'Specialistische Vogelreizen',
+    'Savanna Big Game': 'Groot Wild op de Savanne',
+    'Community & Culture': 'Gemeenschap & Cultuur',
+    'Alpine & Volcano Hiking': 'Berg- & Vulkaanwandelingen',
+    'Wildlife Photography': 'Natuurfotografie',
+    'Pay & Book Directly': 'Direct Boeken & Betalen',
+    'Pay 30% Deposit Directly': 'Betaal Direct 30% Aanbetaling',
+    'Pay Full Package Directly': 'Betaal Direct Volledig Pakket',
+  },
+};
 
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
 
@@ -43,7 +151,9 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [language, setLanguageState] = useState<SupportedLanguage>(() => {
     try {
-      const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY) as SupportedLanguage | null;
+      const saved =
+        (localStorage.getItem(LANGUAGE_STORAGE_KEY) as SupportedLanguage | null) ||
+        (localStorage.getItem(LEGACY_LANGUAGE_STORAGE_KEY) as SupportedLanguage | null);
       if (saved && SUPPORTED_LANGUAGES.some((l) => l.code === saved)) {
         return saved;
       }
@@ -74,18 +184,44 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   });
 
   const setLanguage = useCallback((lang: SupportedLanguage) => {
+    if (!SUPPORTED_LANGUAGES.some((l) => l.code === lang)) return;
     setLanguageState(lang);
     try {
       localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
+      localStorage.setItem(LEGACY_LANGUAGE_STORAGE_KEY, lang);
     } catch {
       // ignore
     }
+  }, []);
+
+  // Cross-tab storage listener so language changes in one tab update all open tabs immediately
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (
+        (e.key === LANGUAGE_STORAGE_KEY || e.key === LEGACY_LANGUAGE_STORAGE_KEY) &&
+        e.newValue &&
+        SUPPORTED_LANGUAGES.some((l) => l.code === e.newValue)
+      ) {
+        setLanguageState(e.newValue as SupportedLanguage);
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const currentLanguageMeta =
     SUPPORTED_LANGUAGES.find((l) => l.code === language) || SUPPORTED_LANGUAGES[0];
   const dir = currentLanguageMeta.dir;
   const t = TRANSLATIONS[language] || TRANSLATIONS.en;
+
+  const translateText = useCallback(
+    (englishText: string): string => {
+      if (!englishText || language === 'en') return englishText;
+      const dict = DYNAMIC_PHRASE_TRANSLATIONS[language];
+      return (dict && dict[englishText]) || englishText;
+    },
+    [language]
+  );
 
   // Sync <html lang="..." dir="..."> whenever language changes
   useEffect(() => {
@@ -289,6 +425,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
         language,
         setLanguage,
         t,
+        translateText,
         currentLanguageMeta,
         dir,
         geoDetection,

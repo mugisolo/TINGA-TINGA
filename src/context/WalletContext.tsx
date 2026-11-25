@@ -91,6 +91,17 @@ interface WalletContextValue extends WalletState {
     tier: ComfortTier,
     departureDate: string
   ) => { ok: boolean; message: string; transaction?: WalletTransaction };
+  payPackageDirect: (params: {
+    packageTitle: string;
+    packageIdOrSlug: string;
+    perPersonUSD: number;
+    guests: number;
+    paymentType: 'deposit_30' | 'full_100';
+    departureDate: string;
+    guideName?: string;
+    paymentRail?: WalletPaymentRail;
+    autoTopUpIfShort?: boolean;
+  }) => { ok: boolean; message: string; transaction?: WalletTransaction };
   subscribeNewsletter: (input: {
     email: string;
     firstName?: string;
@@ -1005,6 +1016,102 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   };
 
+  const payPackageDirect: WalletContextValue['payPackageDirect'] = ({
+    packageTitle,
+    packageIdOrSlug,
+    perPersonUSD,
+    guests,
+    paymentType,
+    departureDate,
+    guideName,
+    paymentRail = 'Visa / Mastercard',
+    autoTopUpIfShort = true,
+  }) => {
+    const cleanGuests = Math.max(1, Math.min(16, Math.round(guests)));
+    const totalPackageUSD = Math.max(100, Math.round(perPersonUSD * cleanGuests));
+    const amountDueUSD =
+      paymentType === 'full_100'
+        ? totalPackageUSD
+        : Math.round(totalPackageUSD * 0.3);
+
+    let currentAvailable = state.availableBalanceUSD;
+    const newTransactions: WalletTransaction[] = [];
+
+    if (amountDueUSD > currentAvailable) {
+      if (!autoTopUpIfShort) {
+        return {
+          ok: false,
+          message: `Insufficient Safari Wallet balance. Amount due is US$${amountDueUSD.toLocaleString()}, and your available balance is US$${currentAvailable.toLocaleString()}.`,
+        };
+      }
+      // Instant top-up for the shortfall via selected paymentRail so direct payment succeeds seamlessly
+      const shortfallUSD = amountDueUSD - currentAvailable;
+      const topUpTx: WalletTransaction = {
+        id: 'tx_topup_' + Date.now(),
+        type: 'deposit',
+        title: `Instant Checkout Wallet Top-Up (${paymentRail})`,
+        subtitle: `Auto-funded US$${shortfallUSD.toLocaleString()} for direct payment of ${packageTitle}`,
+        amountUSD: shortfallUSD,
+        direction: 'credit',
+        status: 'completed',
+        paymentRail,
+        referenceCode: makeCode('ENG-TOP'),
+        createdAt: new Date().toISOString(),
+      };
+      newTransactions.push(topUpTx);
+      currentAvailable += shortfallUSD;
+      syncTransactionToFirestore(topUpTx, OperationType.CREATE);
+    }
+
+    const refCode = makeCode(paymentType === 'full_100' ? 'ENG-FULL' : 'ENG-DEP');
+    const paymentLabel =
+      paymentType === 'full_100' ? '100% Full Package Payment' : '30% Direct Package Deposit';
+
+    const tx: WalletTransaction = {
+      id: 'tx_pay_' + (Date.now() + 1),
+      type: 'safari_deposit',
+      title: `${paymentLabel}: ${packageTitle}`,
+      subtitle: `${cleanGuests} ${cleanGuests === 1 ? 'Guest' : 'Guests'} • Departure: ${
+        departureDate || 'Confirmed 2026/2027 Window'
+      }${guideName ? ` • Guide: ${guideName}` : ''} • Operated by Enganda Members`,
+      amountUSD: amountDueUSD,
+      direction: 'debit',
+      status: 'completed',
+      paymentRail,
+      referenceCode: refCode,
+      createdAt: new Date().toISOString(),
+      metadata: {
+        experienceSlug: packageIdOrSlug,
+        guests: cleanGuests,
+        trekDate: departureDate,
+      },
+    };
+    newTransactions.unshift(tx);
+
+    const nextAvailable = currentAvailable - amountDueUSD;
+    setState((prev) => ({
+      ...prev,
+      availableBalanceUSD: nextAvailable,
+      transactions: [...newTransactions, ...prev.transactions],
+    }));
+
+    syncTransactionToFirestore(tx, OperationType.CREATE);
+    syncWalletSummaryToFirestore(
+      nextAvailable,
+      state.escrowBalanceUSD,
+      state.rewardCreditsUSD,
+      state.permitHolds.length,
+      state.partnerBookings.length,
+      OperationType.UPDATE
+    );
+
+    return {
+      ok: true,
+      message: `Direct payment confirmed! Paid US$${amountDueUSD.toLocaleString()} (${paymentLabel}) for "${packageTitle}" (${refCode}). Your package is confirmed with our Engebbe & East Africa operations desk.`,
+      transaction: tx,
+    };
+  };
+
   const subscribeNewsletter: WalletContextValue['subscribeNewsletter'] = ({
     email,
     firstName,
@@ -1379,6 +1486,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({
         releasePermitEscrow,
         bookPartnerStay,
         paySafariDeposit,
+        payPackageDirect,
         subscribeNewsletter,
         saveCustomItineraryToWallet,
         paySavedItineraryDeposit,

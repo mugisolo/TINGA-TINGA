@@ -1,9 +1,9 @@
 import React from 'react';
-import { MessageCircle, CalendarCheck, ShieldCheck } from 'lucide-react';
+import { CalendarCheck, ShieldCheck } from 'lucide-react';
 import { ComfortTier } from '../types';
 import { formatPrice } from '../lib/currency';
 import { useInquiry } from '../context/InquiryContext';
-import { getWhatsAppUrl, AVAILABILITY_PROMISE } from '../data/seedData';
+import { AVAILABILITY_PROMISE } from '../data/seedData';
 
 interface StickyBookBarProps {
   title: string;
@@ -22,13 +22,9 @@ export const StickyBookBar: React.FC<StickyBookBarProps> = ({
   selectedTier = 'luxury' as ComfortTier,
   guideSlug,
   experienceSlug,
-  ctaLabel = 'Request This Safari',
+  ctaLabel = 'Pay & Book Directly',
 }) => {
   const { currency, openInquiryModal } = useInquiry();
-
-  const whatsappText = `Oli otya! I am interested in "${title}"${
-    guideSlug ? ` with guide ${guideSlug}` : ''
-  }. Could you confirm availability with UWA and lodges?`;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-30 bg-[#1A1612]/95 backdrop-blur-md border-t border-[#383028] text-[#FAF7F2] px-4 sm:px-6 lg:px-8 py-2.5 shadow-2xl print:hidden">
@@ -56,16 +52,6 @@ export const StickyBookBar: React.FC<StickyBookBarProps> = ({
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0">
-          <a
-            href={getWhatsAppUrl(whatsappText)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-[#226B3E] hover:bg-[#287A47] text-[#FAF7F2] border border-[#34945A] text-xs font-semibold transition-colors whitespace-nowrap"
-          >
-            <MessageCircle className="w-3.5 h-3.5 text-[#D99B26]" />
-            <span>WhatsApp Entebbe Desk</span>
-          </a>
-
           <button
             type="button"
             onClick={() =>

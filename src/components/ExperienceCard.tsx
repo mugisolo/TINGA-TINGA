@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Calendar, MapPin, ArrowRight, ShieldCheck, Award, FileText } from 'lucide-react';
 import { Experience } from '../types';
 import { GUIDES, SPECIALTY_LABELS } from '../data/seedData';
 import { formatPrice } from '../lib/currency';
@@ -19,8 +19,29 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({ experience }) =>
   const startingBand = experience.priceBands[0];
 
   return (
-    <article className="bg-[#FAF7F2] border border-[#E4DCCF] rounded-lg overflow-hidden flex flex-col justify-between transition-all hover:border-[#226B3E]/60 shadow-xs">
+    <article
+      className={`bg-[#FAF7F2] rounded-lg overflow-hidden flex flex-col justify-between transition-all shadow-xs ${
+        experience.adminRecommended
+          ? 'border-2 border-[#D99B26] ring-1 ring-[#D99B26]/30 hover:border-[#226B3E]'
+          : 'border border-[#E4DCCF] hover:border-[#226B3E]/60'
+      }`}
+    >
       <div>
+        {/* Enganda Verified Banner for Enganda Safaris Packages */}
+        {experience.adminRecommended && (
+          <div className="bg-gradient-to-r from-[#1A1612] via-[#1B4332] to-[#1A1612] text-[#FAF7F2] px-3 py-1.5 flex items-center justify-between gap-2 border-b border-[#D99B26]/40">
+            <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider font-bold text-[#D99B26]">
+              <Award className="w-3.5 h-3.5 text-[#D99B26] flex-shrink-0" />
+              <span>Enganda Verified</span>
+            </span>
+            {experience.packageCode && (
+              <span className="bg-[#D99B26] text-[#1A1612] font-mono text-[10px] font-bold px-1.5 py-0.5 rounded">
+                ENGANDA {experience.packageCode}
+              </span>
+            )}
+          </div>
+        )}
+
         {/* Image Header */}
         <div className="relative h-48 overflow-hidden bg-[#226B3E]">
           <SmartImage
@@ -29,34 +50,53 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({ experience }) =>
             fallbackLabel={experience.title}
             className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#1A1612]/80 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#1A1612]/85 via-transparent to-transparent" />
 
-          {/* Duration & Region */}
-          <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1.5">
-            <span className="bg-[#1A1612]/85 text-[#FAF7F2] font-mono text-[11px] px-2 py-0.5 rounded-md border border-white/15 flex items-center gap-1">
-              <Calendar className="w-3 h-3 text-[#D99B26]" />
-              <span>
-                {experience.durationDays} {t.common.days}
+          {/* Duration, Region & Package Code */}
+          <div className="absolute top-2.5 left-2.5 right-2.5 flex flex-wrap items-center justify-between gap-1.5">
+            <div className="flex flex-wrap gap-1.5">
+              <span className="bg-[#1A1612]/85 text-[#FAF7F2] font-mono text-[11px] px-2 py-0.5 rounded-md border border-white/15 flex items-center gap-1">
+                <Calendar className="w-3 h-3 text-[#D99B26]" />
+                <span>
+                  {experience.durationDays} {t.common.days}
+                </span>
               </span>
-            </span>
-            <span className="bg-[#226B3E]/90 text-[#FAF7F2] text-[11px] px-2 py-0.5 rounded-md border border-white/15 flex items-center gap-1">
-              <MapPin className="w-3 h-3 text-[#D99B26]" />
-              <span>{experience.region}</span>
-            </span>
+              <span className="bg-[#226B3E]/90 text-[#FAF7F2] text-[11px] px-2 py-0.5 rounded-md border border-white/15 flex items-center gap-1">
+                <MapPin className="w-3 h-3 text-[#D99B26]" />
+                <span>{experience.region}</span>
+              </span>
+            </div>
+
+            {experience.packageCode && !experience.adminRecommended && (
+              <span className="bg-[#C85A28] text-white font-mono text-[10px] font-bold px-2 py-0.5 rounded-md border border-white/20">
+                {experience.operatorName ? `${experience.operatorName.split(' ')[0].toUpperCase()} • ` : ''}
+                {experience.packageCode}
+              </span>
+            )}
           </div>
 
           {/* Price Band Overlay */}
           <div className="absolute bottom-2.5 left-3 right-3 flex items-end justify-between text-white">
             <div>
               <span className="text-[10px] uppercase font-mono tracking-wider text-[#D99B26] block">
-                {t.common.from} ({startingBand.tier})
+                {experience.twoPaxSharingPriceUSD
+                  ? '2-Pax Sharing Tariff'
+                  : `${t.common.from} (${startingBand.tier})`}
               </span>
               <span className="font-mono text-lg font-bold">
-                {formatPrice(startingBand.perPersonUSD, currency)}
+                {formatPrice(
+                  experience.twoPaxSharingPriceUSD || startingBand.perPersonUSD,
+                  currency
+                )}
               </span>
               <span className="text-[11px] text-[#E4DCCF] ml-1">
                 {t.home.perPerson}
               </span>
+              {experience.soloTravelerPriceUSD && (
+                <span className="block text-[10px] font-mono text-[#E4DCCF]">
+                  1-Pax Solo Private: {formatPrice(experience.soloTravelerPriceUSD, currency)}
+                </span>
+              )}
             </div>
             {experience.permitsRequired.length > 0 && (
               <span className="bg-[#2D6A4F] text-white text-[10px] font-medium px-2 py-0.5 rounded-md flex items-center gap-1">
@@ -69,6 +109,26 @@ export const ExperienceCard: React.FC<ExperienceCardProps> = ({ experience }) =>
 
         {/* Body */}
         <div className="p-4 space-y-2.5">
+          {experience.operatorName && (
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-mono text-[10px] uppercase tracking-wider font-semibold text-[#226B3E]">
+                {experience.operatorName}
+              </span>
+              {experience.pdfBrochureUrl && (
+                <a
+                  href={experience.pdfBrochureUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 font-mono text-[10px] font-semibold text-[#C85A28] hover:underline"
+                  title="Open Official PDF Portfolio Dossier"
+                >
+                  <FileText className="w-3 h-3" />
+                  <span>Official PDF</span>
+                </a>
+              )}
+            </div>
+          )}
+
           <h3 className="font-serif text-xl font-bold text-[#1A1612] leading-snug">
             <Link to={`/experiences/${experience.slug}`} className="hover:text-[#C85A28] transition-colors">
               {experience.title}

@@ -1,24 +1,19 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Compass,
   MapPin,
-  Phone,
   Mail,
   ShieldCheck,
   FileCheck,
   Award,
   Plane,
-  ArrowUpRight,
   Globe,
   Settings,
 } from 'lucide-react';
 import {
   BRAND_NAME,
   HQ_ADDRESS,
-  WHATSAPP_NUMBER,
   CONTACT_EMAIL,
-  getWhatsAppUrl,
 } from '../data/seedData';
 import { SocialLinks } from './SocialLinks';
 import { useLanguage } from '../context/LanguageContext';
@@ -78,11 +73,11 @@ export const Footer: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Footer Grid */}
+      {/* Main Footer Section: Brand & Entebbe Head Office */}
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-8 sm:py-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 sm:gap-8">
-          {/* Column 1-2: Brand & Entebbe Head Office */}
-          <div className="lg:col-span-2 space-y-3">
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
+          {/* Left: Brand & Bio */}
+          <div className="space-y-3 max-w-xl">
             <Link
               to="/"
               className="inline-flex items-center gap-3 group"
@@ -99,11 +94,14 @@ export const Footer: React.FC = () => {
             <p className="font-serif italic text-base text-[#E4DCCF]">
               “{t.home.heroTitle}”
             </p>
-            <p className="text-xs sm:text-sm text-[#D6CEC2] leading-relaxed max-w-md">
+            <p className="text-xs sm:text-sm text-[#D6CEC2] leading-relaxed">
               {t.footer.brandBio}
             </p>
+          </div>
 
-            <div className="pt-1 space-y-2 text-sm text-[#E4DCCF]">
+          {/* Right: Entebbe Head Office & Social Channels */}
+          <div className="space-y-4">
+            <div className="space-y-2 text-sm text-[#E4DCCF]">
               <div className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-[#D99B26] flex-shrink-0 mt-1" />
                 <div>
@@ -120,17 +118,6 @@ export const Footer: React.FC = () => {
                 </span>
               </div>
               <div className="flex items-center gap-2.5">
-                <Phone className="w-4 h-4 text-[#D99B26] flex-shrink-0" />
-                <a
-                  href={getWhatsAppUrl()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-mono text-xs hover:text-[#D99B26] transition-colors"
-                >
-                  WhatsApp: {WHATSAPP_NUMBER}
-                </a>
-              </div>
-              <div className="flex items-center gap-2.5">
                 <Mail className="w-4 h-4 text-[#D99B26] flex-shrink-0" />
                 <a
                   href={`mailto:${CONTACT_EMAIL}`}
@@ -141,256 +128,12 @@ export const Footer: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-3 space-y-2">
+            <div className="space-y-2">
               <div className="text-[11px] font-mono uppercase tracking-wider text-[#D99B26] font-semibold">
                 {t.footer.connectSocials}
               </div>
               <SocialLinks variant="footer-dark" showLabels={true} />
             </div>
-          </div>
-
-          {/* Column 3: Our Guides, Partners & Safaris */}
-          <div>
-            <h4 className="text-xs font-mono uppercase tracking-wider text-[#D99B26] font-semibold mb-4">
-              {t.footer.colGuidesPartners}
-            </h4>
-            <ul className="space-y-2.5 text-sm text-[#D6CEC2]">
-              <li>
-                <Link
-                  to="/guides"
-                  className="hover:text-white transition-colors font-semibold text-[#FAF7F2]"
-                >
-                  {t.home.ctaMeetGuides}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/guides?view=partners"
-                  className="hover:text-white transition-colors"
-                >
-                  Partner Hotels, Motels, Camp Sites & Lodges
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/wallet"
-                  className="hover:text-white transition-colors text-[#D99B26] font-medium"
-                >
-                  {t.nav.safariWallet} & UWA Permit Escrow
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/experiences"
-                  className="hover:text-white transition-colors"
-                >
-                  {t.nav.experiences}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/experiences/8-day-tingatinga-signature-primate-lions-nile"
-                  className="hover:text-white transition-colors text-[#D99B26] font-semibold"
-                >
-                  8-Day Tingatinga Safaris Signature (Gorillas, Chimps &amp; Lions)
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/experiences/32-day-east-african-grand-safari-2027"
-                  className="hover:text-white transition-colors text-[#D99B26] font-semibold"
-                >
-                  32-Day East African Grand Safari 2027 (Shuma Safaris)
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/experiences/15-day-shuma-uganda-grand-sector"
-                  className="hover:text-white transition-colors"
-                >
-                  15-Day Shuma Uganda &amp; Kidepo Charter
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/experiences/7-day-shuma-uganda-rwanda-primate-akagera"
-                  className="hover:text-white transition-colors"
-                >
-                  7-Day Uganda &amp; Rwanda Primate Odyssey
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/experiences/3-day-bwindi-gorilla-trek"
-                  className="hover:text-white transition-colors"
-                >
-                  3-Day Bwindi Gorilla Trek
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/experiences/7-day-best-of-uganda"
-                  className="hover:text-white transition-colors"
-                >
-                  7-Day Best of Uganda
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/experiences/10-day-uganda-grand-circuit-kidepo"
-                  className="hover:text-white transition-colors"
-                >
-                  10-Day Grand Circuit &amp; Kidepo
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Column 4: Uganda Regions */}
-          <div>
-            <h4 className="text-xs font-mono uppercase tracking-wider text-[#D99B26] font-semibold mb-4">
-              {t.footer.colRegions}
-            </h4>
-            <ul className="space-y-2.5 text-sm text-[#D6CEC2]">
-              <li>
-                <Link
-                  to="/destinations"
-                  className="hover:text-white transition-colors"
-                >
-                  Bwindi & Mgahinga
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/destinations"
-                  className="hover:text-white transition-colors"
-                >
-                  Kibale Forest
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/destinations"
-                  className="hover:text-white transition-colors"
-                >
-                  Queen Elizabeth NP
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/destinations"
-                  className="hover:text-white transition-colors"
-                >
-                  Murchison Falls NP
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/destinations"
-                  className="hover:text-white transition-colors"
-                >
-                  Kidepo Valley NP
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/destinations"
-                  className="hover:text-white transition-colors"
-                >
-                  Rwenzori Mountains & Lake Bunyonyi
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/destinations"
-                  className="hover:text-white transition-colors"
-                >
-                  Entebbe, Mabamba & Jinja
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Column 5: Planning & Role Portals */}
-          <div>
-            <h4 className="text-xs font-mono uppercase tracking-wider text-[#D99B26] font-semibold mb-4">
-              {t.footer.colPlanning} & Portals
-            </h4>
-            <ul className="space-y-2 text-sm text-[#D6CEC2]">
-              <li>
-                <Link
-                  to="/trip-planner"
-                  className="hover:text-white transition-colors font-semibold text-[#FAF7F2] inline-flex items-center gap-1"
-                >
-                  <span>{t.nav.tripPlanner}</span>
-                  <ArrowUpRight className="w-3.5 h-3.5 text-[#D99B26]" />
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/safari-essentials"
-                  className="hover:text-white transition-colors text-[#D99B26] font-medium"
-                >
-                  Safari Essentials Checklist
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/portals/client"
-                  className="hover:text-white transition-colors font-medium text-[#FAF7F2]"
-                >
-                  Client Portal (Wallet & Escrow)
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/portals/specialists"
-                  className="hover:text-white transition-colors"
-                >
-                  Specialists & Field Guides Portal
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/portals/partner"
-                  className="hover:text-white transition-colors"
-                >
-                  Partner Lodges & Camps Portal
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/portals/staff"
-                  className="hover:text-white transition-colors"
-                >
-                  Staff (Entebbe Operations Desk)
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/portals/admin"
-                  className="hover:text-white transition-colors font-semibold text-[#D99B26]"
-                >
-                  Admin Dashboard & Governance Portal
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/how-we-work"
-                  className="hover:text-white transition-colors"
-                >
-                  {t.nav.howWeWork}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/contact"
-                  className="hover:text-white transition-colors"
-                >
-                  {t.nav.contact}
-                </Link>
-              </li>
-            </ul>
           </div>
         </div>
       </div>

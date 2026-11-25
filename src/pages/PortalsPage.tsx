@@ -55,6 +55,7 @@ import {
 import { formatPrice } from '../lib/currency';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { AdminDashboard } from '../components/AdminDashboard';
+import { ServiceProviderPackageAIBuilder } from '../components/ServiceProviderPackageAIBuilder';
 
 const DISPATCH_STORAGE_KEY = 'enganda_portal_dispatches_v1';
 
@@ -82,7 +83,7 @@ const PORTAL_DEFINITIONS: PortalDefinition[] = [
       { id: 'overview', label: 'Expeditions & Itineraries' },
       { id: 'permits', label: 'UWA Permit Escrow' },
       { id: 'vouchers', label: 'Lodge Vouchers & Stays' },
-      { id: 'readiness', label: 'Checklists & Desk Requests' },
+      { id: 'readiness', label: 'Field Dispatches & Briefings' },
     ],
   },
   {
@@ -95,6 +96,7 @@ const PORTAL_DEFINITIONS: PortalDefinition[] = [
     icon: UserCheck,
     sections: [
       { id: 'roster', label: 'Assigned Expeditions' },
+      { id: 'ai-package-builder', label: 'AI Package Uploader' },
       { id: 'field-log', label: 'Field & Trail Dispatches' },
       { id: 'vehicle', label: '4x4 Land Cruiser Readiness' },
     ],
@@ -104,10 +106,11 @@ const PORTAL_DEFINITIONS: PortalDefinition[] = [
     slug: 'partner',
     label: 'Partner Portal',
     shortLabel: 'Partner',
-    subtitle: 'Safari Lodges, Tented Camps, Regional Hotels & Conservation Revenue Ledger',
+    subtitle: 'Approved Tour Operators (Tingatinga, Shuma, Enganda), Safari Lodges & AI Document-to-Package Pricing',
     badgeText: 'Verified Partner',
     icon: Building2,
     sections: [
+      { id: 'ai-package-builder', label: 'AI Document-to-Package Uploader' },
       { id: 'allocations', label: 'Room Allocations & Vouchers' },
       { id: 'rates', label: 'Seasonal Tariffs & Inventory' },
       { id: 'settlements', label: 'Escrow Payout Ledger' },
@@ -118,11 +121,11 @@ const PORTAL_DEFINITIONS: PortalDefinition[] = [
     slug: 'staff',
     label: 'Staff Operations Portal',
     shortLabel: 'Staff Desk',
-    subtitle: 'Entebbe Coordination Desk, UWA Permit Procurement, EBB Airport Pickups & 4x4 Fleet',
+    subtitle: 'Entebbe Coordination Desk, Direct Package Payments, UWA Permit Procurement & 4x4 Fleet',
     badgeText: 'Entebbe Ops Desk',
     icon: Briefcase,
     sections: [
-      { id: 'inquiries', label: 'Client Inquiry Dispatch' },
+      { id: 'direct-payments', label: 'Direct Payments & AI Packages' },
       { id: 'uwa-queue', label: 'UWA Permit Queue' },
       { id: 'fleet-ebb', label: 'EBB Arrivals & 4x4 Fleet' },
     ],
@@ -289,7 +292,6 @@ export const PortalsPage: React.FC = () => {
     permitHolds,
     partnerBookings,
     savedItineraries,
-    savedChecklists,
     topUpWallet,
     holdPermitInEscrow,
     releasePermitEscrow,
@@ -1033,7 +1035,7 @@ export const PortalsPage: React.FC = () => {
                       {formatPrice(rewardCreditsUSD, currency)}
                     </div>
                     <div className="text-[11px] text-[#5A5248] mt-0.5 tabular-nums">
-                      {savedChecklists.length} packing checklists
+                      {transactions.length} direct wallet payments
                     </div>
                   </div>
                 </div>
@@ -1353,17 +1355,17 @@ export const PortalsPage: React.FC = () => {
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E4DCCF] pb-3">
                       <div>
                         <h2 className="font-serif text-base font-bold text-[#1A1612]">
-                          Pre-Departure Checklists & Entebbe Desk Dispatches
+                          East Africa Field Briefings &amp; Entebbe Desk Dispatches
                         </h2>
                         <p className="text-xs text-[#5A5248]">
-                          Track your Safari Essentials packing progress and communicate with your assigned specialist.
+                          Live trail condition dispatches and operational updates from your assigned Enganda Member specialist.
                         </p>
                       </div>
                       <Link
-                        to="/safari-essentials"
+                        to="/wallet"
                         className="px-3 py-1.5 rounded bg-[#F3ECE1] hover:bg-[#E4DCCF] text-[#1A1612] border border-[#D6CEC2] text-xs font-semibold"
                       >
-                        Open Safari Essentials Checklist
+                        Open Safari Wallet &amp; Receipts
                       </Link>
                     </div>
 
@@ -1439,73 +1441,46 @@ export const PortalsPage: React.FC = () => {
                   </div>
                 </div>
 
+                {activeSection === 'ai-package-builder' && (
+                  <ServiceProviderPackageAIBuilder defaultProviderName="Enganda Safaris (Enganda Member)" />
+                )}
+
                 {activeSection === 'roster' && (
                   <div className="bg-white border border-[#E4DCCF] rounded-lg overflow-hidden">
                     <div className="px-4 py-3 border-b border-[#E4DCCF] flex items-center justify-between">
                       <div>
                         <h3 className="font-serif text-base font-bold text-[#1A1612]">
-                          Assigned Expeditions & Guaranteed Departures
+                          Assigned East Africa Expeditions &amp; Guaranteed Departures
                         </h3>
                         <p className="text-xs text-[#5A5248]">
-                          Confirmed client departures and custom itineraries matched to {selectedGuide.name}.
+                          Live Firestore packages and guaranteed East African departures assigned to {selectedGuide.name}.
                         </p>
                       </div>
                       <span className="font-mono text-xs font-semibold text-[#226B3E] tabular-nums">
-                        {CONFIRMED_EVENTS.length + leads.filter((l) => l.preferredGuideSlug === selectedGuide.slug).length} Active Assignments
+                        {safariEvents.length} Active Programs
                       </span>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse text-xs">
                         <thead>
                           <tr className="bg-[#FAF7F2] border-b border-[#E4DCCF] font-mono text-[10px] uppercase text-[#5A5248]">
-                            <th className="py-2.5 px-3.5">Expedition / Client</th>
-                            <th className="py-2.5 px-3.5">Circuit & Sector</th>
+                            <th className="py-2.5 px-3.5">Expedition Package</th>
+                            <th className="py-2.5 px-3.5">East Africa Circuit &amp; Sector</th>
                             <th className="py-2.5 px-3.5">Date Window</th>
-                            <th className="py-2.5 px-3.5 text-right">Party / Spots</th>
-                            <th className="py-2.5 px-3.5 text-right">Package Tariff</th>
-                            <th className="py-2.5 px-3.5">Readiness</th>
+                            <th className="py-2.5 px-3.5 text-right">Spots Open</th>
+                            <th className="py-2.5 px-3.5 text-right">Direct Tariff</th>
+                            <th className="py-2.5 px-3.5">Status</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-[#E4DCCF]">
-                          {leads
-                            .filter((l) => !l.preferredGuideSlug || l.preferredGuideSlug === selectedGuide.slug)
-                            .map((lead) => (
-                              <tr key={lead.id} className="hover:bg-[#FAF7F2]/60">
-                                <td className="py-2.5 px-3.5">
-                                  <div className="font-semibold text-[#1A1612]">
-                                    {lead.name}
-                                  </div>
-                                  <div className="text-[11px] text-[#5A5248]">
-                                    {lead.notes || 'Private 4x4 Land Cruiser Charter'}
-                                  </div>
-                                </td>
-                                <td className="py-2.5 px-3.5 text-[#5A5248]">
-                                  {(lead.regions || ['Bwindi & Kibale']).join(', ')}
-                                </td>
-                                <td className="py-2.5 px-3.5 font-mono tabular-nums">
-                                  {lead.targetDates}
-                                </td>
-                                <td className="py-2.5 px-3.5 text-right font-mono tabular-nums">
-                                  {lead.partySize} Guests
-                                </td>
-                                <td className="py-2.5 px-3.5 text-right font-mono font-semibold tabular-nums">
-                                  {lead.budgetTier.toUpperCase()}
-                                </td>
-                                <td className="py-2.5 px-3.5">
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#16A34A]/15 text-[#16A34A]">
-                                    {lead.status.replace('_', ' ')}
-                                  </span>
-                                </td>
-                              </tr>
-                            ))}
-                          {CONFIRMED_EVENTS.map((ev) => (
+                          {safariEvents.map((ev) => (
                             <tr key={ev.id} className="hover:bg-[#FAF7F2]/60">
                               <td className="py-2.5 px-3.5">
                                 <div className="font-semibold text-[#1A1612]">
                                   {ev.title}
                                 </div>
                                 <div className="text-[11px] text-[#5A5248]">
-                                  {ev.category}
+                                  {ev.operatorName || ev.category}
                                 </div>
                               </td>
                               <td className="py-2.5 px-3.5 text-[#5A5248]">
@@ -1590,13 +1565,21 @@ export const PortalsPage: React.FC = () => {
 
                 {activeSection === 'vehicle' && (
                   <div className="bg-white border border-[#E4DCCF] rounded-lg overflow-hidden">
-                    <div className="px-4 py-3 border-b border-[#E4DCCF]">
-                      <h3 className="font-serif text-base font-bold text-[#1A1612]">
-                        4x4 Land Cruiser Inspection & Field Optics Verification
-                      </h3>
-                      <p className="text-xs text-[#5A5248]">
-                        Confirm vehicle mechanical sign-off, pop-up roof latches, dual-battery fridge, and Swarovski optics before leaving Entebbe HQ.
-                      </p>
+                    <div className="px-4 py-3 border-b border-[#E4DCCF] flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <h3 className="font-serif text-base font-bold text-[#1A1612]">
+                          4x4 Land Cruiser Inspection, Known Drivers Fleet &amp; Daily Rates
+                        </h3>
+                        <p className="text-xs text-[#5A5248]">
+                          Confirm vehicle mechanical sign-off, pop-up roof latches, or upload new 4x4 safari fleet vehicles &amp; daily rates.
+                        </p>
+                      </div>
+                      <Link
+                        to="/guides?section=drivers-cars"
+                        className="px-3 py-1.5 rounded bg-[#226B3E] hover:bg-[#194E2D] text-white text-xs font-semibold"
+                      >
+                        + Upload Driver Fleet &amp; Daily Rates
+                      </Link>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse text-xs">
@@ -1714,15 +1697,19 @@ export const PortalsPage: React.FC = () => {
                   </div>
                 </div>
 
+                {activeSection === 'ai-package-builder' && (
+                  <ServiceProviderPackageAIBuilder defaultProviderName="Tingatinga Safaris (Enganda Member)" />
+                )}
+
                 {activeSection === 'allocations' && (
                   <div className="bg-white border border-[#E4DCCF] rounded-lg overflow-hidden">
                     <div className="px-4 py-3 border-b border-[#E4DCCF] flex flex-wrap items-center justify-between gap-2">
                       <div>
                         <h3 className="font-serif text-base font-bold text-[#1A1612]">
-                          Guest Room Allocations & Confirmed Safari Vouchers
+                          Guest Room Allocations &amp; Confirmed Safari Vouchers
                         </h3>
                         <p className="text-xs text-[#5A5248]">
-                          Live guest bookings from Enganda Safari Wallet and Entebbe Desk room block holds.
+                          Live guest bookings settled directly from Enganda Safari Wallet.
                         </p>
                       </div>
                       <button
@@ -1782,39 +1769,6 @@ export const PortalsPage: React.FC = () => {
                               </td>
                             </tr>
                           ))}
-                          {leads.map((lead) => (
-                            <tr key={lead.id} className="hover:bg-[#FAF7F2]/60">
-                              <td className="py-2.5 px-3.5 font-mono font-semibold text-[#1A1612] tabular-nums">
-                                BLK-{lead.id.slice(-5).toUpperCase()}
-                              </td>
-                              <td className="py-2.5 px-3.5 font-semibold text-[#1A1612]">
-                                {selectedPartner.name} ({lead.name})
-                              </td>
-                              <td className="py-2.5 px-3.5 text-[#5A5248]">
-                                {selectedPartner.region}
-                              </td>
-                              <td className="py-2.5 px-3.5 font-mono tabular-nums">
-                                {lead.targetDates}
-                              </td>
-                              <td className="py-2.5 px-3.5 text-right font-mono tabular-nums">
-                                2n • {lead.partySize}g
-                              </td>
-                              <td className="py-2.5 px-3.5 text-right font-mono font-semibold tabular-nums">
-                                {formatPrice(
-                                  (partnerRateOverrides[selectedPartner.slug] ??
-                                    selectedPartner.pricePerNightUSD) *
-                                    2 *
-                                    Math.ceil(lead.partySize / 2),
-                                  currency
-                                )}
-                              </td>
-                              <td className="py-2.5 px-3.5">
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#D97706]/15 text-[#D97706]">
-                                  Desk Allocation Hold
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
                         </tbody>
                       </table>
                     </div>
@@ -1823,13 +1777,21 @@ export const PortalsPage: React.FC = () => {
 
                 {activeSection === 'rates' && (
                   <div className="bg-white border border-[#E4DCCF] rounded-lg overflow-hidden">
-                    <div className="px-4 py-3 border-b border-[#E4DCCF]">
-                      <h3 className="font-serif text-base font-bold text-[#1A1612]">
-                        Partner Properties & Seasonal Contracted Tariffs
-                      </h3>
-                      <p className="text-xs text-[#5A5248]">
-                        Manage contracted full-board nightly rates across Enganda’s verified accommodation network.
-                      </p>
+                    <div className="px-4 py-3 border-b border-[#E4DCCF] flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <h3 className="font-serif text-base font-bold text-[#1A1612]">
+                          Partner Properties (Including Igongo Country Hotel) &amp; Uploaded Room Tariffs
+                        </h3>
+                        <p className="text-xs text-[#5A5248]">
+                          Manage contracted nightly rates or upload individual hotel &amp; motel rooms and per-room rates.
+                        </p>
+                      </div>
+                      <Link
+                        to="/guides?section=partners"
+                        className="px-3 py-1.5 rounded bg-[#226B3E] hover:bg-[#194E2D] text-white text-xs font-semibold"
+                      >
+                        + Upload Hotel &amp; Motel Rooms &amp; Rates
+                      </Link>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-left border-collapse text-xs">
@@ -1954,138 +1916,74 @@ export const PortalsPage: React.FC = () => {
             {/* ============================================================== */}
             {currentRole === 'staff' && (
               <div className="space-y-4">
-                {activeSection === 'inquiries' && (
-                  <div className="bg-white border border-[#E4DCCF] rounded-lg overflow-hidden">
-                    <div className="px-4 py-3 border-b border-[#E4DCCF] flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <h2 className="font-serif text-base font-bold text-[#1A1612]">
-                          Entebbe Desk — Client Inquiry & Lead Dispatch Queue
-                        </h2>
-                        <p className="text-xs text-[#5A5248]">
-                          Assign field specialists, send custom quotes, and confirm incoming safari inquiries.
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <select
-                          value={statusFilter}
-                          onChange={(e) => setStatusFilter(e.target.value)}
-                          className="bg-[#FAF7F2] border border-[#D6CEC2] rounded px-2.5 py-1 text-xs font-mono text-[#1A1612]"
-                        >
-                          <option value="all">All Statuses ({leads.length})</option>
-                          <option value="new">New Inquiries</option>
-                          <option value="quote_sent">Quote Sent</option>
-                          <option value="confirmed">Confirmed</option>
-                        </select>
+                {activeSection === 'direct-payments' && (
+                  <div className="space-y-4">
+                    <ServiceProviderPackageAIBuilder defaultProviderName="Tingatinga Safaris (Enganda Member)" />
+
+                    <div className="bg-white border border-[#E4DCCF] rounded-lg overflow-hidden">
+                      <div className="px-4 py-3 border-b border-[#E4DCCF] flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <h2 className="font-serif text-base font-bold text-[#1A1612]">
+                            Entebbe Desk — Direct Package Payments &amp; Settlement Ledger
+                          </h2>
+                          <p className="text-xs text-[#5A5248]">
+                            Clients pay 30% deposit or 100% full package price directly. All payments are logged in Firestore (/wallet_transactions).
+                          </p>
+                        </div>
                         <button
                           type="button"
                           onClick={() => openInquiryModal()}
-                          className="px-3 py-1 rounded bg-[#C85A28] text-white text-xs font-semibold cursor-pointer"
+                          className="px-3 py-1.5 rounded bg-[#C85A28] hover:bg-[#A8481D] text-white text-xs font-semibold cursor-pointer"
                         >
-                          + Log Phone/WhatsApp Lead
+                          + Process Direct Package Payment
                         </button>
                       </div>
-                    </div>
 
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse text-xs">
-                        <thead>
-                          <tr className="bg-[#FAF7F2] border-b border-[#E4DCCF] font-mono text-[10px] uppercase text-[#5A5248]">
-                            <th className="py-2.5 px-3.5">Client & Contact</th>
-                            <th className="py-2.5 px-3.5">Target Dates & Tier</th>
-                            <th className="py-2.5 px-3.5 text-right">Party</th>
-                            <th className="py-2.5 px-3.5">Assigned Specialist</th>
-                            <th className="py-2.5 px-3.5">Status</th>
-                            <th className="py-2.5 px-3.5 text-right">Desk Action</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[#E4DCCF]">
-                          {leads
-                            .filter((l) => statusFilter === 'all' || l.status === statusFilter)
-                            .map((lead) => (
-                              <tr key={lead.id} className="hover:bg-[#FAF7F2]/60">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse text-xs">
+                          <thead>
+                            <tr className="bg-[#FAF7F2] border-b border-[#E4DCCF] font-mono text-[10px] uppercase text-[#5A5248]">
+                              <th className="py-2.5 px-3.5">Receipt Code</th>
+                              <th className="py-2.5 px-3.5">Package &amp; Payment Details</th>
+                              <th className="py-2.5 px-3.5">Payment Rail</th>
+                              <th className="py-2.5 px-3.5">Date</th>
+                              <th className="py-2.5 px-3.5 text-right">Amount Paid</th>
+                              <th className="py-2.5 px-3.5">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-[#E4DCCF]">
+                            {transactions.map((tx) => (
+                              <tr key={tx.id} className="hover:bg-[#FAF7F2]/60">
+                                <td className="py-2.5 px-3.5 font-mono font-semibold text-[#1A1612] tabular-nums">
+                                  {tx.referenceCode}
+                                </td>
                                 <td className="py-2.5 px-3.5">
                                   <div className="font-semibold text-[#1A1612]">
-                                    {lead.name}
+                                    {tx.title}
                                   </div>
-                                  <div className="font-mono text-[10px] text-[#5A5248] tabular-nums">
-                                    {lead.email} • {lead.whatsapp}
+                                  <div className="text-[11px] text-[#5A5248]">
+                                    {tx.subtitle}
                                   </div>
+                                </td>
+                                <td className="py-2.5 px-3.5 font-mono text-[11px] text-[#5A5248]">
+                                  {tx.paymentRail}
+                                </td>
+                                <td className="py-2.5 px-3.5 font-mono text-[11px] tabular-nums">
+                                  {new Date(tx.createdAt).toLocaleDateString()}
+                                </td>
+                                <td className="py-2.5 px-3.5 text-right font-mono font-bold text-[#226B3E] tabular-nums">
+                                  {formatPrice(tx.amountUSD, currency)}
                                 </td>
                                 <td className="py-2.5 px-3.5">
-                                  <div className="font-mono text-[11px] tabular-nums">
-                                    {lead.targetDates}
-                                  </div>
-                                  <div className="text-[10px] uppercase font-mono text-[#5A5248]">
-                                    {lead.budgetTier}
-                                  </div>
-                                </td>
-                                <td className="py-2.5 px-3.5 text-right font-mono tabular-nums">
-                                  {lead.partySize}
-                                </td>
-                                <td className="py-2.5 px-3.5">
-                                  <select
-                                    value={lead.preferredGuideSlug || 'samuel-kato'}
-                                    onChange={(e) => {
-                                      updateLeadStatus(lead.id, lead.status, e.target.value);
-                                      notify(
-                                        'success',
-                                        `Assigned specialist to ${lead.name}.`
-                                      );
-                                    }}
-                                    className="bg-[#FAF7F2] border border-[#D6CEC2] rounded px-2 py-1 text-xs text-[#1A1612]"
-                                  >
-                                    {GUIDES.map((g) => (
-                                      <option key={g.slug} value={g.slug}>
-                                        {g.name}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </td>
-                                <td className="py-2.5 px-3.5">
-                                  <span
-                                    className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${
-                                      lead.status === 'confirmed'
-                                        ? 'bg-[#16A34A]/15 text-[#16A34A]'
-                                        : lead.status === 'quote_sent'
-                                        ? 'bg-[#D97706]/15 text-[#D97706]'
-                                        : 'bg-[#C85A28]/15 text-[#C85A28]'
-                                    }`}
-                                  >
-                                    {lead.status.replace('_', ' ')}
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#16A34A]/15 text-[#16A34A]">
+                                    {tx.status.replace('_', ' ')}
                                   </span>
-                                </td>
-                                <td className="py-2.5 px-3.5 text-right">
-                                  <div className="inline-flex items-center gap-1">
-                                    {lead.status === 'new' && (
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          updateLeadStatus(lead.id, 'quote_sent');
-                                          notify('success', `Marked quote sent for ${lead.name}.`);
-                                        }}
-                                        className="px-2 py-1 rounded bg-[#226B3E] text-white font-mono text-[10px] cursor-pointer"
-                                      >
-                                        Send Quote
-                                      </button>
-                                    )}
-                                    {lead.status !== 'confirmed' && (
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          updateLeadStatus(lead.id, 'confirmed');
-                                          notify('success', `Confirmed expedition for ${lead.name}.`);
-                                        }}
-                                        className="px-2 py-1 rounded border border-[#226B3E] text-[#226B3E] hover:bg-[#226B3E] hover:text-white font-mono text-[10px] cursor-pointer"
-                                      >
-                                        Confirm
-                                      </button>
-                                    )}
-                                  </div>
                                 </td>
                               </tr>
                             ))}
-                        </tbody>
-                      </table>
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -2243,13 +2141,13 @@ export const PortalsPage: React.FC = () => {
                   </div>
                   <div className="bg-white border border-[#E4DCCF] rounded-lg p-3.5">
                     <div className="font-mono text-[10px] uppercase text-[#5A5248]">
-                      Active Inquiry Pipeline
+                      Direct Escrows &amp; Lodge Vouchers
                     </div>
                     <div className="font-mono text-lg font-bold text-[#C85A28] tabular-nums mt-1">
-                      {leads.length} Leads
+                      {permitHolds.length} Escrows · {partnerBookings.length} Vouchers
                     </div>
                     <div className="text-[11px] text-[#5A5248] mt-0.5 tabular-nums">
-                      {leads.filter((l) => l.status === 'confirmed').length} confirmed expeditions
+                      Direct client payment settlement active
                     </div>
                   </div>
                   <div className="bg-white border border-[#E4DCCF] rounded-lg p-3.5">

@@ -1,0 +1,448 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================================
+    // Global Authentication & Role-Based Access Control (RBAC) Helpers
+    // =========================================================================
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function hasUserDoc() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function currentUserRole() {
+      return hasUserDoc() ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role : 'client';
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        (request.auth.token.email == 'mugisolo@gmail.com' && request.auth.token.email_verified == true) ||
+        (hasUserDoc() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+
+    function isStaffOrAdmin() {
+      return isAdmin() || (hasUserDoc() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'staff');
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // =========================================================================
+    // Entity Schema Validators (Enforcing request.auth.uid Ownership & Roles)
+    // =========================================================================
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'createdAt']) &&
+             data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'role', 'createdAt']) &&
+             data.uid is string && data.uid.size() > 0 && data.uid.size() <= 128 &&
+             data.email is string && data.email.size() > 0 && data.email.size() <= 256 &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 128)) &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 512)) &&
+             (!('role' in data) || data.role in ['client', 'admin', 'partner', 'specialist', 'staff', 'traveler', 'agent']) &&
+             data.createdAt is string && data.createdAt.size() <= 64 &&
+             data.uid == request.auth.uid;
+    }
+
+    function isValidPortalDispatch(data) {
+      return data.keys().hasAll(['id', 'userId', 'authorName', 'portalRole', 'category', 'title', 'region', 'status', 'priority', 'referenceCode', 'createdAt']) &&
+             data.keys().hasOnly(['id', 'userId', 'authorName', 'portalRole', 'category', 'title', 'region', 'status', 'priority', 'notes', 'referenceCode', 'createdAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid &&
+             data.authorName is string && data.authorName.size() > 0 && data.authorName.size() <= 128 &&
+             data.portalRole in ['client', 'admin', 'partner', 'specialist', 'staff'] &&
+             data.category is string && data.category.size() > 0 && data.category.size() <= 64 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.region is string && data.region.size() > 0 && data.region.size() <= 160 &&
+             data.status in ['open', 'in_progress', 'verified', 'resolved'] &&
+             data.priority in ['normal', 'high', 'urgent'] &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 1500)) &&
+             data.referenceCode is string && data.referenceCode.size() <= 64 &&
+             data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    function isValidSafariDocument(data) {
+      return data.keys().hasAll(['id', 'driveFileId', 'name', 'userId', 'createdAt']) &&
+             data.keys().hasOnly(['id', 'driveFileId', 'name', 'mimeType', 'size', 'webViewLink', 'category', 'userId', 'createdAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.driveFileId is string && data.driveFileId.size() > 0 && data.driveFileId.size() <= 256 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 256 &&
+             data.userId is string && data.userId.size() <= 128 &&
+             data.createdAt is string && data.createdAt.size() <= 64 &&
+             data.userId == request.auth.uid;
+    }
+
+    function isValidTestimonial(data) {
+      return data.keys().hasAll(['id', 'guestName', 'country', 'destination', 'rating', 'title', 'text', 'date', 'status', 'authorId']) &&
+             data.keys().hasOnly(['id', 'guestName', 'country', 'destination', 'experienceSlug', 'guideSlug', 'guideName', 'rating', 'title', 'text', 'date', 'partyType', 'status', 'authorId']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.guestName is string && data.guestName.size() > 0 && data.guestName.size() <= 128 &&
+             data.country is string && data.country.size() > 0 && data.country.size() <= 100 &&
+             data.destination is string && data.destination.size() > 0 && data.destination.size() <= 160 &&
+             data.rating is number && data.rating >= 1 && data.rating <= 5 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.text is string && data.text.size() > 0 && data.text.size() <= 1500 &&
+             data.date is string && data.date.size() > 0 && data.date.size() <= 64 &&
+             data.status in ['published', 'archived'] &&
+             data.authorId is string && data.authorId.size() <= 128 &&
+             data.authorId == request.auth.uid;
+    }
+
+    function isValidSavedItinerary(data) {
+      return data.keys().hasAll(['id', 'userId', 'title', 'region', 'budgetTier', 'durationDays', 'estimatedPerPersonUSD', 'referenceCode', 'createdAt']) &&
+             data.keys().hasOnly(['id', 'userId', 'title', 'region', 'budgetTier', 'activityFocus', 'durationDays', 'estimatedPerPersonUSD', 'depositAmountUSD', 'matchedGuideName', 'matchedGuideSlug', 'depositPaid', 'referenceCode', 'createdAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.region is string && data.region.size() > 0 && data.region.size() <= 200 &&
+             data.budgetTier in ['mid-range', 'luxury', 'signature'] &&
+             (!('activityFocus' in data) || (data.activityFocus is string && data.activityFocus.size() <= 200)) &&
+             data.durationDays is number && data.durationDays >= 1 && data.durationDays <= 60 &&
+             data.estimatedPerPersonUSD is number && data.estimatedPerPersonUSD >= 0 &&
+             (!('depositAmountUSD' in data) || (data.depositAmountUSD is number && data.depositAmountUSD >= 0)) &&
+             (!('matchedGuideName' in data) || (data.matchedGuideName is string && data.matchedGuideName.size() <= 128)) &&
+             (!('matchedGuideSlug' in data) || (data.matchedGuideSlug is string && data.matchedGuideSlug.size() <= 128)) &&
+             (!('depositPaid' in data) || data.depositPaid is bool) &&
+             data.referenceCode is string && data.referenceCode.size() <= 64 &&
+             data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    function isValidSavedChecklist(data) {
+      return data.keys().hasAll(['id', 'userId', 'referenceCode', 'title', 'totalItems', 'checkedCount', 'updatedAt']) &&
+             data.keys().hasOnly(['id', 'userId', 'referenceCode', 'title', 'totalItems', 'checkedCount', 'notes', 'updatedAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid &&
+             data.referenceCode is string && data.referenceCode.size() <= 64 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.totalItems is number && data.totalItems >= 0 && data.totalItems <= 500 &&
+             data.checkedCount is number && data.checkedCount >= 0 && data.checkedCount <= 500 &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000)) &&
+             data.updatedAt is string && data.updatedAt.size() <= 64;
+    }
+
+    function isValidSafariEvent(data) {
+      return data.keys().hasAll(['id', 'userId', 'title', 'category', 'dateWindow', 'durationLabel', 'location', 'spotsRemaining', 'pricePerPersonUSD', 'leadGuideSlug', 'heroImage', 'placement', 'createdAt']) &&
+             data.keys().hasOnly(['id', 'userId', 'title', 'shortTabLabel', 'subtitle', 'eventTag', 'category', 'dateWindow', 'durationLabel', 'location', 'spotsRemaining', 'pricePerPersonUSD', 'leadGuideSlug', 'experienceSlug', 'heroImage', 'highlights', 'statusLabel', 'placement', 'createdAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             (!('shortTabLabel' in data) || (data.shortTabLabel is string && data.shortTabLabel.size() <= 64)) &&
+             (!('subtitle' in data) || (data.subtitle is string && data.subtitle.size() <= 400)) &&
+             (!('eventTag' in data) || (data.eventTag is string && data.eventTag.size() <= 64)) &&
+             data.category in ['Cultural & Music Event', 'Guaranteed Primate Departure', 'Seasonal Migration & Savanna', 'Ornithology Special'] &&
+             data.dateWindow is string && data.dateWindow.size() > 0 && data.dateWindow.size() <= 128 &&
+             data.durationLabel is string && data.durationLabel.size() > 0 && data.durationLabel.size() <= 128 &&
+             data.location is string && data.location.size() > 0 && data.location.size() <= 256 &&
+             data.spotsRemaining is number && data.spotsRemaining >= 0 && data.spotsRemaining <= 200 &&
+             data.pricePerPersonUSD is number && data.pricePerPersonUSD >= 0 &&
+             data.leadGuideSlug is string && data.leadGuideSlug.size() <= 128 &&
+             (!('experienceSlug' in data) || (data.experienceSlug is string && data.experienceSlug.size() <= 128)) &&
+             data.heroImage is string && data.heroImage.size() > 0 && data.heroImage.size() <= 1024 &&
+             (!('highlights' in data) || (data.highlights is list && data.highlights.size() <= 10)) &&
+             (!('statusLabel' in data) || (data.statusLabel is string && data.statusLabel.size() <= 128)) &&
+             data.placement in ['carousel', 'upcoming', 'both'] &&
+             data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    function isValidFooterLogo(data) {
+      return data.keys().hasAll(['id', 'userId', 'name', 'subtitle', 'logoUrl', 'category', 'active', 'displayOrder', 'updatedAt']) &&
+             data.keys().hasOnly(['id', 'userId', 'name', 'subtitle', 'logoUrl', 'category', 'websiteUrl', 'active', 'displayOrder', 'updatedAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 128 &&
+             data.subtitle is string && data.subtitle.size() <= 256 &&
+             data.logoUrl is string && data.logoUrl.size() > 0 && data.logoUrl.size() <= 200000 &&
+             data.category in ['Government & Conservation', 'Banking & Fintech', 'Strategic Partner'] &&
+             (!('websiteUrl' in data) || (data.websiteUrl is string && data.websiteUrl.size() <= 512)) &&
+             data.active is bool &&
+             data.displayOrder is number && data.displayOrder >= 0 && data.displayOrder <= 100 &&
+             data.updatedAt is string && data.updatedAt.size() <= 64;
+    }
+
+    function isValidSafariLead(data) {
+      return data.keys().hasAll(['id', 'userId', 'name', 'email', 'partySize', 'targetDates', 'budgetTier', 'durationDays', 'status', 'createdAt']) &&
+             data.keys().hasOnly(['id', 'userId', 'name', 'email', 'whatsapp', 'partySize', 'targetDates', 'budgetTier', 'durationDays', 'preferredGuideSlug', 'experienceSlug', 'notes', 'status', 'createdAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 128 &&
+             data.email is string && data.email.size() > 0 && data.email.size() <= 256 &&
+             (!('whatsapp' in data) || (data.whatsapp is string && data.whatsapp.size() <= 64)) &&
+             data.partySize is number && data.partySize >= 1 && data.partySize <= 50 &&
+             data.targetDates is string && data.targetDates.size() <= 128 &&
+             data.budgetTier in ['mid-range', 'luxury', 'signature'] &&
+             data.durationDays is number && data.durationDays >= 1 && data.durationDays <= 60 &&
+             (!('preferredGuideSlug' in data) || (data.preferredGuideSlug is string && data.preferredGuideSlug.size() <= 128)) &&
+             (!('experienceSlug' in data) || (data.experienceSlug is string && data.experienceSlug.size() <= 128)) &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 2000)) &&
+             data.status in ['new', 'contacted', 'quote_sent', 'confirmed'] &&
+             data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    function isValidUserWallet(data) {
+      return data.keys().hasAll(['userId', 'availableBalanceUSD', 'escrowBalanceUSD', 'rewardCreditsUSD', 'updatedAt']) &&
+             data.keys().hasOnly(['userId', 'availableBalanceUSD', 'escrowBalanceUSD', 'rewardCreditsUSD', 'permitHoldsCount', 'partnerBookingsCount', 'updatedAt']) &&
+             data.userId is string && data.userId.size() > 0 && data.userId.size() <= 128 && data.userId == request.auth.uid &&
+             data.availableBalanceUSD is number && data.availableBalanceUSD >= 0 &&
+             data.escrowBalanceUSD is number && data.escrowBalanceUSD >= 0 &&
+             data.rewardCreditsUSD is number && data.rewardCreditsUSD >= 0 &&
+             (!('permitHoldsCount' in data) || (data.permitHoldsCount is number && data.permitHoldsCount >= 0 && data.permitHoldsCount <= 200)) &&
+             (!('partnerBookingsCount' in data) || (data.partnerBookingsCount is number && data.partnerBookingsCount >= 0 && data.partnerBookingsCount <= 200)) &&
+             data.updatedAt is string && data.updatedAt.size() <= 64;
+    }
+
+    function isValidWalletTransaction(data) {
+      return data.keys().hasAll(['id', 'userId', 'type', 'title', 'subtitle', 'amountUSD', 'direction', 'status', 'paymentRail', 'referenceCode', 'createdAt']) &&
+             data.keys().hasOnly(['id', 'userId', 'type', 'title', 'subtitle', 'amountUSD', 'direction', 'status', 'paymentRail', 'referenceCode', 'withdrawalChannel', 'cashPickupCode', 'createdAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid &&
+             data.type in ['deposit', 'withdrawal', 'permit_escrow', 'permit_release', 'partner_booking', 'safari_deposit', 'expedition_reward'] &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 256 &&
+             data.subtitle is string && data.subtitle.size() <= 512 &&
+             data.amountUSD is number && data.amountUSD >= 0 && data.amountUSD <= 1000000 &&
+             data.direction in ['credit', 'debit', 'escrow_lock', 'escrow_unlock'] &&
+             data.status in ['completed', 'escrow_held', 'pending_verification', 'refunded'] &&
+             data.paymentRail is string && data.paymentRail.size() > 0 && data.paymentRail.size() <= 128 &&
+             data.referenceCode is string && data.referenceCode.size() > 0 && data.referenceCode.size() <= 64 &&
+             (!('withdrawalChannel' in data) || data.withdrawalChannel in ['bank_account', 'momo', 'enganda_agent']) &&
+             (!('cashPickupCode' in data) || (data.cashPickupCode is string && data.cashPickupCode.size() <= 64)) &&
+             data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    function isValidPartnerHotelRoom(data) {
+      return data.keys().hasAll(['id', 'userId', 'partnerSlug', 'partnerName', 'partnerCategory', 'roomName', 'roomType', 'ratePerNightUSD', 'boardBasis', 'maxOccupancy', 'bedConfiguration', 'totalRoomsAvailable', 'imageUrl', 'uploadedByOwnerName', 'createdAt']) &&
+             data.keys().hasOnly(['id', 'userId', 'partnerSlug', 'partnerName', 'partnerCategory', 'roomName', 'roomType', 'ratePerNightUSD', 'boardBasis', 'maxOccupancy', 'bedConfiguration', 'totalRoomsAvailable', 'imageUrl', 'amenities', 'uploadedByOwnerName', 'createdAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid &&
+             data.partnerSlug is string && data.partnerSlug.size() > 0 && data.partnerSlug.size() <= 128 &&
+             data.partnerName is string && data.partnerName.size() > 0 && data.partnerName.size() <= 200 &&
+             data.partnerCategory in ['hotel', 'motel', 'campsite', 'lodge'] &&
+             data.roomName is string && data.roomName.size() > 0 && data.roomName.size() <= 200 &&
+             data.roomType is string && data.roomType.size() > 0 && data.roomType.size() <= 128 &&
+             data.ratePerNightUSD is number && data.ratePerNightUSD >= 0 && data.ratePerNightUSD <= 50000 &&
+             data.boardBasis in ['Bed & Breakfast', 'Half Board', 'Full Board', 'Room Only'] &&
+             data.maxOccupancy is number && data.maxOccupancy >= 1 && data.maxOccupancy <= 30 &&
+             data.bedConfiguration is string && data.bedConfiguration.size() > 0 && data.bedConfiguration.size() <= 128 &&
+             data.totalRoomsAvailable is number && data.totalRoomsAvailable >= 1 && data.totalRoomsAvailable <= 500 &&
+             data.imageUrl is string && data.imageUrl.size() > 0 && data.imageUrl.size() <= 350000 &&
+             (!('amenities' in data) || (data.amenities is list && data.amenities.size() <= 20 && (data.amenities.size() == 0 || (data.amenities[0] is string && data.amenities[0].size() <= 300)))) &&
+             data.uploadedByOwnerName is string && data.uploadedByOwnerName.size() > 0 && data.uploadedByOwnerName.size() <= 128 &&
+             data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    function isValidDriverFleetVehicle(data) {
+      return data.keys().hasAll(['id', 'userId', 'driverName', 'driverLicenseAndBadge', 'driverPhone', 'driverPhotoUrl', 'vehicleName', 'vehicleCategory', 'registrationPlate', 'passengerCapacity', 'ratePerDayUSD', 'rateIncludes', 'homeBaseRegion', 'vehicleImageUrl', 'availableStatus', 'createdAt']) &&
+             data.keys().hasOnly(['id', 'userId', 'driverName', 'driverSlug', 'driverLicenseAndBadge', 'driverPhone', 'driverPhotoUrl', 'vehicleName', 'vehicleCategory', 'registrationPlate', 'passengerCapacity', 'ratePerDayUSD', 'rateIncludes', 'homeBaseRegion', 'regionsCovered', 'vehicleImageUrl', 'features', 'availableStatus', 'createdAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid &&
+             data.driverName is string && data.driverName.size() > 0 && data.driverName.size() <= 128 &&
+             (!('driverSlug' in data) || (data.driverSlug is string && data.driverSlug.size() <= 128)) &&
+             data.driverLicenseAndBadge is string && data.driverLicenseAndBadge.size() > 0 && data.driverLicenseAndBadge.size() <= 200 &&
+             data.driverPhone is string && data.driverPhone.size() > 0 && data.driverPhone.size() <= 64 &&
+             data.driverPhotoUrl is string && data.driverPhotoUrl.size() > 0 && data.driverPhotoUrl.size() <= 350000 &&
+             data.vehicleName is string && data.vehicleName.size() > 0 && data.vehicleName.size() <= 200 &&
+             data.vehicleCategory in ['4x4 Extended Land Cruiser', '4x4 Land Cruiser Prado', '4x4 Pop-Up Safari Van', 'Executive Group Coaster', 'Luxury Overland Truck'] &&
+             data.registrationPlate is string && data.registrationPlate.size() > 0 && data.registrationPlate.size() <= 64 &&
+             data.passengerCapacity is number && data.passengerCapacity >= 1 && data.passengerCapacity <= 60 &&
+             data.ratePerDayUSD is number && data.ratePerDayUSD >= 0 && data.ratePerDayUSD <= 25000 &&
+             data.rateIncludes is string && data.rateIncludes.size() > 0 && data.rateIncludes.size() <= 400 &&
+             data.homeBaseRegion is string && data.homeBaseRegion.size() > 0 && data.homeBaseRegion.size() <= 200 &&
+             (!('regionsCovered' in data) || (data.regionsCovered is list && data.regionsCovered.size() <= 20 && (data.regionsCovered.size() == 0 || (data.regionsCovered[0] is string && data.regionsCovered[0].size() <= 200)))) &&
+             data.vehicleImageUrl is string && data.vehicleImageUrl.size() > 0 && data.vehicleImageUrl.size() <= 350000 &&
+             (!('features' in data) || (data.features is list && data.features.size() <= 20 && (data.features.size() == 0 || (data.features[0] is string && data.features[0].size() <= 300)))) &&
+             data.availableStatus in ['Available Now', 'On Charter', 'Advance Booking'] &&
+             data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Admins lookup collection (read-only for self/admin, no client writes)
+    match /admins/{adminUid} {
+      allow get: if isSignedIn() && (request.auth.uid == adminUid || isAdmin());
+      allow list, write: if false;
+    }
+
+    // Users collection (Scoped to request.auth.uid; Staff/Admin can read directory)
+    match /users/{userId} {
+      allow get: if isValidId(userId) && (isOwner(userId) || isStaffOrAdmin());
+      allow list: if isStaffOrAdmin();
+      allow create: if isValidId(userId) && isOwner(userId) && isValidUser(incoming()) &&
+                    (!('role' in incoming()) || incoming().role in ['client', 'admin', 'partner', 'specialist', 'staff', 'traveler']);
+      allow update: if isValidId(userId) && (
+                      (isOwner(userId) && isValidUser(incoming()) &&
+                       incoming().uid == existing().uid &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'role']) &&
+                       (!('role' in incoming()) || incoming().role in ['client', 'admin', 'partner', 'specialist', 'staff', 'traveler'])) ||
+                      isAdmin()
+                    );
+      allow delete: if isValidId(userId) && (isOwner(userId) || isAdmin());
+    }
+
+    // Safari Events & Upcoming Programs collection (Publicly readable for active placements; Admin & Authorized user replacement/management)
+    match /safari_events/{eventId} {
+      allow get: if isValidId(eventId) && (existing().placement in ['carousel', 'upcoming', 'both'] || (isSignedIn() && (existing().userId == request.auth.uid || isStaffOrAdmin())));
+      allow list: if existing().placement in ['carousel', 'upcoming', 'both'] || (isSignedIn() && (existing().userId == request.auth.uid || isStaffOrAdmin()));
+      allow create: if isSignedIn() && isValidId(eventId) && isValidSafariEvent(incoming());
+      allow update: if isSignedIn() && isValidId(eventId) && isValidSafariEvent(incoming()) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+      allow delete: if isSignedIn() && isValidId(eventId) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+    }
+
+    // Footer Partner Logos collection (Publicly readable for footer display; Admin & Authorized user replacement/management)
+    match /footer_logos/{logoId} {
+      allow get: if isValidId(logoId) && (existing().active in [true, false] || (isSignedIn() && (existing().userId == request.auth.uid || isStaffOrAdmin())));
+      allow list: if existing().active in [true, false] || (isSignedIn() && (existing().userId == request.auth.uid || isStaffOrAdmin()));
+      allow create: if isSignedIn() && isValidId(logoId) && isValidFooterLogo(incoming());
+      allow update: if isSignedIn() && isValidId(logoId) && isValidFooterLogo(incoming()) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+      allow delete: if isSignedIn() && isValidId(logoId) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+    }
+
+    // Safari Leads & Inquiries collection (Owner CRUD; Staff/Admin full coordination & replacement access)
+    match /safari_leads/{leadId} {
+      allow get: if isSignedIn() && isValidId(leadId) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+      allow list: if isSignedIn() && (existing().userId == request.auth.uid || isStaffOrAdmin());
+      allow create: if isSignedIn() && isValidId(leadId) && isValidSafariLead(incoming());
+      allow update: if isSignedIn() && isValidId(leadId) && isValidSafariLead(incoming()) && (
+                      existing().userId == request.auth.uid ||
+                      isStaffOrAdmin()
+                    );
+      allow delete: if isSignedIn() && isValidId(leadId) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+    }
+
+    // User Wallets summary collection (Owner CRUD; Staff/Admin read & treasury verification)
+    match /user_wallets/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && (isOwner(userId) || isStaffOrAdmin());
+      allow list: if isSignedIn() && (existing().userId == request.auth.uid || isStaffOrAdmin());
+      allow create: if isSignedIn() && isValidId(userId) && isOwner(userId) && isValidUserWallet(incoming());
+      allow update: if isSignedIn() && isValidId(userId) && (
+                      (isOwner(userId) && isValidUserWallet(incoming()) && incoming().userId == existing().userId) ||
+                      isStaffOrAdmin()
+                    );
+      allow delete: if isSignedIn() && isValidId(userId) && (isOwner(userId) || isAdmin());
+    }
+
+    // Wallet Transactions collection (Owner CRUD; Staff/Admin read & verification for Bank/MoMo/Agent Cash withdrawals)
+    match /wallet_transactions/{txId} {
+      allow get: if isSignedIn() && isValidId(txId) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+      allow list: if isSignedIn() && (existing().userId == request.auth.uid || isStaffOrAdmin());
+      allow create: if isSignedIn() && isValidId(txId) && isValidWalletTransaction(incoming());
+      allow update: if isSignedIn() && isValidId(txId) && isValidWalletTransaction(incoming()) && (
+                      existing().userId == request.auth.uid ||
+                      isStaffOrAdmin()
+                    );
+      allow delete: if isSignedIn() && isValidId(txId) && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // Portal Dispatches collection (Scoped by userId == request.auth.uid, matching portalRole, or Staff/Admin oversight)
+    match /portal_dispatches/{dispatchId} {
+      allow get: if isSignedIn() && isValidId(dispatchId) && (
+                   existing().userId == request.auth.uid ||
+                   existing().portalRole == currentUserRole() ||
+                   isStaffOrAdmin()
+                 );
+      allow list: if isSignedIn() && (
+                    existing().userId == request.auth.uid ||
+                    existing().portalRole == currentUserRole() ||
+                    isStaffOrAdmin()
+                  );
+      allow create: if isSignedIn() && isValidId(dispatchId) && isValidPortalDispatch(incoming());
+      allow update: if isSignedIn() && isValidId(dispatchId) && isValidPortalDispatch(incoming()) && (
+                      existing().userId == request.auth.uid ||
+                      existing().portalRole == currentUserRole() ||
+                      isStaffOrAdmin()
+                    );
+      allow delete: if isSignedIn() && isValidId(dispatchId) && (
+                      existing().userId == request.auth.uid ||
+                      existing().portalRole == currentUserRole() ||
+                      isStaffOrAdmin()
+                    );
+    }
+
+    // Safari Documents collection (Owner CRUD; Staff/Admin read for UWA permit & voucher verification)
+    match /safari_documents/{docId} {
+      allow get: if isSignedIn() && isValidId(docId) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+      allow list: if isSignedIn() && (existing().userId == request.auth.uid || isStaffOrAdmin());
+      allow create: if isSignedIn() && isValidId(docId) && isValidSafariDocument(incoming());
+      allow update: if isSignedIn() && isValidId(docId) && isValidSafariDocument(incoming()) && (
+                      (existing().userId == request.auth.uid &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['name', 'category', 'webViewLink'])) ||
+                      isStaffOrAdmin()
+                    );
+      allow delete: if isSignedIn() && isValidId(docId) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+    }
+
+    // Client Testimonials collection (Publicly readable for published reviews; Owner/Admin edit, replace & delete)
+    match /testimonials/{testimonialId} {
+      allow get: if isValidId(testimonialId) && (existing().status == 'published' || (isSignedIn() && (existing().authorId == request.auth.uid || isStaffOrAdmin())));
+      allow list: if existing().status == 'published' || (isSignedIn() && (existing().authorId == request.auth.uid || isStaffOrAdmin()));
+      allow create: if isSignedIn() && isValidId(testimonialId) && isValidTestimonial(incoming());
+      allow update: if isSignedIn() && isValidId(testimonialId) && isValidTestimonial(incoming()) && (
+                      existing().authorId == request.auth.uid ||
+                      isStaffOrAdmin()
+                    );
+      allow delete: if isSignedIn() && isValidId(testimonialId) && (existing().authorId == request.auth.uid || isStaffOrAdmin());
+    }
+
+    // Saved Custom Safari Itineraries collection (Owner CRUD; Staff/Admin read & update for Entebbe dispatch)
+    match /saved_itineraries/{itineraryId} {
+      allow get: if isSignedIn() && isValidId(itineraryId) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+      allow list: if isSignedIn() && (existing().userId == request.auth.uid || isStaffOrAdmin());
+      allow create: if isSignedIn() && isValidId(itineraryId) && isValidSavedItinerary(incoming());
+      allow update: if isSignedIn() && isValidId(itineraryId) && isValidSavedItinerary(incoming()) && (
+                      existing().userId == request.auth.uid ||
+                      isStaffOrAdmin()
+                    );
+      allow delete: if isSignedIn() && isValidId(itineraryId) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+    }
+
+    // Saved Safari Essentials Checklists collection (Owner CRUD; Specialist/Staff/Admin read & briefing)
+    match /saved_checklists/{checklistId} {
+      allow get: if isSignedIn() && isValidId(checklistId) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+      allow list: if isSignedIn() && (existing().userId == request.auth.uid || isStaffOrAdmin());
+      allow create: if isSignedIn() && isValidId(checklistId) && isValidSavedChecklist(incoming());
+      allow update: if isSignedIn() && isValidId(checklistId) && isValidSavedChecklist(incoming()) && (
+                      existing().userId == request.auth.uid ||
+                      isStaffOrAdmin()
+                    );
+      allow delete: if isSignedIn() && isValidId(checklistId) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+    }
+
+    // Partner Hotel & Motel Rooms & Per-Room Rates collection (Publicly readable for room catalog; Owner/Partner/Admin upload & management)
+    match /partner_hotel_rooms/{roomId} {
+      allow get: if isValidId(roomId) && (existing().partnerCategory in ['hotel', 'motel', 'campsite', 'lodge'] || (isSignedIn() && (existing().userId == request.auth.uid || isStaffOrAdmin())));
+      allow list: if existing().partnerCategory in ['hotel', 'motel', 'campsite', 'lodge'] || (isSignedIn() && (existing().userId == request.auth.uid || isStaffOrAdmin()));
+      allow create: if isSignedIn() && isValidId(roomId) && isValidPartnerHotelRoom(incoming());
+      allow update: if isSignedIn() && isValidId(roomId) && isValidPartnerHotelRoom(incoming()) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+      allow delete: if isSignedIn() && isValidId(roomId) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+    }
+
+    // Known Drivers & 4x4 Fleet Vehicles & Daily Rates collection (Publicly readable for fleet catalog; Driver/Specialist/Admin upload & management)
+    match /driver_fleet_vehicles/{vehicleId} {
+      allow get: if isValidId(vehicleId) && (existing().availableStatus in ['Available Now', 'On Charter', 'Advance Booking'] || (isSignedIn() && (existing().userId == request.auth.uid || isStaffOrAdmin())));
+      allow list: if existing().availableStatus in ['Available Now', 'On Charter', 'Advance Booking'] || (isSignedIn() && (existing().userId == request.auth.uid || isStaffOrAdmin()));
+      allow create: if isSignedIn() && isValidId(vehicleId) && isValidDriverFleetVehicle(incoming());
+      allow update: if isSignedIn() && isValidId(vehicleId) && isValidDriverFleetVehicle(incoming()) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+      allow delete: if isSignedIn() && isValidId(vehicleId) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+    }
+  }
+}

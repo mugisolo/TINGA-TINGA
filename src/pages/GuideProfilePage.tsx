@@ -193,7 +193,7 @@ export const GuideProfilePage: React.FC = () => {
                 onClick={() => openInquiryModal({ guideSlug: guide.slug })}
                 className="inline-flex items-center gap-2 bg-[#226B3E] hover:bg-[#194E2D] text-[#FAF7F2] font-semibold text-sm px-5 py-3 rounded-md transition-colors cursor-pointer"
               >
-                <span>Quick Availability Inquiry</span>
+                <span>Pay &amp; Book Directly with {guide.name.split(' ')[0]}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>

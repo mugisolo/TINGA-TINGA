@@ -96,6 +96,13 @@ export interface Experience {
     answer: string;
   }[];
   shumaGroupOffer?: ShumaGroupOffer;
+  packageCode?: string;
+  operatorName?: string;
+  adminRecommended?: boolean;
+  adminRecommendationNote?: string;
+  twoPaxSharingPriceUSD?: number;
+  soloTravelerPriceUSD?: number;
+  pdfBrochureUrl?: string;
 }
 
 export interface PermitFact {
@@ -190,6 +197,8 @@ export interface GeneratedSafariItinerary {
 export interface DestinationRegion {
   slug: string;
   name: string;
+  country?: 'Uganda' | 'Tanzania' | 'Kenya' | 'Rwanda';
+  operatedBy?: string;
   tagline: string;
   summary: string;
   bestSeasons: string;
@@ -271,6 +280,18 @@ export interface ConfirmedPackageEvent {
   highlights: string[];
   statusLabel: string;
   placement?: EventDisplayPlacement;
+  operatorName?: string;
+  dayByDaySummary?: string[];
+  sourceDocumentName?: string;
+  packageCode?: string;
+  operatorLogoUrl?: string;
+  utbLicenseNumber?: string;
+  uwaAccreditationId?: string;
+  carouselSlotNumber?: number;
+  isStandbySlot?: boolean;
+  soloPricePerPersonUSD?: number;
+  adminRecommended?: boolean;
+  pdfBrochureUrl?: string;
 }
 
 export interface FooterPartnerLogo {
@@ -302,6 +323,13 @@ export interface AccommodationPartner {
   rating: number;
   reviewCount: number;
   heroImage: string;
+  logoUrl?: string;
+  secondaryLogoUrl?: string;
+  websiteUrl?: string;
+  utbLicenseNumber?: string;
+  uwaAccreditationId?: string;
+  galleryImages?: string[];
+  officialPartnerHighlights?: string[];
   summary: string;
   amenities: string[];
   sustainabilityNote: string;
@@ -310,11 +338,61 @@ export interface AccommodationPartner {
   verifiedPartnerBadge: string;
 }
 
+export interface PartnerHotelRoom {
+  id: string;
+  partnerSlug: string;
+  partnerName: string;
+  partnerCategory: PartnerCategory;
+  roomName: string;
+  roomType: string;
+  ratePerNightUSD: number;
+  boardBasis: 'Bed & Breakfast' | 'Half Board' | 'Full Board' | 'Room Only';
+  maxOccupancy: number;
+  bedConfiguration: string;
+  totalRoomsAvailable: number;
+  imageUrl: string;
+  amenities: string[];
+  uploadedByOwnerName: string;
+  utbLicenseNumber?: string;
+  createdAt: string;
+}
+
+export interface DriverFleetVehicle {
+  id: string;
+  driverName: string;
+  driverSlug?: string;
+  driverLicenseAndBadge: string;
+  utbLicenseNumber?: string;
+  uwaAccreditationId?: string;
+  driverPhone: string;
+  driverPhotoUrl: string;
+  vehicleName: string;
+  vehicleCategory:
+    | '4x4 Extended Land Cruiser'
+    | '4x4 Land Cruiser Prado'
+    | '4x4 Pop-Up Safari Van'
+    | 'Executive Group Coaster'
+    | 'Luxury Overland Truck';
+  registrationPlate: string;
+  passengerCapacity: number;
+  ratePerDayUSD: number;
+  rateIncludes: string;
+  homeBaseRegion: string;
+  regionsCovered: string[];
+  vehicleImageUrl: string;
+  features: string[];
+  availableStatus: 'Available Now' | 'On Charter' | 'Advance Booking';
+  createdAt: string;
+}
+
 export interface TourOperatorPartner {
   id: string;
   slug: string;
   name: string;
   shortName: string;
+  logoUrl?: string;
+  utbLicenseNumber?: string;
+  uwaAccreditationId?: string;
   tagline: string;
   roleLabel: string;
   headquarters: string;
@@ -324,6 +402,90 @@ export interface TourOperatorPartner {
   heroImage: string;
   featuredExperienceSlugs: string[];
   accreditations: string[];
+}
+
+export interface VolunteerProgram {
+  id: string;
+  slug: string;
+  title: string;
+  organization: string;
+  utbLicenseNumber: string;
+  uwaAccreditationId: string;
+  region: string;
+  durationWeeks: string;
+  programFeeUSD: number;
+  category: 'Wildlife Conservation' | 'Community Education & Healthcare' | 'Reforestation & Agroforestry' | 'Cultural Heritage';
+  heroImage: string;
+  summary: string;
+  impactHighlights: string[];
+  includedSupport: string[];
+  spotsAvailable: number;
+}
+
+export interface ConservationFundraiser {
+  id: string;
+  slug: string;
+  title: string;
+  beneficiaryOrganization: string;
+  utbUwaVerificationCode: string;
+  region: string;
+  category: 'Ranger Welfare & Anti-Poaching' | 'Batwa & Host Community Livelihoods' | 'Primate Habitat Corridor' | 'Clean Water & Schools';
+  targetAmountUSD: number;
+  raisedAmountUSD: number;
+  backersCount: number;
+  heroImage: string;
+  summary: string;
+  milestones: string[];
+}
+
+export interface ConciergeMessage {
+  id: string;
+  role: 'user' | 'model';
+  text: string;
+  suggestedGuideSlugs?: string[];
+  suggestedExperienceSlugs?: string[];
+}
+
+export interface AutonomousBookingQuote {
+  quoteId: string;
+  packageId: string;
+  packageTitle: string;
+  operatorName: string;
+  utbLicenseNumber: string;
+  uwaAccreditationId: string;
+  leadGuideName: string;
+  leadGuideSlug: string;
+  guests: number;
+  durationLabel: string;
+  departureDate: string;
+  pricePerPersonUSD: number;
+  uwaPermitsTotalUSD: number;
+  accommodationAndTransportUSD: number;
+  conservationLevyUSD: number;
+  totalUSD: number;
+  currency: Currency;
+  convertedTotal: number;
+  includesGorillaPermit: boolean;
+  includesChimpPermit: boolean;
+  createdAt: string;
+}
+
+export interface AutonomousBookingConfirmation {
+  bookingId: string;
+  invoiceNumber: string;
+  quote: AutonomousBookingQuote;
+  clientName: string;
+  clientEmail: string;
+  paymentMethod:
+    | 'wallet_balance'
+    | 'mtn_momo'
+    | 'airtel_money'
+    | 'visa_mastercard'
+    | 'bank_transfer';
+  status: 'confirmed_paid' | 'pending_payment' | 'reserved_pending_payment';
+  receiptId: string;
+  uwaEscrowReference: string;
+  createdAt: string;
 }
 
 export interface DriveMediaPhoto {

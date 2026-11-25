@@ -16,6 +16,7 @@ import {
   FileText,
   Users,
   AlertCircle,
+  Award,
 } from 'lucide-react';
 import {
   EXPERIENCES,
@@ -38,7 +39,10 @@ export const ExperienceDetailPage: React.FC = () => {
 
   const experience = EXPERIENCES.find((e) => e.slug === slug);
   const [selectedTier, setSelectedTier] = useState<ComfortTier>(
-    experience?.shumaGroupOffer ? 'mid-range' : 'luxury'
+    experience?.shumaGroupOffer ||
+      (experience?.twoPaxSharingPriceUSD && experience?.packageCode !== 'VERGOUW-SOLO' && experience?.packageCode !== 'T5')
+      ? 'mid-range'
+      : 'luxury'
   );
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
@@ -289,10 +293,21 @@ export const ExperienceDetailPage: React.FC = () => {
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#D99B26] hover:underline"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to All Uganda Experiences</span>
+            <span>Back to All East African Safari Packages</span>
           </Link>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {experience.adminRecommended && (
+              <span className="bg-[#D99B26] text-[#1A1612] font-mono text-xs font-bold px-3 py-1 rounded-md flex items-center gap-1.5 shadow-sm">
+                <Award className="w-3.5 h-3.5" />
+                <span>RECOMMENDED BY ADMINISTRATOR • ENGANDA {experience.packageCode}</span>
+              </span>
+            )}
+            {experience.packageCode && !experience.adminRecommended && (
+              <span className="bg-[#C85A28] text-white font-mono text-xs font-bold px-3 py-1 rounded-md">
+                {experience.operatorName ? `${experience.operatorName} • ` : ''}Code {experience.packageCode}
+              </span>
+            )}
             <span className="bg-[#226B3E] text-[#FAF7F2] font-mono text-xs px-3 py-1 rounded-md border border-white/20 flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-[#D99B26]" />
               <span>{experience.durationDays} {experience.durationDays === 1 ? 'Day' : 'Days'}</span>
@@ -321,6 +336,87 @@ export const ExperienceDetailPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 lg:grid-cols-12 gap-10">
         {/* Left 8 Columns */}
         <div className="lg:col-span-8 space-y-12">
+          {/* Administrator Recommendation & Official 2026 PDF Dossier Card */}
+          {(experience.adminRecommended || experience.pdfBrochureUrl || experience.twoPaxSharingPriceUSD) && (
+            <section
+              className={`rounded-xl overflow-hidden shadow-sm border-2 ${
+                experience.adminRecommended
+                  ? 'bg-[#144225] text-[#FAF7F2] border-[#D99B26]'
+                  : 'bg-[#1A1612] text-[#FAF7F2] border-[#226B3E]'
+              }`}
+            >
+              <div className="px-6 py-4 bg-[#1A1612]/90 border-b border-white/15 flex flex-wrap items-center justify-between gap-3">
+                <div className="space-y-0.5">
+                  <span className="font-mono text-[11px] uppercase tracking-wider text-[#D99B26] font-bold flex items-center gap-1.5">
+                    {experience.adminRecommended ? (
+                      <>
+                        <Award className="w-4 h-4 text-[#D99B26]" />
+                        <span>Enganda Verified • Enganda Safaris 2026 Specialist Expedition</span>
+                      </>
+                    ) : (
+                      <span>
+                        Official 2026 Verified Safari Dossier • {experience.operatorName || 'Enganda Member Collective'}
+                      </span>
+                    )}
+                  </span>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-white">
+                    {experience.packageCode ? `Package ${experience.packageCode}: ` : ''}
+                    Official 2-Pax Sharing &amp; 1-Pax Solo Traveler Tariffs
+                  </h2>
+                </div>
+                {experience.pdfBrochureUrl && (
+                  <a
+                    href={experience.pdfBrochureUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md bg-[#D99B26] hover:bg-[#c5891d] text-[#1A1612] font-mono text-xs font-bold transition-colors"
+                  >
+                    <FileText className="w-4 h-4" />
+                    <span>Open Official PDF Portfolio</span>
+                  </a>
+                )}
+              </div>
+
+              <div className="p-6 space-y-4">
+                {experience.adminRecommendationNote && (
+                  <p className="text-xs sm:text-sm text-[#E4DCCF] leading-relaxed bg-[#1A1612]/60 border border-[#D99B26]/30 rounded-lg p-3.5">
+                    {experience.adminRecommendationNote}
+                  </p>
+                )}
+
+                {experience.twoPaxSharingPriceUSD && experience.soloTravelerPriceUSD && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="bg-[#1A1612]/80 border border-white/15 rounded-lg p-4 space-y-1">
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-[#D99B26] block">
+                        2-Pax Sharing Tariff (Per Person)
+                      </span>
+                      <div className="font-mono text-2xl font-bold text-white">
+                        {formatPrice(experience.twoPaxSharingPriceUSD, currency)}
+                        <span className="text-xs font-normal text-[#E4DCCF]"> / person</span>
+                      </div>
+                      <span className="text-[11px] font-mono text-[#E4DCCF] block">
+                        ~{formatPrice(Math.round(experience.twoPaxSharingPriceUSD / experience.durationDays), currency)}/day • Shared Private 4x4 Land Cruiser &amp; Twin/Double Room
+                      </span>
+                    </div>
+
+                    <div className="bg-[#1A1612]/80 border border-[#D99B26]/40 rounded-lg p-4 space-y-1">
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-[#D99B26] block">
+                        1-Pax Solo Traveler Private Tariff
+                      </span>
+                      <div className="font-mono text-2xl font-bold text-[#D99B26]">
+                        {formatPrice(experience.soloTravelerPriceUSD, currency)}
+                        <span className="text-xs font-normal text-[#E4DCCF]"> / solo total</span>
+                      </div>
+                      <span className="text-[11px] font-mono text-[#E4DCCF] block">
+                        ~{formatPrice(Math.round(experience.soloTravelerPriceUSD / experience.durationDays), currency)}/day • 100% Exclusive Private 4x4 Land Cruiser &amp; Single Room
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+
           {/* Overview */}
           <section className="bg-white border border-[#E4DCCF] rounded-lg p-6 sm:p-8 space-y-4">
             <h2 className="font-serif text-3xl font-bold text-[#1A1612]">
@@ -722,7 +818,7 @@ export const ExperienceDetailPage: React.FC = () => {
                       }
                       className="text-xs font-semibold text-[#C85A28] hover:underline cursor-pointer"
                     >
-                      Request {guide.name.split(' ')[0]} →
+                      Book &amp; Pay with {guide.name.split(' ')[0]} →
                     </button>
                   </div>
                 </div>
@@ -749,7 +845,7 @@ export const ExperienceDetailPage: React.FC = () => {
                 }
                 className="w-full py-3 px-4 rounded-md bg-[#C85A28] hover:bg-[#B04B1D] text-white text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
               >
-                Inquire & Check UWA Dates
+                Pay &amp; Book Package Directly
               </button>
 
               <Link
@@ -773,7 +869,7 @@ export const ExperienceDetailPage: React.FC = () => {
         pricePerPersonUSD={activeBand.perPersonUSD}
         selectedTier={selectedTier}
         experienceSlug={experience.slug}
-        ctaLabel="Inquire About This Experience"
+        ctaLabel="Pay & Book This Package Directly"
       />
     </div>
   );

@@ -4,8 +4,6 @@ import {
   ArrowRight,
   Compass,
   ShieldCheck,
-  FileCheck,
-  MessageCircle,
   MapPin,
   Users,
   Calendar,
@@ -17,6 +15,7 @@ import {
   Plane,
   FileText,
   Globe,
+  Award,
 } from 'lucide-react';
 import {
   GUIDES,
@@ -24,19 +23,17 @@ import {
   HQ_ADDRESS,
   AVAILABILITY_PROMISE,
   SHUMA_COMPANY_INFO,
+  OFFICIAL_PORTFOLIO_PDFS,
   TOUR_OPERATORS,
   SHARED_DRIVE_MEDIA_VAULT,
   SHARED_GOOGLE_DRIVE_FOLDER_URL,
   drivePhotoUrl,
-  getWhatsAppUrl,
 } from '../data/seedData';
 import { GuideCard } from '../components/GuideCard';
 import { ExperienceCard } from '../components/ExperienceCard';
 import { SmartImage } from '../components/SmartImage';
 import { SEO } from '../components/SEO';
-import { SocialStrip } from '../components/SocialLinks';
 import { Journal } from '../components/Journal';
-import { UgandaParksMap } from '../components/UgandaParksMap';
 import { NewsletterSignup } from '../components/NewsletterSignup';
 import { SafariItineraryGenerator } from '../components/SafariItineraryGenerator';
 import { ClientTestimonialsCarousel } from '../components/ClientTestimonialsCarousel';
@@ -55,18 +52,19 @@ export const HomePage: React.FC = () => {
   const featuredGuides = GUIDES.slice(0, 4);
   const featuredExperiences = useMemo(() => {
     const prioritySlugs = [
-      '8-day-tingatinga-signature-primate-lions-nile',
-      '32-day-east-african-grand-safari-2027',
-      '15-day-shuma-uganda-grand-sector',
-      '7-day-shuma-uganda-rwanda-primate-akagera',
+      '9-day-enganda-e5-ankole-cattle-mburo-walking-bwindi',
+      '8-day-enganda-e4-batwa-heritage-lake-mutanda-ishasha-lions',
+      '6-day-enganda-e3-tooro-kingdom-semliki-chimps',
+      '5-day-enganda-e2-nile-adrenaline-sipi-pian-upe',
+      '4-day-enganda-e1-mabamba-shoebill-budongo-birding',
+      '10-day-vergouw-solo-wild-package-uganda-expedition',
+      '12-day-tingatinga-t5-ultimate-luxury-gorillas-nile-kidepo',
+      '10-day-tingatinga-t4-sustainable-uganda-grand-circuit',
+      '7-day-tingatinga-t3-pearl-of-africa-primate-savanna-classic',
     ];
-    const priorityPackages = EXPERIENCES.filter((e) =>
-      prioritySlugs.includes(e.slug)
-    );
-    const classicPackages = EXPERIENCES.filter(
-      (e) => !prioritySlugs.includes(e.slug)
-    ).slice(0, 2);
-    return [...priorityPackages, ...classicPackages];
+    return prioritySlugs
+      .map((slug) => EXPERIENCES.find((e) => e.slug === slug))
+      .filter((e): e is (typeof EXPERIENCES)[number] => Boolean(e));
   }, []);
 
   const [activeSlide, setActiveSlide] = useState(0);
@@ -103,6 +101,14 @@ export const HomePage: React.FC = () => {
 
   const filteredUpcomingPrograms = useMemo(() => {
     if (upcomingCategoryFilter === 'all') return upcomingEvents;
+    if (upcomingCategoryFilter === 'admin-recommended') {
+      return upcomingEvents.filter(
+        (item) =>
+          item.adminRecommended ||
+          item.eventTag.toUpperCase().includes('ENGANDA VERIFIED') ||
+          item.eventTag.toUpperCase().includes('ADMIN RECOMMENDED')
+      );
+    }
     return upcomingEvents.filter((item) => item.category === upcomingCategoryFilter);
   }, [upcomingEvents, upcomingCategoryFilter]);
 
@@ -124,368 +130,376 @@ export const HomePage: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-[#144225]/95 via-[#226B3E]/85 to-[#144225]/80" />
         </div>
 
-        <div className="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-10 lg:py-14 w-full min-w-0">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
-            {/* Left 5 Columns: Editorial Headline, Manifesto, CTAs & Social Connections */}
-            <div className="lg:col-span-5 flex flex-col justify-between space-y-5 bg-[#144225]/60 backdrop-blur-xs border border-white/15 rounded-xl p-5 sm:p-7 shadow-xl min-w-0">
-              <div className="space-y-4">
-                <div className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-[#D99B26] font-semibold max-w-full">
-                  <Compass className="w-4 h-4 text-[#D99B26] shrink-0" />
-                  <span className="break-words">{t.home.heroBadge}</span>
-                </div>
-
-                <h1 className="font-serif text-3xl sm:text-4xl xl:text-[44px] font-bold leading-[1.1] tracking-tight text-white break-words">
-                  {t.home.heroTitle}
-                </h1>
-
-                <p className="text-sm sm:text-base text-[#E4DCCF] leading-relaxed break-words">
-                  {t.home.heroParagraph}
-                </p>
-
-                {/* Primary Conversion CTAs — Strictly bounded inside column */}
-                <div className="pt-1 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <Link
-                    to="/guides"
-                    className="inline-flex items-center justify-center gap-2 bg-[#C85A28] hover:bg-[#B04B1D] text-white font-semibold text-xs sm:text-sm px-4 py-3 rounded-md transition-colors shadow-md text-center"
-                  >
-                    <span>{t.home.ctaMeetGuides}</span>
-                    <ArrowRight className="w-4 h-4 shrink-0" />
-                  </Link>
-
-                  <Link
-                    to="/trip-planner"
-                    className="inline-flex items-center justify-center gap-2 bg-[#FAF7F2] hover:bg-[#F3ECE1] text-[#226B3E] font-semibold text-xs sm:text-sm px-4 py-3 rounded-md transition-colors text-center"
-                  >
-                    <span>{t.home.ctaPlanSafari}</span>
-                    <ArrowRight className="w-4 h-4 shrink-0" />
-                  </Link>
-
-                  <a
-                    href={getWhatsAppUrl()}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="sm:col-span-2 inline-flex items-center justify-center gap-2 bg-[#1A1612]/80 hover:bg-[#1A1612] text-[#FAF7F2] border border-white/25 font-medium text-xs sm:text-sm px-4 py-2.5 rounded-md transition-colors text-center"
-                  >
-                    <MessageCircle className="w-4 h-4 text-[#D99B26] shrink-0" />
-                    <span>{t.home.ctaWhatsappDesk}</span>
-                  </a>
-                </div>
+        <div className="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-8 w-full min-w-0 space-y-5">
+          {/* Compact Standalone Hero Manifesto Frame Directly Above Confirmed Packages & Events Carousel */}
+          <div className="bg-[#144225]/80 backdrop-blur-xs border border-white/15 rounded-xl px-5 py-4 sm:px-6 sm:py-5 shadow-xl flex flex-col lg:flex-row lg:items-center justify-between gap-4 min-w-0">
+            <div className="space-y-1.5 max-w-4xl min-w-0">
+              <div className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-[#D99B26] font-semibold">
+                <Compass className="w-3.5 h-3.5 text-[#D99B26] shrink-0" />
+                <span>{t.home.heroBadge}</span>
               </div>
-
-              {/* Bottom Aligned Trust Credentials & Social Connections */}
-              <div className="space-y-4 pt-4 border-t border-white/15">
-                <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-2 text-xs text-[#D6CEC2]">
-                  <div className="flex items-center gap-2.5">
-                    <ShieldCheck className="w-4 h-4 text-[#D99B26] shrink-0" />
-                    <span className="break-words">{t.home.trustUtb}</span>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <FileCheck className="w-4 h-4 text-[#D99B26] shrink-0" />
-                    <span className="break-words">{t.home.trustUwa}</span>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <MapPin className="w-4 h-4 text-[#D99B26] shrink-0" />
-                    <span className="break-words">{t.home.trustHq}</span>
-                  </div>
-                </div>
-
-                {/* Direct Social Media Connections */}
-                <div className="pt-3 border-t border-white/15 flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-mono text-[11px] uppercase tracking-wider text-[#D99B26] font-semibold">
-                    {t.home.followDispatches}
-                  </span>
-                  <SocialStrip variant="hero-dark" showLabels={true} />
-                </div>
-              </div>
+              <h1 className="font-serif text-xl sm:text-2xl lg:text-3xl font-bold leading-snug tracking-tight text-white break-words">
+                {t.home.heroTitle}
+              </h1>
+              <p className="text-xs sm:text-sm text-[#E4DCCF] leading-relaxed break-words">
+                {t.home.heroParagraph}
+              </p>
             </div>
 
-            {/* Right 7 Columns: Confirmed Packages & Events Carousel (Refined so all tabs & words fit strictly inside boundaries) */}
-            {currentPackage && (
-              <div
-                className="lg:col-span-7 w-full min-w-0 flex flex-col"
-                onMouseEnter={() => setCarouselPaused(true)}
-                onMouseLeave={() => setCarouselPaused(false)}
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0">
+              <Link
+                to="/guides"
+                className="inline-flex items-center justify-center gap-2 bg-[#C85A28] hover:bg-[#B04B1D] text-white font-semibold text-xs sm:text-sm px-4 py-2.5 rounded-md transition-colors shadow-md whitespace-nowrap"
               >
-                <div className="bg-[#144225]/95 backdrop-blur-md border border-[#D99B26]/40 rounded-xl overflow-hidden shadow-2xl flex-1 flex flex-col justify-between min-h-[450px] sm:min-h-[500px] lg:min-h-[550px] min-w-0">
-                  {/* 1. Carousel Top Header Bar */}
-                  <div className="px-4 sm:px-5 py-3 bg-[#1A1612]/85 border-b border-white/10 flex flex-wrap items-center justify-between gap-2 min-w-0">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Sparkles className="w-4 h-4 text-[#D99B26] shrink-0" />
-                      <span className="font-mono text-xs uppercase tracking-wider text-[#FAF7F2] font-semibold truncate">
-                        {t.home.confirmedPackagesHeader}
-                      </span>
-                    </div>
+                <span>{t.home.ctaMeetGuides}</span>
+                <ArrowRight className="w-4 h-4 shrink-0" />
+              </Link>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Link
-                        to="/portals/admin?section=events-manager"
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#226B3E] hover:bg-[#2E8550] text-[#D99B26] border border-[#D99B26]/40 font-mono text-[10px] font-semibold transition-colors"
+              <Link
+                to="/trip-planner"
+                className="inline-flex items-center justify-center gap-2 bg-[#FAF7F2] hover:bg-[#F3ECE1] text-[#226B3E] font-semibold text-xs sm:text-sm px-4 py-2.5 rounded-md transition-colors whitespace-nowrap"
+              >
+                <span>{t.home.ctaPlanSafari}</span>
+                <ArrowRight className="w-4 h-4 shrink-0" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Full-Width Paid-Tier Featured Carousel (Strict 10-Slot Cap & Crisp White #FFFFFF Theme) */}
+          {currentPackage && (
+            <div
+              className="w-full min-w-0 flex flex-col"
+              onMouseEnter={() => setCarouselPaused(true)}
+              onMouseLeave={() => setCarouselPaused(false)}
+            >
+              <div className="bg-white text-[#1A1612] border-2 border-[#E4DCCF] rounded-2xl overflow-hidden shadow-2xl flex-1 flex flex-col justify-between min-w-0">
+                {/* 1. Carousel Top Header Bar (White Theme with High-Contrast Dark Typography) */}
+                <div className="px-4 sm:px-6 py-3 bg-white border-b border-[#E4DCCF] flex flex-wrap items-center justify-between gap-2.5 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2.5 min-w-0">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#1A1612] text-[#D99B26] font-mono text-[11px] uppercase tracking-wider font-bold shrink-0">
+                      <Sparkles className="w-3.5 h-3.5 text-[#D99B26] shrink-0" />
+                      <span>{t.home.confirmedPackagesHeader}</span>
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#FAF7F2] border border-[#E4DCCF] text-[#226B3E] font-mono text-[10px] font-bold uppercase tracking-wider">
+                      <ShieldCheck className="w-3.5 h-3.5 text-[#226B3E] shrink-0" />
+                      <span>Paid-Tier Featured ({carouselEvents.length}/10 Active Slots Cap)</span>
+                    </span>
+                    <span className="hidden xl:inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#FAF7F2] border border-[#E4DCCF] text-[#5A5248] font-mono text-[10px]">
+                      <span>Standby Rotation Queue: 011. Shoebill &amp; Chimps</span>
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Link
+                      to="/portals/admin?section=events-manager"
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-[#FAF7F2] hover:bg-[#F3ECE1] text-[#1A1612] border border-[#E4DCCF] font-mono text-[10px] font-bold transition-colors"
+                    >
+                      <Plus className="w-3 h-3 text-[#C85A28]" />
+                      <span>Admin: Manage 10 Slots</span>
+                    </Link>
+
+                    <span className="font-mono text-xs font-bold text-[#1A1612] bg-[#FAF7F2] border border-[#E4DCCF] px-2.5 py-1 rounded-md tabular-nums">
+                      0{safeSlideIndex + 1} / 0{carouselEvents.length}
+                    </span>
+
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={handlePrevSlide}
+                        aria-label="Previous confirmed package or event"
+                        className="p-1.5 rounded-md bg-white hover:bg-[#FAF7F2] text-[#1A1612] border border-[#E4DCCF] transition-colors cursor-pointer shadow-2xs"
                       >
-                        <Plus className="w-3 h-3" />
-                        <span>Admin: Load Event</span>
-                      </Link>
-
-                      <span className="font-mono text-xs text-[#D99B26] tabular-nums">
-                        0{safeSlideIndex + 1} / 0{carouselEvents.length}
-                      </span>
-
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={handlePrevSlide}
-                          aria-label="Previous confirmed package or event"
-                          className="p-1.5 rounded-md bg-[#226B3E] hover:bg-[#2E8550] text-[#FAF7F2] border border-white/15 transition-colors cursor-pointer"
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleNextSlide}
-                          aria-label="Next confirmed package or event"
-                          className="p-1.5 rounded-md bg-[#226B3E] hover:bg-[#2E8550] text-[#FAF7F2] border border-white/15 transition-colors cursor-pointer"
-                        >
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
-                      </div>
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleNextSlide}
+                        aria-label="Next confirmed package or event"
+                        className="p-1.5 rounded-md bg-white hover:bg-[#FAF7F2] text-[#1A1612] border border-[#E4DCCF] transition-colors cursor-pointer shadow-2xs"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
+                </div>
 
-                  {/* 2. Dedicated Wrapping Event Selector Tab Bar (Fits cleanly without overflowing) */}
-                  <div
-                    role="tablist"
-                    aria-label="Confirmed safari packages and events"
-                    className="px-4 sm:px-5 py-2.5 bg-[#1B5632] border-b border-white/10 flex flex-wrap items-center gap-1.5 min-w-0"
-                  >
-                    {carouselEvents.map((pkg, idx) => {
-                      const isCurrent = idx === safeSlideIndex;
-                      const label =
-                        pkg.shortTabLabel ||
-                        (pkg.title.length > 24
-                          ? `${pkg.title.slice(0, 22)}…`
-                          : pkg.title);
-                      return (
-                        <button
-                          key={pkg.id}
-                          type="button"
-                          role="tab"
-                          aria-selected={isCurrent}
-                          onClick={() => setActiveSlide(idx)}
-                          className={`px-3 py-1.5 rounded text-xs font-mono transition-colors cursor-pointer max-w-full truncate ${
-                            isCurrent
-                              ? 'bg-[#C85A28] text-white font-semibold shadow-xs'
-                              : 'bg-[#144225]/80 text-[#D6CEC2] hover:text-white hover:bg-[#226B3E]'
-                          }`}
-                        >
-                          0{idx + 1}. {label}
-                        </button>
-                      );
-                    })}
-                  </div>
+                {/* 2. Crisp White (#FFFFFF) 10-Item Paid-Tier Selector Tab Bar */}
+                <div
+                  role="tablist"
+                  aria-label="Paid-tier featured safari packages and events (10 active slots)"
+                  className="px-4 sm:px-6 py-2.5 bg-white border-b border-[#E4DCCF] flex flex-wrap items-center gap-1.5 min-w-0"
+                >
+                  {carouselEvents.slice(0, 10).map((pkg, idx) => {
+                    const isCurrent = idx === safeSlideIndex;
+                    const label =
+                      pkg.shortTabLabel ||
+                      (pkg.title.length > 24
+                        ? `${pkg.title.slice(0, 22)}…`
+                        : pkg.title);
+                    const slotPrefix = `0${idx + 1}.`;
+                    return (
+                      <button
+                        key={pkg.id}
+                        type="button"
+                        role="tab"
+                        aria-selected={isCurrent}
+                        onClick={() => setActiveSlide(idx)}
+                        className={`px-3 py-1.5 rounded-md text-xs font-mono transition-all cursor-pointer max-w-full truncate border ${
+                          isCurrent
+                            ? 'bg-[#1A1612] text-white border-[#1A1612] font-bold shadow-xs'
+                            : 'bg-white text-[#1A1612] border-[#E4DCCF] hover:bg-[#FAF7F2] hover:border-[#226B3E]'
+                        }`}
+                      >
+                        {slotPrefix} {label}
+                      </button>
+                    );
+                  })}
+                </div>
 
-                  {/* 3. Balanced 6/6 Split Slide Content (All text wraps strictly inside bounds) */}
-                  <div className="grid grid-cols-1 md:grid-cols-12 flex-1 min-h-[360px] sm:min-h-[410px] min-w-0">
-                    {/* Active Slide Media Banner (6 cols on md+) */}
-                    <div className="relative md:col-span-6 min-h-[280px] sm:min-h-[340px] md:min-h-full overflow-hidden flex flex-col justify-between p-4 sm:p-5 min-w-0">
-                      <SmartImage
-                        src={currentPackage.heroImage}
-                        alt={currentPackage.title}
-                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#144225] via-[#144225]/50 to-[#1A1612]/45" />
+                {/* 3. Balanced 6/6 Split Slide Content on Crisp White (#FFFFFF) Surface */}
+                <div className="grid grid-cols-1 md:grid-cols-12 flex-1 min-h-[340px] sm:min-h-[370px] bg-white min-w-0">
+                  {/* Active Slide Media Banner (6 cols on md+) */}
+                  <div className="relative md:col-span-6 min-h-[260px] sm:min-h-[320px] md:min-h-full overflow-hidden flex flex-col justify-between p-4 sm:p-6 min-w-0 bg-[#1A1612]">
+                    <SmartImage
+                      src={currentPackage.heroImage}
+                      alt={currentPackage.title}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1A1612]/95 via-[#1A1612]/45 to-[#1A1612]/35" />
 
-                      {/* Top Status Row */}
-                      <div className="relative z-10 flex flex-wrap items-center justify-between gap-1.5 min-w-0">
-                        <span className="px-2.5 py-1 rounded bg-[#C85A28] text-white font-mono text-[10px] uppercase tracking-wider font-semibold shadow break-words max-w-full">
+                    {/* Top Status & Operator Logo Row */}
+                    <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="px-2.5 py-1 rounded bg-[#C85A28] text-white font-mono text-[10px] uppercase tracking-wider font-bold shadow break-words max-w-full">
                           {currentPackage.eventTag}
                         </span>
-                        <span className="px-2.5 py-1 rounded bg-[#1A1612]/90 border border-[#D99B26]/50 text-[#D99B26] font-mono text-[11px] font-medium tabular-nums">
-                          {currentPackage.statusLabel}
-                        </span>
-                      </div>
-
-                      {/* Bottom Media Overlay: Date, Title & 2x2 Compact Slide Switcher */}
-                      <div className="relative z-10 space-y-3 pt-8 min-w-0">
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-mono text-[#E4DCCF] mb-1.5">
-                            <span className="inline-flex items-center gap-1 text-[#D99B26] font-semibold tabular-nums">
-                              <Calendar className="w-3.5 h-3.5 shrink-0" />
-                              <span>{currentPackage.dateWindow}</span>
+                        {currentPackage.operatorLogoUrl && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#1A1612]/95 border border-[#D99B26]/60 shadow">
+                            <img
+                              src={currentPackage.operatorLogoUrl}
+                              alt={currentPackage.operatorName || 'Operator Logo'}
+                              className="h-5 w-auto object-contain"
+                            />
+                            <span className="font-mono text-[10px] font-bold text-[#D99B26]">
+                              {currentPackage.operatorName}
                             </span>
-                            <span aria-hidden="true">·</span>
-                            <span>{currentPackage.durationLabel}</span>
-                          </div>
-                          <h2 className="font-serif text-xl sm:text-2xl xl:text-3xl font-bold text-white leading-snug break-words">
-                            {currentPackage.title}
-                          </h2>
-                          <div className="text-xs font-mono text-[#D6CEC2] mt-1 flex items-center gap-1.5">
-                            <MapPin className="w-3.5 h-3.5 text-[#D99B26] shrink-0" />
-                            <span className="break-words">{currentPackage.location}</span>
-                          </div>
-                        </div>
-
-                        {/* 2-Column Preview Grid (Never clips text) */}
-                        <div className="grid grid-cols-2 gap-1.5 pt-2 border-t border-white/15">
-                          {carouselEvents.slice(0, 4).map((pkg, idx) => {
-                            const active = idx === safeSlideIndex;
-                            return (
-                              <button
-                                key={pkg.id}
-                                type="button"
-                                onClick={() => setActiveSlide(idx)}
-                                className={`text-left rounded-md border transition-all cursor-pointer px-2.5 py-1.5 min-w-0 ${
-                                  active
-                                    ? 'bg-[#1A1612]/90 border-[#D99B26] shadow-xs'
-                                    : 'bg-[#1A1612]/55 border-white/15 hover:border-white/40 opacity-85 hover:opacity-100'
-                                }`}
-                              >
-                                <div className="font-mono text-[10px] text-[#D99B26] truncate">
-                                  0{idx + 1} · {pkg.dateWindow}
-                                </div>
-                                <div className="text-[11px] font-semibold text-white truncate">
-                                  {pkg.shortTabLabel || pkg.title}
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
+                          </span>
+                        )}
                       </div>
+                      <span className="px-2.5 py-1 rounded bg-white text-[#1A1612] font-mono text-[11px] font-bold tabular-nums shadow-xs">
+                        {currentPackage.statusLabel}
+                      </span>
                     </div>
 
-                    {/* Active Slide Body (6 cols on md+, all words wrapped inside bounds) */}
-                    <div className="md:col-span-6 p-5 sm:p-6 flex flex-col justify-between space-y-4 bg-[#144225]/95 border-t md:border-t-0 md:border-l border-white/10 min-w-0">
-                      <div className="space-y-4 min-w-0">
-                        <div>
-                          <span className="font-mono text-[10px] uppercase tracking-wider text-[#D99B26] font-semibold">
-                            {currentPackage.category}
+                    {/* Bottom Media Overlay: Date, Title, UTB/UWA Badges & 4-Slot Quick Preview */}
+                    <div className="relative z-10 space-y-2.5 pt-6 min-w-0">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-mono text-[#E4DCCF] mb-1">
+                          <span className="inline-flex items-center gap-1 text-[#D99B26] font-semibold tabular-nums">
+                            <Calendar className="w-3.5 h-3.5 shrink-0" />
+                            <span>{currentPackage.dateWindow}</span>
                           </span>
-                          <p className="text-xs sm:text-sm text-[#E4DCCF] leading-relaxed mt-1 break-words">
-                            {currentPackage.subtitle}
-                          </p>
+                          <span aria-hidden="true">·</span>
+                          <span>{currentPackage.durationLabel}</span>
                         </div>
-
-                        {/* Highlights List */}
-                        <div className="space-y-2 pt-2 border-t border-white/10 min-w-0">
-                          <div className="font-mono text-[10px] uppercase tracking-wider text-[#D6CEC2]">
-                            Included Permits &amp; Expedition Highlights
-                          </div>
-                          <ul className="space-y-2">
-                            {currentPackage.highlights.map((item) => (
-                              <li
-                                key={item}
-                                className="flex items-start gap-2 text-xs text-[#FAF7F2] leading-relaxed min-w-0"
-                              >
-                                <CheckCircle2 className="w-3.5 h-3.5 text-[#D99B26] shrink-0 mt-0.5" />
-                                <span className="break-words">{item}</span>
-                              </li>
-                            ))}
-                          </ul>
+                        <h2 className="font-serif text-xl sm:text-2xl xl:text-3xl font-bold text-white leading-snug break-words">
+                          {currentPackage.title}
+                        </h2>
+                        <div className="text-xs font-mono text-[#E4DCCF] mt-1 flex flex-wrap items-center gap-2">
+                          <span className="inline-flex items-center gap-1">
+                            <MapPin className="w-3.5 h-3.5 text-[#D99B26] shrink-0" />
+                            <span className="break-words">{currentPackage.location}</span>
+                          </span>
                         </div>
                       </div>
 
-                      <div className="space-y-3.5 pt-3 border-t border-white/15 min-w-0">
-                        {/* Lead Guide + Price Row (Wraps cleanly so price never collides) */}
-                        <div className="flex flex-wrap items-center justify-between gap-2.5 bg-[#1B5632]/70 p-3 rounded-lg border border-white/10 min-w-0">
-                          {currentPackageGuide ? (
-                            <Link
-                              to={`/guides/${currentPackageGuide.slug}`}
-                              className="flex items-center gap-2.5 group min-w-0"
-                            >
-                              <SmartImage
-                                src={currentPackageGuide.photo}
-                                alt={currentPackageGuide.name}
-                                className="w-10 h-10 rounded-full object-cover border-2 border-[#D99B26] shrink-0"
-                              />
-                              <div className="min-w-0">
-                                <div className="text-[10px] font-mono uppercase text-[#D99B26]">
-                                  {t.home.ledBySpecialist}
-                                </div>
-                                <div className="text-xs sm:text-sm font-semibold text-white group-hover:text-[#D99B26] transition-colors break-words">
-                                  {currentPackageGuide.name}
-                                </div>
-                              </div>
-                            </Link>
-                          ) : null}
-
-                          <div className="text-left sm:text-right">
-                            <div className="text-[10px] font-mono uppercase text-[#D6CEC2]">
-                              {t.home.confirmedFrom}
-                            </div>
-                            <div className="font-mono text-lg font-bold text-[#D99B26] tabular-nums">
-                              {formatPrice(currentPackage.pricePerPersonUSD, currency)}{' '}
-                              <span className="text-[11px] font-normal text-[#D6CEC2]">
-                                {t.home.perPerson}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Action Buttons (Responsive grid so words never go out of bounds) */}
-                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              openInquiryModal({
-                                experienceSlug: currentPackage.experienceSlug,
-                                guideSlug: currentPackage.leadGuideSlug,
-                                defaultNotes: `Requesting confirmed package/event: ${currentPackage.title} (${currentPackage.dateWindow}) led by ${currentPackageGuide?.name || 'Enganda Specialist'}.`,
-                              })
-                            }
-                            className={`${
-                              currentPackage.experienceSlug ? 'sm:col-span-8' : 'sm:col-span-12'
-                            } inline-flex items-center justify-center gap-2 bg-[#C85A28] hover:bg-[#B04B1D] text-white text-xs sm:text-sm font-semibold px-3.5 py-3 rounded-md transition-colors cursor-pointer shadow-md text-center`}
-                          >
-                            <span>
-                              {t.home.reserveSpot} ({currentPackage.spotsRemaining}{' '}
-                              {t.home.left})
-                            </span>
-                            <ArrowRight className="w-4 h-4 shrink-0" />
-                          </button>
-
-                          {currentPackage.experienceSlug && (
-                            <Link
-                              to={`/experiences/${currentPackage.experienceSlug}`}
-                              className="sm:col-span-4 inline-flex items-center justify-center px-3 py-3 rounded-md bg-[#226B3E] hover:bg-[#287A47] text-[#FAF7F2] border border-white/15 text-xs font-medium transition-colors text-center"
-                            >
-                              {t.home.itineraryBtn}
-                            </Link>
-                          )}
-                        </div>
-
-                        {/* Slide Progress Indicators */}
-                        <div className="flex items-center justify-center gap-1.5 pt-0.5">
-                          {carouselEvents.map((pkg, idx) => (
+                      {/* 4-Column Quick Preview Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-2 border-t border-white/20">
+                        {carouselEvents.slice(0, 4).map((pkg, idx) => {
+                          const active = idx === safeSlideIndex;
+                          return (
                             <button
                               key={pkg.id}
                               type="button"
                               onClick={() => setActiveSlide(idx)}
-                              aria-label={`Go to slide ${idx + 1}: ${pkg.title}`}
-                              className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                                idx === safeSlideIndex
-                                  ? 'w-7 bg-[#D99B26]'
-                                  : 'w-2 bg-white/25 hover:bg-white/50'
+                              className={`text-left rounded-md border transition-all cursor-pointer px-2.5 py-1.5 min-w-0 ${
+                                active
+                                  ? 'bg-white text-[#1A1612] border-white shadow-xs'
+                                  : 'bg-[#1A1612]/70 text-white border-white/20 hover:border-white/50 opacity-90 hover:opacity-100'
                               }`}
-                            />
-                          ))}
+                            >
+                              <div
+                                className={`font-mono text-[10px] font-bold truncate ${
+                                  active ? 'text-[#C85A28]' : 'text-[#D99B26]'
+                                }`}
+                              >
+                                0{idx + 1} · {pkg.dateWindow}
+                              </div>
+                              <div
+                                className={`text-[11px] font-semibold truncate ${
+                                  active ? 'text-[#1A1612]' : 'text-white'
+                                }`}
+                              >
+                                {pkg.shortTabLabel || pkg.title}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Active Slide Body (6 cols on md+ — Crisp White #FFFFFF Surface) */}
+                  <div className="md:col-span-6 p-4 sm:p-6 flex flex-col justify-between space-y-4 bg-white text-[#1A1612] border-t md:border-t-0 md:border-l border-[#E4DCCF] min-w-0">
+                    <div className="space-y-3 min-w-0">
+                      {/* Operator UTB & UWA Verification Badges Row */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-[#E4DCCF]">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#226B3E]/30 text-[#226B3E] font-mono text-[10px] font-bold">
+                            <ShieldCheck className="w-3 h-3 text-[#226B3E]" />
+                            <span>UTB: {currentPackage.utbLicenseNumber || 'UTB/TO/2026/0102'}</span>
+                          </span>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#C85A28]/30 text-[#C85A28] font-mono text-[10px] font-bold">
+                            <Award className="w-3 h-3 text-[#C85A28]" />
+                            <span>UWA: {currentPackage.uwaAccreditationId || 'UWA-REG-1104-UG'}</span>
+                          </span>
                         </div>
+                        <span className="font-mono text-[10px] uppercase tracking-wider text-[#5A5248] font-bold">
+                          Slot 0{safeSlideIndex + 1} · {currentPackage.operatorName || 'Enganda Safaris'}
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="font-mono text-[10px] uppercase tracking-wider text-[#C85A28] font-bold">
+                          {currentPackage.category}
+                        </span>
+                        <p className="text-xs sm:text-sm text-[#1A1612] leading-relaxed mt-1 break-words font-normal">
+                          {currentPackage.subtitle}
+                        </p>
+                      </div>
+
+                      {/* Highlights List */}
+                      <div className="space-y-1.5 pt-2 border-t border-[#E4DCCF] min-w-0">
+                        <div className="font-mono text-[10px] uppercase tracking-wider text-[#5A5248] font-bold">
+                          Included UWA Permits &amp; Expedition Highlights
+                        </div>
+                        <ul className="space-y-1.5">
+                          {currentPackage.highlights.map((item) => (
+                            <li
+                              key={item}
+                              className="flex items-start gap-2 text-xs text-[#1A1612] leading-relaxed min-w-0"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5 text-[#226B3E] shrink-0 mt-0.5" />
+                              <span className="break-words">{item}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 pt-3 border-t border-[#E4DCCF] min-w-0">
+                      {/* Lead Guide + Price Row */}
+                      <div className="flex flex-wrap items-center justify-between gap-2.5 bg-[#FAF7F2] p-3 rounded-xl border border-[#E4DCCF] min-w-0">
+                        {currentPackageGuide ? (
+                          <Link
+                            to={`/guides/${currentPackageGuide.slug}`}
+                            className="flex items-center gap-2.5 group min-w-0"
+                          >
+                            <SmartImage
+                              src={currentPackageGuide.photo}
+                              alt={currentPackageGuide.name}
+                              className="w-10 h-10 rounded-full object-cover border-2 border-[#226B3E] shrink-0"
+                            />
+                            <div className="min-w-0">
+                              <div className="text-[10px] font-mono uppercase text-[#226B3E] font-bold">
+                                {t.home.ledBySpecialist}
+                              </div>
+                              <div className="text-xs sm:text-sm font-bold text-[#1A1612] group-hover:text-[#C85A28] transition-colors break-words">
+                                {currentPackageGuide.name}
+                              </div>
+                            </div>
+                          </Link>
+                        ) : null}
+
+                        <div className="text-left sm:text-right">
+                          <div className="text-[10px] font-mono uppercase text-[#5A5248] font-semibold">
+                            {t.home.confirmedFrom}
+                          </div>
+                          <div className="font-mono text-lg sm:text-xl font-bold text-[#1A1612] tabular-nums">
+                            {formatPrice(currentPackage.pricePerPersonUSD, currency)}{' '}
+                            <span className="text-[11px] font-normal text-[#5A5248]">
+                              {t.home.perPerson}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            openInquiryModal({
+                              experienceSlug: currentPackage.experienceSlug,
+                              guideSlug: currentPackage.leadGuideSlug,
+                              defaultNotes: `Direct booking for confirmed package/event: ${currentPackage.title} (${currentPackage.dateWindow}) led by ${currentPackageGuide?.name || 'Enganda Specialist'}.`,
+                            })
+                          }
+                          className={`${
+                            currentPackage.experienceSlug ? 'sm:col-span-8' : 'sm:col-span-12'
+                          } inline-flex items-center justify-center gap-2 bg-[#C85A28] hover:bg-[#B04B1D] text-white text-xs sm:text-sm font-bold px-3.5 py-2.5 rounded-lg transition-colors cursor-pointer shadow-sm text-center`}
+                        >
+                          <span>
+                            {t.home.reserveSpot} ({currentPackage.spotsRemaining}{' '}
+                            {t.home.left})
+                          </span>
+                          <ArrowRight className="w-4 h-4 shrink-0" />
+                        </button>
+
+                        {currentPackage.experienceSlug && (
+                          <Link
+                            to={`/experiences/${currentPackage.experienceSlug}`}
+                            className="sm:col-span-4 inline-flex items-center justify-center px-3 py-2.5 rounded-lg bg-[#1A1612] hover:bg-[#226B3E] text-white text-xs font-semibold transition-colors text-center"
+                          >
+                            {t.home.itineraryBtn}
+                          </Link>
+                        )}
+                      </div>
+
+                      {/* Slide Progress Indicators (10 Slots) */}
+                      <div className="flex items-center justify-center gap-1.5 pt-0.5">
+                        {carouselEvents.slice(0, 10).map((pkg, idx) => (
+                          <button
+                            key={pkg.id}
+                            type="button"
+                            onClick={() => setActiveSlide(idx)}
+                            aria-label={`Go to slide ${idx + 1}: ${pkg.title}`}
+                            className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                              idx === safeSlideIndex
+                                ? 'w-7 bg-[#1A1612]'
+                                : 'w-2 bg-[#E4DCCF] hover:bg-[#5A5248]'
+                            }`}
+                          />
+                        ))}
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
-          {/* Quick Safari Discovery Bar Beneath Hero Grid */}
-          <div className="mt-8 pt-6 border-t border-white/15 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Quick Safari Discovery Bar Beneath Carousel */}
+          <div className="pt-4 border-t border-white/15 grid grid-cols-1 sm:grid-cols-3 gap-4">
             <a
               href="#upcoming-safari-programs"
-              className="group bg-[#144225]/85 hover:bg-[#1A1612]/85 border border-white/15 hover:border-[#D99B26]/60 rounded-lg p-4 flex items-center justify-between gap-3 transition-all"
+              className="group bg-[#144225]/85 hover:bg-[#1A1612]/85 border border-white/15 hover:border-[#D99B26]/60 rounded-lg p-3.5 flex items-center justify-between gap-3 transition-all"
             >
               <div className="min-w-0">
                 <div className="font-mono text-[11px] uppercase tracking-wider text-[#D99B26]">
                   01 · Scheduled Departures
                 </div>
-                <div className="font-serif text-lg font-bold text-white group-hover:text-[#D99B26] transition-colors truncate">
+                <div className="font-serif text-base sm:text-lg font-bold text-white group-hover:text-[#D99B26] transition-colors truncate">
                   Upcoming Programs ({upcomingEvents.length})
                 </div>
               </div>
@@ -493,29 +507,14 @@ export const HomePage: React.FC = () => {
             </a>
 
             <a
-              href="#uganda-parks-map"
-              className="group bg-[#144225]/85 hover:bg-[#1A1612]/85 border border-white/15 hover:border-[#D99B26]/60 rounded-lg p-4 flex items-center justify-between gap-3 transition-all"
-            >
-              <div className="min-w-0">
-                <div className="font-mono text-[11px] uppercase tracking-wider text-[#D99B26]">
-                  02 · Interactive Route Map
-                </div>
-                <div className="font-serif text-lg font-bold text-white group-hover:text-[#D99B26] transition-colors truncate">
-                  Explore National Parks &amp; Circuits
-                </div>
-              </div>
-              <ArrowRight className="w-4 h-4 text-[#D99B26] shrink-0 group-hover:translate-x-1 transition-transform" />
-            </a>
-
-            <a
               href="#safari-itinerary-generator"
-              className="group bg-[#144225]/85 hover:bg-[#1A1612]/85 border border-white/15 hover:border-[#D99B26]/60 rounded-lg p-4 flex items-center justify-between gap-3 transition-all"
+              className="group bg-[#144225]/85 hover:bg-[#1A1612]/85 border border-white/15 hover:border-[#D99B26]/60 rounded-lg p-3.5 flex items-center justify-between gap-3 transition-all"
             >
               <div className="min-w-0">
                 <div className="font-mono text-[11px] uppercase tracking-wider text-[#D99B26]">
-                  03 · Custom Route Builder
+                  02 · Custom Route Builder
                 </div>
-                <div className="font-serif text-lg font-bold text-white group-hover:text-[#D99B26] transition-colors truncate">
+                <div className="font-serif text-base sm:text-lg font-bold text-white group-hover:text-[#D99B26] transition-colors truncate">
                   Build &amp; Save Your Safari Itinerary
                 </div>
               </div>
@@ -524,13 +523,13 @@ export const HomePage: React.FC = () => {
 
             <Link
               to="/portals/admin?section=events-manager"
-              className="group bg-[#144225]/85 hover:bg-[#1A1612]/85 border border-white/15 hover:border-[#D99B26]/60 rounded-lg p-4 flex items-center justify-between gap-3 transition-all"
+              className="group bg-[#144225]/85 hover:bg-[#1A1612]/85 border border-white/15 hover:border-[#D99B26]/60 rounded-lg p-3.5 flex items-center justify-between gap-3 transition-all"
             >
               <div className="min-w-0">
                 <div className="font-mono text-[11px] uppercase tracking-wider text-[#D99B26]">
-                  04 · Admin &amp; Role Portals
+                  03 · Admin &amp; Role Portals
                 </div>
-                <div className="font-serif text-lg font-bold text-white group-hover:text-[#D99B26] transition-colors truncate">
+                <div className="font-serif text-base sm:text-lg font-bold text-white group-hover:text-[#D99B26] transition-colors truncate">
                   Load Events, Permits &amp; Portals
                 </div>
               </div>
@@ -582,6 +581,7 @@ export const HomePage: React.FC = () => {
           <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-[#F3ECE1] border border-[#E4DCCF] rounded-lg w-fit">
             {[
               { id: 'all', label: `All Upcoming (${upcomingEvents.length})` },
+              { id: 'admin-recommended', label: '★ Enganda Verified (Enganda E1–E5)' },
               { id: 'Seasonal Migration & Savanna', label: 'Savanna & Big Game' },
               { id: 'Cultural & Music Event', label: 'Cultural, Highlands & Events' },
               { id: 'Guaranteed Primate Departure', label: 'Primate Departures' },
@@ -593,7 +593,9 @@ export const HomePage: React.FC = () => {
                 onClick={() => setUpcomingCategoryFilter(tab.id)}
                 className={`px-3.5 py-2 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
                   upcomingCategoryFilter === tab.id
-                    ? 'bg-[#226B3E] text-white shadow-xs'
+                    ? tab.id === 'admin-recommended'
+                      ? 'bg-[#1A1612] text-[#D99B26] border border-[#D99B26] shadow-xs'
+                      : 'bg-[#226B3E] text-white shadow-xs'
                     : 'text-[#5A5248] hover:text-[#1A1612] hover:bg-[#FAF7F2]'
                 }`}
               >
@@ -606,12 +608,39 @@ export const HomePage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredUpcomingPrograms.map((prog) => {
               const progGuide = GUIDES.find((g) => g.slug === prog.leadGuideSlug);
+              const isAdminRec =
+                prog.adminRecommended ||
+                prog.eventTag.toUpperCase().includes('ENGANDA VERIFIED') ||
+                prog.eventTag.toUpperCase().includes('ADMIN RECOMMENDED');
               return (
                 <article
                   key={prog.id}
-                  className="bg-white border border-[#E4DCCF] hover:border-[#226B3E] rounded-xl overflow-hidden flex flex-col justify-between transition-all shadow-xs"
+                  className={`bg-white rounded-xl overflow-hidden flex flex-col justify-between transition-all shadow-xs ${
+                    isAdminRec
+                      ? 'border-2 border-[#D99B26] ring-1 ring-[#D99B26]/30 hover:border-[#226B3E]'
+                      : 'border border-[#E4DCCF] hover:border-[#226B3E]'
+                  }`}
                 >
                   <div>
+                    {isAdminRec && (
+                      <div className="bg-gradient-to-r from-[#1A1612] via-[#1B4332] to-[#1A1612] text-[#D99B26] px-4 py-1.5 flex items-center justify-between gap-2 border-b border-[#D99B26]/40">
+                        <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider font-bold">
+                          <Award className="w-3.5 h-3.5 text-[#D99B26]" />
+                          <span>Enganda Verified</span>
+                        </span>
+                        {prog.pdfBrochureUrl && (
+                          <a
+                            href={prog.pdfBrochureUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 font-mono text-[10px] font-bold text-white hover:text-[#D99B26]"
+                          >
+                            <FileText className="w-3 h-3" />
+                            <span>Official PDF</span>
+                          </a>
+                        )}
+                      </div>
+                    )}
                     <div className="relative h-56 overflow-hidden bg-[#144225]">
                       <SmartImage
                         src={prog.heroImage}
@@ -621,7 +650,13 @@ export const HomePage: React.FC = () => {
                       <div className="absolute inset-0 bg-gradient-to-t from-[#1A1612]/80 via-[#1A1612]/20 to-transparent" />
 
                       <div className="absolute top-3 left-3 right-3 flex flex-wrap items-center justify-between gap-1.5">
-                        <span className="px-2.5 py-1 rounded bg-[#226B3E] text-white font-mono text-[10px] uppercase tracking-wider font-semibold">
+                        <span
+                          className={`px-2.5 py-1 rounded font-mono text-[10px] uppercase tracking-wider font-semibold ${
+                            isAdminRec
+                              ? 'bg-[#D99B26] text-[#1A1612] font-bold'
+                              : 'bg-[#226B3E] text-white'
+                          }`}
+                        >
                           {prog.eventTag}
                         </span>
                         {prog.placement === 'both' && (
@@ -642,10 +677,30 @@ export const HomePage: React.FC = () => {
                     </div>
 
                     <div className="p-5 sm:p-6 space-y-3">
-                      <div className="flex items-center justify-between gap-2 text-xs font-mono text-[#5A5248]">
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-[#5A5248]">
                         <span className="text-[#226B3E] font-semibold">{prog.category}</span>
                         <span className="text-[#C85A28] font-semibold tabular-nums">
                           {prog.spotsRemaining} spots open
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {prog.operatorLogoUrl && (
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#1A1612] text-[#D99B26] font-mono text-[10px] font-bold">
+                            <img
+                              src={prog.operatorLogoUrl}
+                              alt={prog.operatorName || 'Operator'}
+                              className="h-4 w-auto object-contain"
+                            />
+                            <span>{prog.operatorName}</span>
+                          </span>
+                        )}
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#226B3E]/30 text-[#226B3E] font-mono text-[10px] font-semibold">
+                          <ShieldCheck className="w-3 h-3 text-[#226B3E]" />
+                          <span>{prog.utbLicenseNumber || 'UTB/TO/2026/0102'}</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#C85A28]/30 text-[#C85A28] font-mono text-[10px] font-semibold">
+                          <span>{prog.uwaAccreditationId || 'UWA-REG-1104-UG'}</span>
                         </span>
                       </div>
 
@@ -836,24 +891,42 @@ export const HomePage: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <span className="font-mono text-xs uppercase tracking-wider text-[#C85A28] font-semibold">
-              {t.home.experiencesSectionTag} • Featuring {SHUMA_COMPANY_INFO.name}
+              {t.home.experiencesSectionTag} • ★ Enganda Verified E1–E5, Tingatinga T1–T5 &amp; Vergouw Solo
             </span>
             <h2 className="font-serif text-3xl sm:text-5xl font-bold text-[#1A1612] mt-1">
               {t.home.experiencesSectionTitle}
             </h2>
-            <p className="text-sm sm:text-base text-[#5A5248] mt-2 max-w-2xl">
-              {t.home.experiencesSectionDesc} Explore both our classic Uganda circuits and the flagship <strong>32-Day East African Grand Safari 2027</strong> by <strong>{SHUMA_COMPANY_INFO.name}</strong> (<em>“{SHUMA_COMPANY_INFO.tagline}”</em>).
+            <p className="text-sm sm:text-base text-[#5A5248] mt-2 max-w-3xl">
+              Featuring our <strong>Enganda Verified 2026 Specialist Expeditions (E1–E5)</strong>, the <strong>Tingatinga Safaris 2026 Portfolio (T1–T5)</strong>, <strong>The Vergouw 10-Day Solo Wild Package ($6,912)</strong>, and the <strong>32-Day East African Grand Safari 2027</strong>.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
             <a
-              href={SHUMA_COMPANY_INFO.pdfBrochureUrl}
+              href={OFFICIAL_PORTFOLIO_PDFS.engandaSpecialist2026}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md bg-[#144225] hover:bg-[#1B5632] text-[#D99B26] border border-[#D99B26]/40 text-xs sm:text-sm font-mono font-semibold transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-md bg-[#1A1612] hover:bg-[#144225] text-[#D99B26] border border-[#D99B26] text-xs font-mono font-bold transition-colors"
             >
-              <FileText className="w-4 h-4" />
-              <span>32-Day Shuma PDF Dossier</span>
+              <Award className="w-3.5 h-3.5" />
+              <span>★ Enganda E1–E5 PDF</span>
+            </a>
+            <a
+              href={OFFICIAL_PORTFOLIO_PDFS.tingatingaPortfolio2026}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-md bg-[#144225] hover:bg-[#1B5632] text-[#FAF7F2] border border-white/20 text-xs font-mono font-semibold transition-colors"
+            >
+              <FileText className="w-3.5 h-3.5 text-[#D99B26]" />
+              <span>Tingatinga T1–T5 PDF</span>
+            </a>
+            <a
+              href={OFFICIAL_PORTFOLIO_PDFS.vergouwSoloWild10Day}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-md bg-[#144225] hover:bg-[#1B5632] text-[#FAF7F2] border border-white/20 text-xs font-mono font-semibold transition-colors"
+            >
+              <FileText className="w-3.5 h-3.5 text-[#D99B26]" />
+              <span>Vergouw Solo PDF</span>
             </a>
             <Link
               to="/experiences"
@@ -974,19 +1047,44 @@ export const HomePage: React.FC = () => {
                         {operator.accreditations[0] || 'UTB Licensed'}
                       </span>
                     </div>
-                    <div className="absolute bottom-3 left-3 right-3 text-white">
-                      <h4 className="font-serif text-xl font-bold leading-tight">
-                        {operator.name}
-                      </h4>
-                      <p className="text-[11px] text-[#E4DCCF] italic">
-                        “{operator.tagline}”
-                      </p>
+                    <div className="absolute bottom-3 left-3 right-3 text-white flex items-end justify-between gap-3">
+                      <div className="min-w-0">
+                        <h4 className="font-serif text-xl font-bold leading-tight">
+                          {operator.name}
+                        </h4>
+                        <p className="text-[11px] text-[#E4DCCF] italic">
+                          “{operator.tagline}”
+                        </p>
+                      </div>
+                      {operator.logoUrl && (
+                        <div className="bg-[#1A1612]/95 border border-[#D99B26]/60 rounded-lg px-2.5 py-1.5 shrink-0 shadow-md">
+                          <img
+                            src={operator.logoUrl}
+                            alt={`${operator.name} Official Logo`}
+                            className="h-9 w-auto object-contain"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   <div className="p-4 sm:p-5 space-y-3">
-                    <div className="text-[11px] font-mono text-[#226B3E] font-semibold">
-                      HQ: {operator.headquarters}
+                    <div className="flex flex-wrap items-center justify-between gap-1.5">
+                      <div className="text-[11px] font-mono text-[#226B3E] font-semibold">
+                        HQ: {operator.headquarters}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1">
+                        {operator.utbLicenseNumber && (
+                          <span className="px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#226B3E]/30 font-mono text-[10px] font-bold text-[#226B3E]">
+                            {operator.utbLicenseNumber}
+                          </span>
+                        )}
+                        {operator.uwaAccreditationId && (
+                          <span className="px-2 py-0.5 rounded bg-[#FAF7F2] border border-[#C85A28]/30 font-mono text-[10px] font-bold text-[#C85A28]">
+                            {operator.uwaAccreditationId}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <p className="text-xs text-[#5A5248] leading-relaxed">
                       {operator.description}
@@ -1008,14 +1106,18 @@ export const HomePage: React.FC = () => {
                   <Link
                     to={
                       operator.id === 'op-tingatinga-safaris'
-                        ? '/experiences/8-day-tingatinga-signature-primate-lions-nile'
+                        ? '/tingatinga-safaris'
                         : operator.id === 'op-shuma-africa-safaris'
                         ? '/experiences/32-day-east-african-grand-safari-2027'
                         : '/experiences/7-day-best-of-uganda'
                     }
                     className="text-xs font-semibold text-[#226B3E] hover:text-[#C85A28] inline-flex items-center gap-1"
                   >
-                    <span>View Signature Package</span>
+                    <span>
+                      {operator.id === 'op-tingatinga-safaris'
+                        ? 'Open Tingatinga Safaris Showcase'
+                        : 'View Signature Package'}
+                    </span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                   <button
@@ -1038,6 +1140,103 @@ export const HomePage: React.FC = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Official Service Provider Hotel Partner Spotlight: Igongo Country Hotel & Cultural Centre + Rooms & Drivers Fleet */}
+        <div className="pt-8 border-t border-[#E4DCCF] space-y-6">
+          <div className="bg-white border-2 border-[#D99B26]/80 rounded-2xl overflow-hidden shadow-sm">
+            <div className="bg-[#1A1612] text-white px-6 py-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[#D99B26]/30">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="bg-white rounded-xl px-3.5 py-2 shrink-0 self-start sm:self-auto">
+                  <img
+                    src="/assets/aistudio/logo_igongo_8f5928e8.png"
+                    alt="Igongo Country Hotel & Cultural Centre Official Logo"
+                    className="h-10 w-auto object-contain"
+                  />
+                </div>
+                <div>
+                  <span className="font-mono text-[11px] uppercase tracking-wider text-[#D99B26] font-bold">
+                    Official Service Provider &amp; Hotel Partner of Enganda • Western Safari Circuit
+                  </span>
+                  <h3 className="font-serif text-2xl sm:text-3xl font-bold text-white mt-0.5">
+                    Igongo Country Hotel &amp; Cultural Centre (Biharwe, Mbarara)
+                  </h3>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2.5">
+                <a
+                  href="https://igongo.co.ug/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-white/10 hover:bg-white/20 text-white border border-white/20 text-xs font-mono font-semibold transition-colors"
+                >
+                  <span>Visit igongo.co.ug</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-[#D99B26]" />
+                </a>
+                <Link
+                  to="/guides?section=partners"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-[#226B3E] hover:bg-[#194E2D] text-white text-xs font-mono font-semibold transition-colors"
+                >
+                  <span>Hotels, Motels &amp; Room Rates</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-[#D99B26]" />
+                </Link>
+                <Link
+                  to="/guides?section=drivers-cars"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-[#C85A28] hover:bg-[#B04B1D] text-white text-xs font-mono font-semibold transition-colors"
+                >
+                  <span>Drivers &amp; Cars (Fleet &amp; Rates)</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+
+            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                {
+                  src: '/assets/aistudio/cow_b5a75acc.jpg',
+                  title: 'Ankole Long-Horned Cow & Eriijukiro Museum',
+                  tag: 'Official Enganda Partner • From $140/night',
+                },
+                {
+                  src: '/assets/aistudio/cultural-village-e1720185580794_60f38fea.jpg',
+                  title: 'Itaramiro Cultural Village & Ankole Milk Gourd',
+                  tag: 'Authentic Ankole Heritage Experience',
+                },
+                {
+                  src: '/assets/aistudio/monument-1_d59343db.jpg',
+                  title: '1520 AD Biharwe Eclipse Monument',
+                  tag: 'Biharwe Hilltop Viewpoint Overlooking Ankole',
+                },
+                {
+                  src: '/assets/aistudio/museum-2-scaled_b13d5e4a.jpg',
+                  title: 'Eriijukiro Museum — "The Power of Milk"',
+                  tag: 'Museum of South Western Uganda',
+                },
+              ].map((item) => (
+                <Link
+                  key={item.src}
+                  to="/guides?section=partners"
+                  className="group relative rounded-xl overflow-hidden border border-[#E4DCCF] bg-[#1A1612] aspect-[4/3] block"
+                >
+                  <img
+                    src={item.src}
+                    alt={item.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+                  <div className="absolute bottom-3 left-3 right-3 text-white">
+                    <div className="font-mono text-[10px] text-[#D99B26] font-semibold">
+                      {item.tag}
+                    </div>
+                    <div className="font-serif text-sm font-bold leading-snug mt-0.5">
+                      {item.title}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -1100,9 +1299,6 @@ export const HomePage: React.FC = () => {
       {/* 4B. Bespoke Safari Itinerary Generator (Save to User Wallet) */}
       <SafariItineraryGenerator />
 
-      {/* 4C. Interactive D3 National Parks Map (Bwindi, Kibale, Murchison, Kidepo) */}
-      <UgandaParksMap />
-
       {/* 5. Horizontal Scrollable Field Journal (Travel Updates, Safari Tips & Cultural Stories) */}
       <Journal />
 
@@ -1135,15 +1331,13 @@ export const HomePage: React.FC = () => {
               <span>{t.home.ctaPlanSafari}</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
-            <a
-              href={getWhatsAppUrl()}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              to="/wallet"
               className="inline-flex items-center justify-center gap-2 bg-[#226B3E] hover:bg-[#194E2D] text-[#FAF7F2] font-semibold text-sm px-6 py-3.5 rounded-md transition-colors"
             >
-              <MessageCircle className="w-4 h-4 text-[#D99B26]" />
-              <span>{t.home.whatsappUs}</span>
-            </a>
+              <ShieldCheck className="w-4 h-4 text-[#D99B26]" />
+              <span>Safari Wallet &amp; Direct Pay</span>
+            </Link>
           </div>
         </div>
       </section>

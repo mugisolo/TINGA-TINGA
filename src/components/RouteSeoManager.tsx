@@ -70,22 +70,13 @@ export const STATIC_ROUTE_SEO_MAP: Record<string, RouteSeoMetadata> = {
     schemaType: 'WebApplication',
   },
   '/wallet': {
-    title: 'Safari Wallet & Official UWA Gorilla Permit Escrow | WildLife Safaris',
+    title: 'Safari Wallet & Direct Package Payment Escrow | Enganda Safaris',
     description:
-      'Manage your Uganda safari funds, lock $800 Bwindi gorilla and $250 Kibale chimpanzee permits in UWA escrow, and book partner safari lodges with multi-currency support.',
+      'Pay directly for your East African safari package, lock $800 Bwindi gorilla and $250 Kibale chimpanzee permits in escrow, and manage funds with multi-currency support.',
     keywords:
-      'UWA gorilla permit escrow, Uganda Wildlife Authority permit cost, Safari Wallet Uganda, MTN Mobile Money safari payment, Uganda gorilla permit receipt',
+      'UWA gorilla permit escrow, East Africa safari wallet, direct safari payment, MTN Mobile Money safari payment, Uganda gorilla permit receipt',
     ogType: 'website',
     schemaType: 'FinancialProduct',
-  },
-  '/safari-essentials': {
-    title: 'Uganda Gorilla Trekking & Safari Packing Checklist | WildLife Safaris',
-    description:
-      'Interactive packing and readiness checklist for Bwindi gorilla trekking, savannah game drives, chimpanzee tracking, and Uganda Yellow Fever & e-Visa entry requirements.',
-    keywords:
-      'gorilla trekking packing list, what to pack for Uganda safari, Bwindi hiking gear, Uganda Yellow Fever certificate, Uganda tourist e-Visa checklist',
-    ogType: 'article',
-    schemaType: 'HowTo',
   },
   '/how-we-work': {
     title: 'How We Work & 2026/2027 UWA Permit Tariffs | WildLife Safaris',

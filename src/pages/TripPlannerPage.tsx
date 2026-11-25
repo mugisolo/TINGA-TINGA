@@ -19,7 +19,6 @@ import {
   SPECIALTY_LABELS,
   AVAILABILITY_PROMISE,
   PERMIT_RECEIPT_GUARANTEE,
-  getWhatsAppUrl,
 } from '../data/seedData';
 import { Specialty, ComfortTier } from '../types';
 import { formatPrice } from '../lib/currency';
@@ -197,19 +196,13 @@ export const TripPlannerPage: React.FC = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-              <a
-                href={getWhatsAppUrl(
-                  `Oli otya WildLife team! I just completed the Trip Planner (Ref ${submittedLeadId}: ${durationDays} days, ${partySize} guests, ${budgetTier} tier${
-                    selectedGuideObj ? `, preferred guide: ${selectedGuideObj.name}` : ''
-                  }).`
-                )}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                to="/wallet"
                 className="inline-flex items-center gap-2 bg-[#226B3E] hover:bg-[#194E2D] text-[#FAF7F2] text-sm font-semibold px-6 py-3.5 rounded-md transition-colors"
               >
-                <MessageCircle className="w-4 h-4 text-[#D99B26]" />
-                <span>Chat With Entebbe Coordinator on WhatsApp</span>
-              </a>
+                <ShieldCheck className="w-4 h-4 text-[#D99B26]" />
+                <span>Proceed to Safari Wallet &amp; Direct Pay</span>
+              </Link>
 
               <Link
                 to="/guides"
@@ -659,7 +652,7 @@ export const TripPlannerPage: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-[#1A1612] mb-1">
-                      WhatsApp Number
+                      Phone Number
                     </label>
                     <input
                       type="tel"

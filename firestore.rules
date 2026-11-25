@@ -224,6 +224,51 @@ service cloud.firestore {
              data.createdAt is string && data.createdAt.size() <= 64;
     }
 
+    function isValidPartnerHotelRoom(data) {
+      return data.keys().hasAll(['id', 'userId', 'partnerSlug', 'partnerName', 'partnerCategory', 'roomName', 'roomType', 'ratePerNightUSD', 'boardBasis', 'maxOccupancy', 'bedConfiguration', 'totalRoomsAvailable', 'imageUrl', 'uploadedByOwnerName', 'createdAt']) &&
+             data.keys().hasOnly(['id', 'userId', 'partnerSlug', 'partnerName', 'partnerCategory', 'roomName', 'roomType', 'ratePerNightUSD', 'boardBasis', 'maxOccupancy', 'bedConfiguration', 'totalRoomsAvailable', 'imageUrl', 'amenities', 'uploadedByOwnerName', 'createdAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid &&
+             data.partnerSlug is string && data.partnerSlug.size() > 0 && data.partnerSlug.size() <= 128 &&
+             data.partnerName is string && data.partnerName.size() > 0 && data.partnerName.size() <= 200 &&
+             data.partnerCategory in ['hotel', 'motel', 'campsite', 'lodge'] &&
+             data.roomName is string && data.roomName.size() > 0 && data.roomName.size() <= 200 &&
+             data.roomType is string && data.roomType.size() > 0 && data.roomType.size() <= 128 &&
+             data.ratePerNightUSD is number && data.ratePerNightUSD >= 0 && data.ratePerNightUSD <= 50000 &&
+             data.boardBasis in ['Bed & Breakfast', 'Half Board', 'Full Board', 'Room Only'] &&
+             data.maxOccupancy is number && data.maxOccupancy >= 1 && data.maxOccupancy <= 30 &&
+             data.bedConfiguration is string && data.bedConfiguration.size() > 0 && data.bedConfiguration.size() <= 128 &&
+             data.totalRoomsAvailable is number && data.totalRoomsAvailable >= 1 && data.totalRoomsAvailable <= 500 &&
+             data.imageUrl is string && data.imageUrl.size() > 0 && data.imageUrl.size() <= 350000 &&
+             (!('amenities' in data) || (data.amenities is list && data.amenities.size() <= 20 && (data.amenities.size() == 0 || (data.amenities[0] is string && data.amenities[0].size() <= 300)))) &&
+             data.uploadedByOwnerName is string && data.uploadedByOwnerName.size() > 0 && data.uploadedByOwnerName.size() <= 128 &&
+             data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    function isValidDriverFleetVehicle(data) {
+      return data.keys().hasAll(['id', 'userId', 'driverName', 'driverLicenseAndBadge', 'driverPhone', 'driverPhotoUrl', 'vehicleName', 'vehicleCategory', 'registrationPlate', 'passengerCapacity', 'ratePerDayUSD', 'rateIncludes', 'homeBaseRegion', 'vehicleImageUrl', 'availableStatus', 'createdAt']) &&
+             data.keys().hasOnly(['id', 'userId', 'driverName', 'driverSlug', 'driverLicenseAndBadge', 'driverPhone', 'driverPhotoUrl', 'vehicleName', 'vehicleCategory', 'registrationPlate', 'passengerCapacity', 'ratePerDayUSD', 'rateIncludes', 'homeBaseRegion', 'regionsCovered', 'vehicleImageUrl', 'features', 'availableStatus', 'createdAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() <= 128 && data.userId == request.auth.uid &&
+             data.driverName is string && data.driverName.size() > 0 && data.driverName.size() <= 128 &&
+             (!('driverSlug' in data) || (data.driverSlug is string && data.driverSlug.size() <= 128)) &&
+             data.driverLicenseAndBadge is string && data.driverLicenseAndBadge.size() > 0 && data.driverLicenseAndBadge.size() <= 200 &&
+             data.driverPhone is string && data.driverPhone.size() > 0 && data.driverPhone.size() <= 64 &&
+             data.driverPhotoUrl is string && data.driverPhotoUrl.size() > 0 && data.driverPhotoUrl.size() <= 350000 &&
+             data.vehicleName is string && data.vehicleName.size() > 0 && data.vehicleName.size() <= 200 &&
+             data.vehicleCategory in ['4x4 Extended Land Cruiser', '4x4 Land Cruiser Prado', '4x4 Pop-Up Safari Van', 'Executive Group Coaster', 'Luxury Overland Truck'] &&
+             data.registrationPlate is string && data.registrationPlate.size() > 0 && data.registrationPlate.size() <= 64 &&
+             data.passengerCapacity is number && data.passengerCapacity >= 1 && data.passengerCapacity <= 60 &&
+             data.ratePerDayUSD is number && data.ratePerDayUSD >= 0 && data.ratePerDayUSD <= 25000 &&
+             data.rateIncludes is string && data.rateIncludes.size() > 0 && data.rateIncludes.size() <= 400 &&
+             data.homeBaseRegion is string && data.homeBaseRegion.size() > 0 && data.homeBaseRegion.size() <= 200 &&
+             (!('regionsCovered' in data) || (data.regionsCovered is list && data.regionsCovered.size() <= 20 && (data.regionsCovered.size() == 0 || (data.regionsCovered[0] is string && data.regionsCovered[0].size() <= 200)))) &&
+             data.vehicleImageUrl is string && data.vehicleImageUrl.size() > 0 && data.vehicleImageUrl.size() <= 350000 &&
+             (!('features' in data) || (data.features is list && data.features.size() <= 20 && (data.features.size() == 0 || (data.features[0] is string && data.features[0].size() <= 300)))) &&
+             data.availableStatus in ['Available Now', 'On Charter', 'Advance Booking'] &&
+             data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
     // Default deny catch-all
     match /{document=**} {
       allow read, write: if false;
@@ -380,6 +425,24 @@ service cloud.firestore {
                       isStaffOrAdmin()
                     );
       allow delete: if isSignedIn() && isValidId(checklistId) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+    }
+
+    // Partner Hotel & Motel Rooms & Per-Room Rates collection (Publicly readable for room catalog; Owner/Partner/Admin upload & management)
+    match /partner_hotel_rooms/{roomId} {
+      allow get: if isValidId(roomId) && (existing().partnerCategory in ['hotel', 'motel', 'campsite', 'lodge'] || (isSignedIn() && (existing().userId == request.auth.uid || isStaffOrAdmin())));
+      allow list: if existing().partnerCategory in ['hotel', 'motel', 'campsite', 'lodge'] || (isSignedIn() && (existing().userId == request.auth.uid || isStaffOrAdmin()));
+      allow create: if isSignedIn() && isValidId(roomId) && isValidPartnerHotelRoom(incoming());
+      allow update: if isSignedIn() && isValidId(roomId) && isValidPartnerHotelRoom(incoming()) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+      allow delete: if isSignedIn() && isValidId(roomId) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+    }
+
+    // Known Drivers & 4x4 Fleet Vehicles & Daily Rates collection (Publicly readable for fleet catalog; Driver/Specialist/Admin upload & management)
+    match /driver_fleet_vehicles/{vehicleId} {
+      allow get: if isValidId(vehicleId) && (existing().availableStatus in ['Available Now', 'On Charter', 'Advance Booking'] || (isSignedIn() && (existing().userId == request.auth.uid || isStaffOrAdmin())));
+      allow list: if existing().availableStatus in ['Available Now', 'On Charter', 'Advance Booking'] || (isSignedIn() && (existing().userId == request.auth.uid || isStaffOrAdmin()));
+      allow create: if isSignedIn() && isValidId(vehicleId) && isValidDriverFleetVehicle(incoming());
+      allow update: if isSignedIn() && isValidId(vehicleId) && isValidDriverFleetVehicle(incoming()) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+      allow delete: if isSignedIn() && isValidId(vehicleId) && (existing().userId == request.auth.uid || isStaffOrAdmin());
     }
   }
 }

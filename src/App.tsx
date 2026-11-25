@@ -5,7 +5,6 @@ import { RouteSeoManager } from './components/RouteSeoManager';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { InquiryModal } from './components/InquiryModal';
-import { WhatsAppFloatButton } from './components/WhatsAppFloatButton';
 import { ConciergeWidget } from './components/ConciergeWidget';
 import { InquiryProvider } from './context/InquiryContext';
 import { AuthProvider } from './context/AuthContext';
@@ -27,8 +26,8 @@ import { ResponsibleTravelPage } from './pages/ResponsibleTravelPage';
 import { AboutPage } from './pages/AboutPage';
 import { ContactPage } from './pages/ContactPage';
 import { WalletPage } from './pages/WalletPage';
-import { SafariEssentialsPage } from './pages/SafariEssentialsPage';
 import { PortalsPage } from './pages/PortalsPage';
+import { ExploreImpactPage } from './pages/ExploreImpactPage';
 
 export default function App() {
   return (
@@ -55,10 +54,15 @@ export default function App() {
                     <Route path="/partners" element={<GuidesPage />} />
                     <Route path="/guides/:slug" element={<GuideProfilePage />} />
                     <Route path="/wallet" element={<WalletPage />} />
-                    <Route path="/safari-essentials" element={<SafariEssentialsPage />} />
                     <Route path="/experiences" element={<ExperiencesPage />} />
                     <Route path="/experiences/:slug" element={<ExperienceDetailPage />} />
                     <Route path="/destinations" element={<DestinationsPage />} />
+                    <Route path="/explore-impact" element={<ExploreImpactPage />} />
+                    <Route path="/tingatinga-safaris" element={<ExploreImpactPage />} />
+                    <Route path="/volunteer-programs" element={<ExploreImpactPage />} />
+                    <Route path="/fundraisers" element={<ExploreImpactPage />} />
+                    <Route path="/utb-uwa-verification" element={<ExploreImpactPage />} />
+                    <Route path="/vendor-onboarding" element={<ExploreImpactPage />} />
                     <Route path="/how-we-work" element={<HowWeWorkPage />} />
                     <Route path="/trip-planner" element={<TripPlannerPage />} />
                     <Route path="/reviews" element={<ReviewsPage />} />
@@ -73,11 +77,10 @@ export default function App() {
                 {/* Global Footer */}
                 <Footer />
 
-                {/* Global Inquiry Modal */}
+                {/* Global Direct Booking Modal */}
                 <InquiryModal />
 
-                {/* Floating WhatsApp & Guide Matcher Concierge */}
-                <WhatsAppFloatButton />
+                {/* Guide Matcher Concierge */}
                 <ConciergeWidget />
               </div>
             </Router>

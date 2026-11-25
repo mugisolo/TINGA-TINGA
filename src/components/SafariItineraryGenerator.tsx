@@ -25,22 +25,27 @@ import { formatPrice } from '../lib/currency';
 import { SmartImage } from './SmartImage';
 
 const REGION_OPTIONS = [
-  'Bwindi & Mgahinga + Lake Bunyonyi',
-  'Kibale Forest & Queen Elizabeth NP',
-  'Murchison Falls NP & Ziwa Rhino Sanctuary',
-  'Kidepo Valley NP & Northern Karamoja',
-  'Bwindi, Kibale & Queen Elizabeth Primate Circuit',
-  'Entebbe, Mabamba Swamp & Jinja Source of the Nile',
-  'Rwenzori Foothills & Semuliki Valley',
-  ...DESTINATIONS.map((d) => d.name),
+  'Serengeti, Ngorongoro & Bwindi Gorillas (Tanzania & Uganda)',
+  'Maasai Mara, Lake Nakuru & Uganda Primates (Kenya & Uganda)',
+  'Bwindi, Volcanoes NP, Nyungwe & Akagera (Uganda & Rwanda)',
+  '32-Day East African Grand Safari Circuit (TZ • KE • UG • RW)',
+  'Bwindi & Mgahinga + Lake Bunyonyi (Uganda)',
+  'Kibale Forest & Queen Elizabeth NP (Uganda)',
+  'Murchison Falls NP & Ziwa Rhino Sanctuary (Uganda)',
+  'Kidepo Valley NP & Northern Karamoja (Uganda)',
+  'Bwindi, Kibale & Queen Elizabeth Primate Circuit (Uganda)',
+  'Entebbe, Mabamba Swamp & Jinja Source of the Nile (Uganda)',
+  'Rwenzori Foothills & Semuliki Valley (Uganda)',
+  ...DESTINATIONS.map((d) => `${d.name}${d.country ? ` (${d.country})` : ''}`),
 ];
 
 const ACTIVITY_OPTIONS = [
   { id: 'Mountain Gorilla Trekking', label: 'Mountain Gorilla Trekking', category: 'Trekking' },
   { id: 'Chimpanzee Tracking & Habituation', label: 'Chimpanzee Tracking', category: 'Trekking' },
+  { id: 'Serengeti & Maasai Mara Great Migration', label: 'Serengeti & Mara Migration', category: 'Wildlife' },
   { id: 'Big Game Savanna & Kazinga/Nile Boat', label: 'Big Game & Boat Safaris', category: 'Wildlife' },
   { id: 'Shoebill & Albertine Rift Birding', label: 'Shoebill & Birding', category: 'Wildlife' },
-  { id: 'Batwa & Karamojong Cultural Encounters', label: 'Cultural Encounters', category: 'Cultural' },
+  { id: 'Batwa, Maasai & Karamojong Cultural Encounters', label: 'Cultural Encounters', category: 'Cultural' },
   { id: 'Volcano, Crater & Rwenzori Hiking', label: 'Crater & Peak Hiking', category: 'Trekking' },
   { id: 'Golden-Hour Wildlife Photography', label: 'Wildlife Photography', category: 'Wildlife' },
 ];
@@ -79,6 +84,7 @@ export const SafariItineraryGenerator: React.FC = () => {
     savedItineraries,
     saveCustomItineraryToWallet,
     paySavedItineraryDeposit,
+    payPackageDirect,
   } = useWallet();
 
   const [region, setRegion] = useState<string>(REGION_OPTIONS[0]);
@@ -182,6 +188,26 @@ export const SafariItineraryGenerator: React.FC = () => {
     });
   };
 
+  const handlePayFullPackageDirectly = () => {
+    if (!generatedPlan) return;
+    saveCustomItineraryToWallet(generatedPlan);
+    const payRes = payPackageDirect({
+      packageTitle: generatedPlan.title,
+      packageIdOrSlug: generatedPlan.referenceCode,
+      perPersonUSD: generatedPlan.estimatedPerPersonUSD,
+      guests: generatedPlan.partySize,
+      paymentType: 'full_100',
+      departureDate: 'Confirmed 2026/2027',
+      paymentRail: 'Visa / Mastercard',
+      guideName: generatedPlan.matchedGuideName,
+      autoTopUpIfShort: true,
+    });
+    setWalletStatusBanner({
+      type: payRes.ok ? 'success' : 'error',
+      text: payRes.message,
+    });
+  };
+
   const matchedGuideProfile = generatedPlan
     ? GUIDES.find((g) => g.slug === generatedPlan.matchedGuideSlug) || GUIDES[0]
     : null;
@@ -277,25 +303,25 @@ export const SafariItineraryGenerator: React.FC = () => {
                   </span>
                 </label>
                 <span className="font-mono text-xs text-[#5A5248]">
-                  2–10 {t.generator.daysUnit}
+                  2–32 {t.generator.daysUnit}
                 </span>
               </div>
               <input
                 id="custom-gen-days"
                 type="range"
                 min={2}
-                max={10}
+                max={32}
                 value={durationDays}
                 onChange={(e) => setDurationDays(Number(e.target.value))}
                 className="w-full accent-[#226B3E] cursor-pointer mt-1"
               />
-              <div className="flex items-center gap-2 pt-1">
-                {[3, 5, 7, 10].map((d) => (
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                {[3, 5, 7, 10, 14, 32].map((d) => (
                   <button
                     key={d}
                     type="button"
                     onClick={() => setDurationDays(d)}
-                    className={`px-2.5 py-1 rounded text-xs font-mono cursor-pointer border ${
+                    className={`px-2 py-1 rounded text-xs font-mono cursor-pointer border ${
                       durationDays === d
                         ? 'bg-[#226B3E] text-white border-[#226B3E]'
                         : 'bg-[#F3ECE1] text-[#1A1612] border-[#E4DCCF]'
@@ -530,17 +556,34 @@ export const SafariItineraryGenerator: React.FC = () => {
                     </button>
 
                     {!savedWalletItem?.depositPaid ? (
-                      <button
-                        type="button"
-                        onClick={handlePayDepositFromWallet}
-                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md bg-[#C85A28] hover:bg-[#B04B1D] text-white text-xs font-semibold transition-colors cursor-pointer"
-                      >
-                        <Wallet className="w-4 h-4" />
-                        <span>
-                          {t.generator.payDepositBtn} (
-                          {formatPrice(generatedPlan.depositAmountUSD, currency)})
-                        </span>
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          onClick={handlePayDepositFromWallet}
+                          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md bg-[#C85A28] hover:bg-[#B04B1D] text-white text-xs font-semibold transition-colors cursor-pointer"
+                        >
+                          <Wallet className="w-4 h-4" />
+                          <span>
+                            {t.generator.payDepositBtn} (
+                            {formatPrice(generatedPlan.depositAmountUSD, currency)})
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handlePayFullPackageDirectly}
+                          className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md bg-[#226B3E] hover:bg-[#194E2D] border border-[#D99B26]/50 text-white text-xs font-semibold transition-colors cursor-pointer"
+                        >
+                          <CheckCircle2 className="w-4 h-4 text-[#D99B26]" />
+                          <span>
+                            Pay 100% Full Package (
+                            {formatPrice(
+                              generatedPlan.estimatedPerPersonUSD * generatedPlan.partySize,
+                              currency
+                            )}
+                            )
+                          </span>
+                        </button>
+                      </>
                     ) : (
                       <div className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-[#226B3E] text-white text-xs font-mono">
                         <CheckCircle2 className="w-4 h-4 text-[#D99B26]" />

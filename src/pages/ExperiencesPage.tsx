@@ -8,9 +8,9 @@ import {
   Globe,
   ArrowRight,
   Sparkles,
-  CheckCircle2,
+  Award,
 } from 'lucide-react';
-import { EXPERIENCES, SHUMA_COMPANY_INFO } from '../data/seedData';
+import { EXPERIENCES, SHUMA_COMPANY_INFO, OFFICIAL_PORTFOLIO_PDFS } from '../data/seedData';
 import { ExperienceCard } from '../components/ExperienceCard';
 import { SEO } from '../components/SEO';
 import {
@@ -21,6 +21,8 @@ import {
 } from '../components/ExperienceFilterBar';
 import { useInquiry } from '../context/InquiryContext';
 import { formatPrice } from '../lib/currency';
+
+type PortfolioFilterTab = 'all' | 'admin-enganda' | 'tingatinga-2026' | 'vergouw-solo' | 'shuma-grand';
 
 const INITIAL_FILTERS: ExperienceFilterState = {
   region: 'all',
@@ -34,6 +36,7 @@ const INITIAL_FILTERS: ExperienceFilterState = {
 
 export const ExperiencesPage: React.FC = () => {
   const [filters, setFilters] = useState<ExperienceFilterState>(INITIAL_FILTERS);
+  const [portfolioTab, setPortfolioTab] = useState<PortfolioFilterTab>('all');
   const { currency, openInquiryModal } = useInquiry();
 
   const handleFilterChange = (updated: Partial<ExperienceFilterState>) => {
@@ -42,10 +45,34 @@ export const ExperiencesPage: React.FC = () => {
 
   const resetFilters = () => {
     setFilters(INITIAL_FILTERS);
+    setPortfolioTab('all');
   };
+
+  const adminRecommendedPackages = useMemo(
+    () => EXPERIENCES.filter((e) => e.adminRecommended),
+    []
+  );
 
   const filteredAndSortedExperiences = useMemo(() => {
     const filtered = EXPERIENCES.filter((exp) => {
+      // 0. Portfolio Tab Filter
+      if (portfolioTab === 'admin-enganda' && !exp.adminRecommended) return false;
+      if (
+        portfolioTab === 'tingatinga-2026' &&
+        !['T1', 'T2', 'T3', 'T4', 'T5'].includes(exp.packageCode || '') &&
+        exp.slug !== '8-day-tingatinga-signature-primate-lions-nile'
+      ) {
+        return false;
+      }
+      if (portfolioTab === 'vergouw-solo' && exp.packageCode !== 'VERGOUW-SOLO') return false;
+      if (
+        portfolioTab === 'shuma-grand' &&
+        !exp.slug.includes('shuma') &&
+        !exp.shumaGroupOffer
+      ) {
+        return false;
+      }
+
       // 1. Duration filter (bracket + maxDays ceiling)
       const bracketCfg = DURATION_BRACKET_CONFIG[filters.durationBracket];
       const matchesBracket =
@@ -113,10 +140,13 @@ export const ExperiencesPage: React.FC = () => {
           return getStartingPrice(b) - getStartingPrice(a);
         case 'featured':
         default:
+          // Prioritize Enganda Verified (Enganda Safaris E1-E5) at the top
+          if (a.adminRecommended && !b.adminRecommended) return -1;
+          if (!a.adminRecommended && b.adminRecommended) return 1;
           return 0;
       }
     });
-  }, [filters]);
+  }, [filters, portfolioTab]);
 
   const origin =
     typeof window !== 'undefined' && window.location?.origin
@@ -127,9 +157,9 @@ export const ExperiencesPage: React.FC = () => {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
     '@id': `${origin}/experiences#collection`,
-    name: 'Uganda & East African Safari Experiences | WildLife & Shuma Africa Safaris',
+    name: 'Uganda & East African Safari Experiences | Enganda, Tingatinga & Shuma Safaris',
     description:
-      'Explore private Uganda safari itineraries and the flagship 32-Day East African Grand Safari 2027 by Shuma Africa Safaris across Tanzania, Kenya, Uganda, and Rwanda.',
+      'Explore Enganda Verified 2026 Specialist Expeditions (E1–E5), Tingatinga Safaris 2026 Private Portfolio (T1–T5), the 10-Day Vergouw Solo Wild Package, and the 32-Day East African Grand Safari.',
     url: `${origin}/experiences`,
     mainEntity: {
       '@type': 'ItemList',
@@ -158,29 +188,27 @@ export const ExperiencesPage: React.FC = () => {
   return (
     <div className="bg-[#FAF7F2] min-h-screen py-12 sm:py-16">
       <SEO
-        title="Uganda & East African Grand Safari Experiences | WildLife & Shuma Africa Safaris"
-        description="Explore our signature Uganda safari experiences and the 32-Day East African Grand Safari 2027 by Shuma Africa Safaris (Tanzania, Kenya, Uganda & Rwanda — 7 Guests + 1 Complimentary Tour Leader)."
-        ogTitle="Uganda & East African Safari Experiences | WildLife & Shuma Africa Safaris"
-        ogDescription="Compare duration, regions, and comfort tier pricing across all Uganda itineraries plus the 32-Day East African Grand Safari 2027 ($18,078.57 pp / $126,550 group of 7 + 1 Free Tour Leader)."
+        title="Uganda & East African Grand Safari Experiences | Enganda, Tingatinga & Shuma Safaris"
+        description="Explore Enganda Verified 2026 Specialist Uganda Expeditions (E1–E5), Tingatinga Safaris 2026 Portfolio (T1–T5), the Vergouw 10-Day Solo Wild Package, and the 32-Day East African Grand Safari 2027."
+        ogTitle="Uganda & East African Safari Experiences | Enganda, Tingatinga & Shuma Safaris"
+        ogDescription="Compare duration, 2-Pax Sharing & 1-Pax Solo Traveler tariffs across all Enganda Specialist (E1–E5), Tingatinga (T1–T5), Vergouw Solo Wild, and Shuma 4-Country itineraries."
         ogType="website"
         ogImage={EXPERIENCES[0]?.heroImage}
-        ogImageAlt="Mountain Gorilla Trekking & East African Grand Safari — WildLife & Shuma Africa Safaris"
+        ogImageAlt="Mountain Gorilla Trekking & East African Grand Safari — Enganda & Tingatinga Safaris"
         canonicalPath="/experiences"
         keywords={[
-          'Uganda Safari Experiences',
+          'Enganda Safaris 2026 Specialist Expeditions',
+          'Tingatinga Safaris 2026 Portfolio',
+          'Vergouw Solo Wild Package Uganda',
           'Shuma Africa Safaris',
-          '32 Day East African Grand Safari 2027',
           'Bwindi Gorilla Trekking Itinerary',
-          'Kibale Chimpanzee Safari',
-          'Kidepo Valley Charter Safari',
-          'WildLife Safaris Uganda',
         ]}
         jsonLd={experiencesCatalogJsonLd}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         {/* Header */}
-        <div className="bg-[#226B3E] text-[#FAF7F2] rounded-lg p-8 sm:p-12 border border-[#2E8550]">
+        <div className="bg-[#226B3E] text-[#FAF7F2] rounded-lg p-8 sm:p-12 border border-[#2E8550] space-y-5">
           <div className="max-w-3xl space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#1B5632] border border-[#D99B26]/40 text-xs font-mono text-[#D99B26]">
               <Compass className="w-3.5 h-3.5" />
@@ -190,9 +218,160 @@ export const ExperiencesPage: React.FC = () => {
               Uganda &amp; East African Safari Experiences
             </h1>
             <p className="text-sm sm:text-base text-[#D6CEC2] leading-relaxed">
-              Every itinerary below is private and customizable — from 1-to-10-day Uganda primate and savanna circuits to our flagship <strong>32-Day East African Grand Safari 2027</strong> curated with <strong>{SHUMA_COMPANY_INFO.name}</strong> (<em>“{SHUMA_COMPANY_INFO.tagline}”</em>).
+              Explore our <strong>Enganda Verified 2026 Specialist Expeditions (E1–E5)</strong>, the <strong>Tingatinga Safaris 2026 Private Portfolio (T1–T5)</strong>, <strong>The Vergouw 10-Day Solo Wild Package</strong>, and our <strong>32-Day East African Grand Safari 2027</strong>. Every package features transparent 2-Pax Sharing and 1-Pax Solo Traveler tariffs with instant direct checkout.
             </p>
           </div>
+
+          {/* Official PDF Portfolio Dossier Links Bar */}
+          <div className="pt-4 border-t border-white/15 flex flex-wrap items-center gap-2.5">
+            <span className="font-mono text-[11px] uppercase tracking-wider text-[#D99B26] font-bold">
+              Official PDF Portfolios:
+            </span>
+            <a
+              href={OFFICIAL_PORTFOLIO_PDFS.engandaSpecialist2026}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#D99B26] hover:bg-[#c5891d] text-[#1A1612] font-mono text-xs font-bold transition-colors"
+            >
+              <Award className="w-3.5 h-3.5" />
+              <span>★ Enganda E1–E5 Specialist PDF (Enganda Verified)</span>
+            </a>
+            <a
+              href={OFFICIAL_PORTFOLIO_PDFS.tingatingaPortfolio2026}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#1B5632] hover:bg-[#144225] text-white border border-white/25 font-mono text-xs font-semibold transition-colors"
+            >
+              <FileText className="w-3.5 h-3.5 text-[#D99B26]" />
+              <span>Tingatinga T1–T5 2026 Portfolio PDF</span>
+            </a>
+            <a
+              href={OFFICIAL_PORTFOLIO_PDFS.vergouwSoloWild10Day}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#1B5632] hover:bg-[#144225] text-white border border-white/25 font-mono text-xs font-semibold transition-colors"
+            >
+              <FileText className="w-3.5 h-3.5 text-[#D99B26]" />
+              <span>Vergouw 10-Day Solo Wild PDF ($6,912)</span>
+            </a>
+          </div>
+        </div>
+
+        {/* ★ ENGANDA VERIFIED: Enganda Safaris 2026 Specialist Uganda Expeditions (E1–E5) */}
+        <section
+          aria-label="Enganda Verified Enganda Safaris 2026 Specialist Uganda Expeditions"
+          className="bg-gradient-to-br from-[#1A1612] via-[#144225] to-[#1A1612] text-[#FAF7F2] rounded-xl border-2 border-[#D99B26] shadow-lg overflow-hidden"
+        >
+          <div className="px-6 py-4 bg-[#1A1612]/90 border-b border-[#D99B26]/40 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#D99B26] text-[#1A1612] font-mono text-xs font-bold uppercase">
+                <Award className="w-3.5 h-3.5" />
+                <span>Enganda Verified</span>
+              </span>
+              <span className="font-serif text-lg sm:text-xl font-bold text-white">
+                Enganda Safaris • 2026 Specialist Uganda Expeditions (E1–E5)
+              </span>
+            </div>
+            <a
+              href={OFFICIAL_PORTFOLIO_PDFS.engandaSpecialist2026}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-white/10 hover:bg-white/20 text-[#D99B26] border border-[#D99B26]/40 font-mono text-xs font-bold transition-colors"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Download Enganda E1–E5 PDF Portfolio</span>
+            </a>
+          </div>
+
+          <div className="p-6 space-y-5">
+            <p className="text-xs sm:text-sm text-[#E4DCCF] max-w-4xl leading-relaxed">
+              Hand-selected and <strong>Enganda Verified</strong>, these five specialist expeditions combine Uganda’s deepest cultural kingdoms, Ramsar birding wetlands, off-trail savannas, and primate habitats with transparent <strong>2-Pax Sharing</strong> and <strong>1-Pax Solo Traveler</strong> private 4x4 Land Cruiser tariffs.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+              {adminRecommendedPackages.map((pkg) => (
+                <div
+                  key={pkg.id}
+                  className="bg-[#1A1612]/80 border border-[#D99B26]/40 hover:border-[#D99B26] rounded-lg p-3.5 flex flex-col justify-between gap-3 transition-all"
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="px-2 py-0.5 rounded bg-[#D99B26] text-[#1A1612] font-mono text-[10px] font-bold">
+                        CODE {pkg.packageCode}
+                      </span>
+                      <span className="font-mono text-[10px] text-[#E4DCCF]">
+                        {pkg.durationDays} Days / {pkg.durationDays - 1}N
+                      </span>
+                    </div>
+                    <Link
+                      to={`/experiences/${pkg.slug}`}
+                      className="font-serif text-sm font-bold text-white hover:text-[#D99B26] line-clamp-2 block"
+                    >
+                      {pkg.title.replace(/^.*?\(E\d\):\s*/, '')}
+                    </Link>
+                    <div className="pt-1 space-y-0.5 font-mono text-[11px]">
+                      <div className="text-[#D99B26] font-bold">
+                        2-Pax: {formatPrice(pkg.twoPaxSharingPriceUSD || pkg.priceBands[0].perPersonUSD, currency)} pp
+                      </div>
+                      {pkg.soloTravelerPriceUSD && (
+                        <div className="text-[#E4DCCF] text-[10px]">
+                          1-Pax Solo: {formatPrice(pkg.soloTravelerPriceUSD, currency)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 pt-2 border-t border-white/10">
+                    <Link
+                      to={`/experiences/${pkg.slug}`}
+                      className="flex-1 text-center py-1.5 px-2 rounded bg-[#226B3E] hover:bg-[#2E8550] text-white font-mono text-[10px] font-semibold transition-colors"
+                    >
+                      Itinerary
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        openInquiryModal({
+                          experienceSlug: pkg.slug,
+                          defaultTier: 'mid-range',
+                        })
+                      }
+                      className="flex-1 text-center py-1.5 px-2 rounded bg-[#C85A28] hover:bg-[#B04B1D] text-white font-mono text-[10px] font-semibold transition-colors cursor-pointer"
+                    >
+                      Pay Direct
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Portfolio Collection Quick-Filter Tabs */}
+        <div className="flex flex-wrap items-center gap-2">
+          {[
+            { id: 'all', label: `All Packages (${EXPERIENCES.length})` },
+            { id: 'admin-enganda', label: '★ Enganda Verified: Enganda E1–E5 (5)' },
+            { id: 'tingatinga-2026', label: 'Tingatinga 2026 Portfolio T1–T5 (6)' },
+            { id: 'vergouw-solo', label: 'Vergouw 10-Day Solo Wild ($6,912)' },
+            { id: 'shuma-grand', label: 'Shuma 4-Country Grand Safaris (3)' },
+          ].map((tab) => {
+            const active = portfolioTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setPortfolioTab(tab.id as PortfolioFilterTab)}
+                className={`px-3.5 py-2 rounded-lg font-mono text-xs font-semibold transition-all cursor-pointer ${
+                  active
+                    ? 'bg-[#1A1612] text-[#D99B26] border-2 border-[#D99B26] shadow-xs'
+                    : 'bg-white text-[#1A1612] border border-[#E4DCCF] hover:border-[#226B3E]'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
         {/* Shuma Africa Safaris — 2027 Grand Safari Partner Spotlight */}

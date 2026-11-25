@@ -13,12 +13,10 @@ import {
 import {
   HQ_ADDRESS,
   HQ_AIRPORT_NOTE,
-  WHATSAPP_NUMBER,
   CONTACT_EMAIL,
   AVAILABILITY_PROMISE,
   GUIDES,
   SOCIAL_LINKS,
-  getWhatsAppUrl,
 } from '../data/seedData';
 import { ComfortTier } from '../types';
 import { useInquiry } from '../context/InquiryContext';
@@ -113,21 +111,6 @@ export const ContactPage: React.FC = () => {
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <Phone className="w-5 h-5 text-[#2D6A4F] flex-shrink-0 mt-0.5" />
-                  <div>
-                    <div className="font-semibold text-[#1A1612]">WhatsApp Direct Line</div>
-                    <a
-                      href={getWhatsAppUrl()}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-mono text-[#226B3E] hover:underline"
-                    >
-                      {WHATSAPP_NUMBER}
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
                   <Mail className="w-5 h-5 text-[#C85A28] flex-shrink-0 mt-0.5" />
                   <div>
                     <div className="font-semibold text-[#1A1612]">Email</div>
@@ -148,31 +131,6 @@ export const ContactPage: React.FC = () => {
                   </div>
                 </div>
               </div>
-
-              <div className="pt-2">
-                <a
-                  href={getWhatsAppUrl()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 bg-[#2D6A4F] hover:bg-[#23533D] text-white text-xs sm:text-sm font-semibold px-5 py-3 rounded-md transition-colors"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  <span>Message Entebbe Desk on WhatsApp</span>
-                </a>
-              </div>
-            </div>
-
-            {/* Map Embed */}
-            <div className="bg-white border border-[#E4DCCF] rounded-lg overflow-hidden">
-              <div className="px-4 py-2.5 bg-[#F3ECE1] border-b border-[#E4DCCF] text-xs font-mono text-[#1A1612]">
-                Map: Mugwanya Road, Bugonga, Entebbe (Next to Rosemary Courts)
-              </div>
-              <iframe
-                title="Map of Mugwanya Road, Bugonga, Entebbe, Uganda"
-                src="https://www.openstreetmap.org/export/embed.html?bbox=32.445%2C0.038%2C32.482%2C0.065&layer=mapnik&marker=0.0512%2C32.4637"
-                className="w-full h-64 border-0"
-                loading="lazy"
-              />
             </div>
 
             {/* Social Connections Card (X, Instagram, LinkedIn) */}
@@ -235,19 +193,8 @@ export const ContactPage: React.FC = () => {
                     Message Received in Entebbe
                   </h2>
                   <p className="text-sm text-[#5A5248] max-w-md mx-auto">
-                    Thank you, <strong>{name}</strong>. Your inquiry (<span className="font-mono text-xs">{submittedLeadId}</span>) is with our coordination team. {AVAILABILITY_PROMISE}
+                    Thank you, <strong>{name}</strong>. Your message (<span className="font-mono text-xs">{submittedLeadId}</span>) is with our coordination team. {AVAILABILITY_PROMISE}
                   </p>
-                  <div className="pt-3">
-                    <a
-                      href={getWhatsAppUrl(`Oli otya! Following up on my contact inquiry ${submittedLeadId} (${name}).`)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 bg-[#226B3E] text-[#FAF7F2] text-xs font-semibold px-5 py-3 rounded-md"
-                    >
-                      <MessageCircle className="w-4 h-4 text-[#D99B26]" />
-                      <span>Continue on WhatsApp</span>
-                    </a>
-                  </div>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-5">
@@ -295,7 +242,7 @@ export const ContactPage: React.FC = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-xs font-semibold text-[#1A1612] mb-1">
-                        WhatsApp / Phone
+                        Phone Number
                       </label>
                       <input
                         type="tel"

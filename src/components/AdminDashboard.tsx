@@ -38,6 +38,7 @@ import {
   SHARED_GOOGLE_DRIVE_FOLDER_URL,
 } from '../data/seedData';
 import { formatPrice } from '../lib/currency';
+import { ServiceProviderPackageAIBuilder } from './ServiceProviderPackageAIBuilder';
 
 interface AdminDashboardProps {
   initialTab?: 'events' | 'logos' | 'both';
@@ -73,11 +74,11 @@ const ATTACHED_LOGO_PRESETS: {
     category: 'Government & Conservation',
   },
   {
-    label: 'PLU (Patriotic League of Uganda)',
-    name: 'PLU',
-    subtitle: 'Patriotic League of Uganda',
-    url: '/assets/aistudio/PLU_6740178b.jfif',
-    category: 'Strategic Partner',
+    label: 'ECO Bank (Ecobank Pan-African Bank)',
+    name: 'ECO Bank',
+    subtitle: 'Ecobank Pan-African Banking & Escrow Partner',
+    url: '/assets/aistudio/ecobank.svg',
+    category: 'Banking & Fintech',
   },
   {
     label: 'FINCA Uganda',
@@ -100,10 +101,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onNotify,
 }) => {
   const { user, signInWithGoogle } = useAuth();
-  const { transactions, savedItineraries, savedChecklists } = useWallet();
+  const { transactions, savedItineraries, permitHolds, partnerBookings } = useWallet();
   const {
     currency,
-    leads,
     safariEvents,
     carouselEvents,
     upcomingEvents,
@@ -504,8 +504,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="text-white font-bold">{footerLogos.length} Partner Logos</div>
           </div>
           <div className="bg-white/5 rounded px-2.5 py-1.5">
-            <div className="text-[#9E9284] text-[10px]">/safari_leads</div>
-            <div className="text-white font-bold">{leads.length} Client Leads</div>
+            <div className="text-[#9E9284] text-[10px]">/permit_escrow_holds</div>
+            <div className="text-white font-bold">{permitHolds.length} Permit Escrows</div>
           </div>
           <div className="bg-white/5 rounded px-2.5 py-1.5">
             <div className="text-[#9E9284] text-[10px]">/wallet_transactions</div>
@@ -516,8 +516,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="text-white font-bold">{savedItineraries.length} Custom Plans</div>
           </div>
           <div className="bg-white/5 rounded px-2.5 py-1.5">
-            <div className="text-[#9E9284] text-[10px]">/saved_checklists</div>
-            <div className="text-white font-bold">{savedChecklists.length} Checklists</div>
+            <div className="text-[#9E9284] text-[10px]">/partner_bookings</div>
+            <div className="text-white font-bold">{partnerBookings.length} Lodge Vouchers</div>
           </div>
         </div>
       </div>
@@ -527,6 +527,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       {/* ===================================================================== */}
       {(initialTab === 'both' || initialTab === 'events') && (
         <div className="space-y-5">
+          {/* AI Service Provider Document-to-Package & Pricing Engine */}
+          <ServiceProviderPackageAIBuilder />
           <div className="bg-white border border-[#E4DCCF] rounded-lg p-5 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E4DCCF] pb-3">
               <div>

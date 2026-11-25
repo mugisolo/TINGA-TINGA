@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 110" fill="none">
+  <rect width="320" height="110" rx="10" fill="#FFFFFF"/>
+  <!-- Ecobank Signature Deep Blue Rounded Header & Pan-African Green Horizon -->
+  <rect x="10" y="12" width="300" height="62" rx="8" fill="#005B82"/>
+  <path d="M10 62C95 50 215 54 310 64V66C310 70.4183 306.418 74 302 74H18C13.5817 74 10 70.4183 10 66V62Z" fill="#8DC63F"/>
+  <!-- Ecobank Wordmark -->
+  <text x="160" y="51" text-anchor="middle" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="36" letter-spacing="0.5">
+    Ecobank
+  </text>
+  <!-- Pan-African Tagline -->
+  <text x="160" y="96" text-anchor="middle" fill="#005B82" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="13" letter-spacing="1.8">
+    THE PAN AFRICAN BANK
+  </text>
+</svg>

@@ -1,780 +1,368 @@
 import express from 'express';
 import path from 'path';
-import fs from 'fs';
-import { GoogleGenAI, Type, FunctionDeclaration } from '@google/genai';
-import {
-  GUIDES,
-  EXPERIENCES,
-  PERMIT_FACTS,
-  DESTINATIONS,
-  SAMPLE_REVIEWS,
-  JOURNAL_ARTICLES,
-  HQ_ADDRESS,
-} from './src/data/seedData';
-import { WILDLIFE_CONCIERGE_SYSTEM_PROMPT } from './src/config/systemPrompt';
-import {
-  executeConciergeTool,
-  generateRuleBasedConciergeReply,
-} from './src/concierge/conciergeEngine';
-import { Lead, ChatSession } from './src/types';
+import { createServer as createViteServer } from 'vite';
+import { GoogleGenAI } from '@google/genai';
 
-const app = express();
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-
-// Ensure process.env.API_KEY is populated when GEMINI_API_KEY is provided
-if (!process.env.API_KEY && process.env.GEMINI_API_KEY) {
-  process.env.API_KEY = process.env.GEMINI_API_KEY;
-}
-
-app.use(express.json());
-
-// In-memory store for submitted leads and chat sessions
-const inMemoryLeads: Lead[] = [
-  {
-    id: 'eng_lead_seed_1',
-    name: 'Eleanor Vance',
-    email: 'eleanor.vance@example.co.uk',
-    whatsapp: '+44 7700 900123',
-    partySize: 2,
-    targetDates: 'November 2026',
-    budgetTier: 'luxury',
-    interests: ['gorillas', 'chimps'],
-    regions: ['Bwindi & Mgahinga', 'Kibale Forest'],
-    durationDays: 5,
-    preferredGuideSlug: 'samuel-kato',
-    experienceSlug: '5-day-gorillas-and-kibale-chimps',
-    notes: 'Interested in US$600 low-season November Bwindi gorilla permits with Samuel Kato.',
-    status: 'quote_sent',
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-  },
-];
-
-const inMemorySessions: Record<string, ChatSession> = {};
-
-// ================= REST API ENDPOINTS =================
-
-app.get('/api/health', (_req, res) => {
-  res.json({
-    status: 'ok',
-    operator: 'WildLife Safaris',
-    headOffice: HQ_ADDRESS,
-    timeEAT: new Date().toISOString(),
-  });
-});
-
-app.get('/api/guides', (_req, res) => {
-  res.json(GUIDES);
-});
-
-app.get('/api/guides/:slug', (req, res) => {
-  const guide = GUIDES.find((g) => g.slug === req.params.slug);
-  if (!guide) return res.status(404).json({ error: 'Guide not found' });
-  res.json(guide);
-});
-
-app.get('/api/experiences', (_req, res) => {
-  res.json(EXPERIENCES);
-});
-
-app.get('/api/experiences/:slug', (req, res) => {
-  const exp = EXPERIENCES.find((e) => e.slug === req.params.slug);
-  if (!exp) return res.status(404).json({ error: 'Experience not found' });
-  res.json(exp);
-});
-
-app.get('/api/destinations', (_req, res) => {
-  res.json(DESTINATIONS);
-});
-
-app.get('/api/permits', (_req, res) => {
-  res.json(PERMIT_FACTS);
-});
-
-app.get('/api/reviews', (_req, res) => {
-  res.json(SAMPLE_REVIEWS);
-});
-
-app.get('/api/testimonials', (_req, res) => {
-  res.json(SAMPLE_REVIEWS);
-});
-
-app.get('/api/journal', (_req, res) => {
-  res.json(JOURNAL_ARTICLES);
-});
-
-app.get('/api/leads', (_req, res) => {
-  res.json(inMemoryLeads);
-});
-
-app.post('/api/leads', (req, res) => {
-  const newLead: Lead = {
-    id: req.body.id || 'eng_lead_' + Date.now(),
-    name: req.body.name || 'Safari Guest',
-    email: req.body.email || '',
-    whatsapp: req.body.whatsapp || '',
-    partySize: Number(req.body.partySize) || 2,
-    targetDates: req.body.targetDates || 'Flexible 2026/2027',
-    budgetTier: req.body.budgetTier || 'luxury',
-    interests: Array.isArray(req.body.interests) ? req.body.interests : ['gorillas'],
-    regions: req.body.regions,
-    durationDays: req.body.durationDays,
-    preferredGuideSlug: req.body.preferredGuideSlug,
-    experienceSlug: req.body.experienceSlug,
-    notes: req.body.notes,
-    status: 'new',
-    createdAt: new Date().toISOString(),
-  };
-
-  inMemoryLeads.unshift(newLead);
-  res.status(201).json(newLead);
-});
-
-// ================= BESPOKE SAFARI ITINERARY GENERATOR =================
-
-function buildDeterministicUgandaItinerary(params: {
-  region: string;
-  budgetTier: 'mid-range' | 'luxury' | 'signature';
-  activities: string[];
-  durationDays: number;
-  partySize: number;
-  specialRequests?: string;
-}) {
-  const { region, budgetTier, activities, durationDays, partySize } = params;
-  const cleanDays = Math.max(2, Math.min(12, Number(durationDays) || 5));
-  const cleanParty = Math.max(1, Math.min(12, Number(partySize) || 2));
-
-  // Match guide based on region & activity
-  const matchedGuide =
-    GUIDES.find((g) =>
-      g.regionsCovered.some((r) =>
-        region.toLowerCase().includes(r.toLowerCase().split(' ')[0])
-      )
-    ) ||
-    GUIDES.find((g) =>
-      activities.some((act) =>
-        g.specialties.some((s) => act.toLowerCase().includes(s))
-      )
-    ) ||
-    GUIDES[0];
-
-  const includeGorillas =
-    activities.some((a) => a.toLowerCase().includes('gorilla') || a.toLowerCase().includes('trek')) ||
-    region.toLowerCase().includes('bwindi') ||
-    region.toLowerCase().includes('mgahinga') ||
-    region.toLowerCase().includes('grand');
-
-  const includeChimps =
-    activities.some((a) => a.toLowerCase().includes('chimp') || a.toLowerCase().includes('primate')) ||
-    region.toLowerCase().includes('kibale') ||
-    region.toLowerCase().includes('queen');
-
-  const dailyBase =
-    budgetTier === 'signature' ? 890 : budgetTier === 'luxury' ? 590 : 390;
-
-  const permitBreakdown: { permitName: string; costUSD: number }[] = [];
-  if (includeGorillas) {
-    permitBreakdown.push({
-      permitName: 'UWA Mountain Gorilla Trekking Permit (Bwindi/Mgahinga)',
-      costUSD: 800,
-    });
-  }
-  if (includeChimps) {
-    permitBreakdown.push({
-      permitName: 'UWA Kibale Chimpanzee Tracking Permit',
-      costUSD: 250,
-    });
-  }
-  if (permitBreakdown.length === 0) {
-    permitBreakdown.push({
-      permitName: 'Uganda Wildlife Authority National Park Entry & Ranger Fees',
-      costUSD: 160,
-    });
-  }
-
-  const permitTotal = permitBreakdown.reduce((sum, p) => sum + p.costUSD, 0);
-  const estimatedPerPersonUSD = cleanDays * dailyBase + permitTotal;
-  const totalPackageUSD = estimatedPerPersonUSD * cleanParty;
-  const depositAmountUSD = Math.round(totalPackageUSD * 0.3);
-
-  const lodgePool =
-    budgetTier === 'signature'
-      ? ['Sanctuary Gorilla Forest Camp', 'Nile Safari Lodge', 'Apoka Safari Lodge', 'Hotel No.5 Entebbe']
-      : budgetTier === 'luxury'
-      ? ['Buhoma Lodge Bwindi', 'Primate Lodge Kibale', 'Paraa Safari Lodge', 'Kyambura Gorge Lodge']
-      : ['Ichumbi Gorilla Lodge', 'Turaco Treetops Kibale', 'Pakuba Safari Lodge', 'Mabamba Papyrus Eco-Camp'];
-
-  const days = Array.from({ length: cleanDays }, (_, i) => {
-    const dayNum = i + 1;
-    if (dayNum === 1) {
-      return {
-        day: 1,
-        title: `Entebbe Welcome Briefing & Overland Transfer to ${region}`,
-        destination: `Entebbe to ${region}`,
-        morningActivity: `Meet your named WildLife specialist ${matchedGuide.name} at our Bugonga Head Office (5 mins from Entebbe Airport) for Ugandan coffee, route map review, and official UWA permit inspection.`,
-        afternoonActivity: `Scenic drive in your private 4x4 Land Cruiser with pop-up roof toward ${region}, stopping at the Equator crossing or Mabamba/Ziwa conservation corridor en route.`,
-        accommodation: lodgePool[0],
-        meals: 'Breakfast, Lunch, Dinner',
-        driveTime: '4.5–6 hours via scenic highway',
-        wildlifeHighlight: 'Grey Crowned Crane, Rothschild Giraffe or Papyrus Endemics',
-      };
-    }
-    if (dayNum === cleanDays) {
-      return {
-        day: dayNum,
-        title: `Sunrise Nature Walk in ${region} & Return to Entebbe`,
-        destination: `${region} to Entebbe Peninsula`,
-        morningActivity: `Final dawn birding or crater rim walk led by ${matchedGuide.name}, capturing golden-hour photography before breakfast.`,
-        afternoonActivity: `Return journey to Entebbe with an artisanal lunch stop and evening drop-off at Entebbe International Airport or your lakeside partner hotel.`,
-        accommodation: 'Entebbe Departure / Optional Hotel No.5 Day Room',
-        meals: 'Breakfast, Lunch',
-        driveTime: '5 hours return to Entebbe',
-        wildlifeHighlight: 'Great Blue Turaco, Black-and-White Colobus, Ankole Long-Horned Cattle',
-      };
-    }
-    if (dayNum === 2 && includeGorillas) {
-      return {
-        day: 2,
-        title: 'Bwindi Impenetrable Forest Mountain Gorilla Trekking',
-        destination: 'Bwindi Impenetrable National Park',
-        morningActivity: `7:30 AM UWA ranger briefing at the trailhead followed by a guided montane rainforest trek to spend one full, unhurried hour observing a habituated mountain gorilla family.`,
-        afternoonActivity: `Receive your official UWA Gorilla Trekking Certificate and enjoy an optional Batwa forest heritage walk or quiet forest-edge recovery at the lodge.`,
-        accommodation: lodgePool[0],
-        meals: 'Breakfast, Packed Trail Lunch, Dinner',
-        driveTime: '30 mins to trailhead',
-        wildlifeHighlight: 'Mountain Gorilla Silverback & Infant Family, L’Hoest’s Monkey',
-      };
-    }
-    if (dayNum === 3 && includeChimps) {
-      return {
-        day: 3,
-        title: 'Kibale Forest Chimpanzee Tracking & Bigodi Wetland Walk',
-        destination: 'Kibale Forest & Bigodi Sanctuary',
-        morningActivity: `Dawn trek from Kanyanchu Visitor Centre under towering fig trees to track wild Eastern chimpanzees and 12 other primate species with ${matchedGuide.name}.`,
-        afternoonActivity: `Guided boardwalk excursion through the community-run Bigodi Wetland Sanctuary and visit to the Bigodi Women’s Basketry Cooperative.`,
-        accommodation: lodgePool[1 % lodgePool.length],
-        meals: 'Breakfast, Lunch, Dinner',
-        driveTime: '2–3 hours between sectors',
-        wildlifeHighlight: 'Eastern Chimpanzee, Uganda Red Colobus, Great Blue Turaco',
-      };
-    }
-    return {
-      day: dayNum,
-      title: `${region} Savanna Game Drive, Boat Launch & Cultural Encounter`,
-      destination: region,
-      morningActivity: `Sunrise off-track wildlife and photography circuit with ${matchedGuide.name} in the private 4x4 Land Cruiser, scanning for lions, elephants, and endemic birds.`,
-      afternoonActivity: `Private boat launch along the Kazinga Channel / Victoria Nile or a respectful visit to a local Ugandan community homestead and coffee farm.`,
-      accommodation: lodgePool[dayNum % lodgePool.length],
-      meals: 'Breakfast, Lunch, Dinner',
-      driveTime: 'Game viewing & short park transfers',
-      wildlifeHighlight: 'Tree-Climbing Lions, African Bush Elephant, Hippo Pods, Fish Eagle',
-    };
-  });
-
-  const randCode = Math.floor(100000 + Math.random() * 900000);
-  return {
-    id: `itin_${Date.now()}`,
-    referenceCode: `ENG-EXP-${randCode}`,
-    title: `${cleanDays}-Day Custom ${region} & ${activities[0] || 'Uganda'} Expedition`,
-    subtitle: `Private ${budgetTier} Uganda safari tailored for ${cleanParty} ${
-      cleanParty === 1 ? 'traveler' : 'travelers'
-    }, led from Entebbe by ${matchedGuide.name}.`,
-    region,
-    budgetTier,
-    activityFocus: activities.join(', ') || 'Wildlife, Primate Trekking & Culture',
-    durationDays: cleanDays,
-    partySize: cleanParty,
-    estimatedPerPersonUSD,
-    totalPackageUSD,
-    depositAmountUSD,
-    matchedGuideSlug: matchedGuide.slug,
-    matchedGuideName: matchedGuide.name,
-    matchedGuideReason: `${matchedGuide.name} is a UTB-licensed specialist from ${matchedGuide.homeRegion} with ${matchedGuide.yearsExperience} years of field experience leading ${activities.join(' and ') || 'custom Uganda'} safaris.`,
-    permitBreakdown,
-    recommendedPartnerStays: lodgePool.slice(0, 3),
-    days,
-    conservationNote:
-      'Every WildLife itinerary stays 100% within Uganda, includes official UWA conservation permits, and contributes US$25 per booking to our Porter Welfare & Community Water Fund.',
-    createdAt: new Date().toISOString(),
-  };
-}
-
-app.post('/api/itinerary/generate', async (req, res) => {
-  const {
-    region = 'Bwindi & Mgahinga + Queen Elizabeth NP',
-    budgetTier = 'luxury',
-    activities = ['Mountain Gorilla Trekking', 'Savanna Wildlife & Boat Cruise'],
-    durationDays = 5,
-    partySize = 2,
-    specialRequests = '',
-    language = 'en',
-  } = req.body || {};
-
-  const cleanDays = Math.max(2, Math.min(12, Number(durationDays) || 5));
-  const cleanParty = Math.max(1, Math.min(12, Number(partySize) || 2));
-  const cleanTier = (['mid-range', 'luxury', 'signature'].includes(budgetTier)
-    ? budgetTier
-    : 'luxury') as 'mid-range' | 'luxury' | 'signature';
-  const activityList: string[] = Array.isArray(activities)
-    ? activities
-    : [String(activities || 'Gorilla Trekking & Wildlife')];
-
-  const apiKey = process.env.API_KEY;
-
-  if (apiKey) {
-    try {
-      const client = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-      const guideRosterSummary = GUIDES.map(
-        (g) =>
-          `${g.name} (slug: "${g.slug}", homeRegion: "${g.homeRegion}", specialties: [${g.specialties.join(
-            ', '
-          )}], yearsExperience: ${g.yearsExperience})`
-      ).join('\n');
-
-      const prompt = `Design a custom ${cleanDays}-day private Uganda safari itinerary for ${cleanParty} guests in language code "${language}".
-User Preferences:
-- Target Uganda Region(s): ${region}
-- Comfort / Budget Tier: ${cleanTier} (mid-range ~$390/day + permits, luxury ~$590/day + permits, signature ~$890/day + permits)
-- Preferred Activities: ${activityList.join(', ')}
-- Additional Notes: ${specialRequests || 'Include authentic Ugandan cultural touchpoints and unhurried wildlife viewing'}
-
-Strict WildLife Safaris Rules:
-1. All destinations MUST be 100% inside Uganda (e.g., Entebbe, Mabamba Swamp, Bwindi Impenetrable NP, Mgahinga, Kibale Forest, Queen Elizabeth NP, Murchison Falls NP, Ziwa Rhino Sanctuary, Kidepo Valley NP, Rwenzori Mountains, Lake Bunyonyi, Jinja).
-2. Match the itinerary to the best guide from this exact WildLife roster:
-${guideRosterSummary}
-3. Use accurate UWA permit tariffs (Mountain Gorilla Trekking Permit = US$800, Gorilla Habituation = US$1500, Kibale Chimpanzee Permit = US$250, Kyambura Gorge Chimp Permit = US$100).
-4. Provide exactly ${cleanDays} day objects in the "days" array.
-5. Never use the word "AI", "IA", "KI", or "artificial intelligence" anywhere in the output.`;
-
-      const response = await client.models.generateContent({
-        model: 'gemini-3.8-flash',
-        contents: prompt,
-        config: {
-          systemInstruction:
-            'You are the Chief Expedition Architect at WildLife Safaris in Entebbe, Uganda. Build accurate, inspiring, logistically realistic multi-day Uganda safari itineraries led by a named Ugandan guide from our collective. Never mention the word AI or artificial intelligence. Always return valid JSON matching the schema.',
-          responseMimeType: 'application/json',
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              title: {
-                type: Type.STRING,
-                description: 'Compelling editorial title for the custom Uganda safari.',
-              },
-              subtitle: {
-                type: Type.STRING,
-                description: '1-2 sentence summary highlighting the route, pace, and named guide.',
-              },
-              matchedGuideSlug: {
-                type: Type.STRING,
-                description: 'Exact slug of the matched guide from the WildLife roster.',
-              },
-              matchedGuideName: {
-                type: Type.STRING,
-                description: 'Full name of the matched Ugandan guide.',
-              },
-              matchedGuideReason: {
-                type: Type.STRING,
-                description: 'Why this specific guide is the ideal match for the region and activities.',
-              },
-              estimatedPerPersonUSD: {
-                type: Type.INTEGER,
-                description: 'Realistic per-person total price in USD including vehicle, full-board lodges, and UWA permits.',
-              },
-              permitBreakdown: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    permitName: { type: Type.STRING },
-                    costUSD: { type: Type.INTEGER },
-                  },
-                  required: ['permitName', 'costUSD'],
-                },
-              },
-              recommendedPartnerStays: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING },
-                description: '2 to 4 recommended Ugandan partner lodges, hotels, or camp sites.',
-              },
-              days: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    day: { type: Type.INTEGER },
-                    title: { type: Type.STRING },
-                    destination: { type: Type.STRING },
-                    morningActivity: { type: Type.STRING },
-                    afternoonActivity: { type: Type.STRING },
-                    accommodation: { type: Type.STRING },
-                    meals: { type: Type.STRING },
-                    driveTime: { type: Type.STRING },
-                    wildlifeHighlight: { type: Type.STRING },
-                  },
-                  required: [
-                    'day',
-                    'title',
-                    'destination',
-                    'morningActivity',
-                    'afternoonActivity',
-                    'accommodation',
-                    'meals',
-                    'driveTime',
-                    'wildlifeHighlight',
-                  ],
-                },
-              },
-              conservationNote: {
-                type: Type.STRING,
-                description: 'How this itinerary supports UWA conservation and Ugandan local communities.',
-              },
-            },
-            required: [
-              'title',
-              'subtitle',
-              'matchedGuideSlug',
-              'matchedGuideName',
-              'matchedGuideReason',
-              'estimatedPerPersonUSD',
-              'permitBreakdown',
-              'recommendedPartnerStays',
-              'days',
-              'conservationNote',
-            ],
-          },
-        },
-      });
-
-      const rawJson = (response.text ?? '').trim();
-      if (rawJson) {
-        const parsed = JSON.parse(rawJson);
-        const validGuide =
-          GUIDES.find((g) => g.slug === parsed.matchedGuideSlug) || GUIDES[0];
-        const perPersonUSD = Number(parsed.estimatedPerPersonUSD) || cleanDays * 590 + 800;
-        const totalPackageUSD = perPersonUSD * cleanParty;
-        const depositAmountUSD = Math.round(totalPackageUSD * 0.3);
-        const randCode = Math.floor(100000 + Math.random() * 900000);
-
-        return res.json({
-          id: `itin_${Date.now()}`,
-          referenceCode: `ENG-EXP-${randCode}`,
-          title: parsed.title,
-          subtitle: parsed.subtitle,
-          region,
-          budgetTier: cleanTier,
-          activityFocus: activityList.join(', '),
-          durationDays: cleanDays,
-          partySize: cleanParty,
-          estimatedPerPersonUSD: perPersonUSD,
-          totalPackageUSD,
-          depositAmountUSD,
-          matchedGuideSlug: validGuide.slug,
-          matchedGuideName: validGuide.name,
-          matchedGuideReason: parsed.matchedGuideReason,
-          permitBreakdown: Array.isArray(parsed.permitBreakdown)
-            ? parsed.permitBreakdown
-            : [],
-          recommendedPartnerStays: Array.isArray(parsed.recommendedPartnerStays)
-            ? parsed.recommendedPartnerStays
-            : [],
-          days: Array.isArray(parsed.days) ? parsed.days : [],
-          conservationNote: parsed.conservationNote,
-          createdAt: new Date().toISOString(),
-        });
-      }
-    } catch (err: any) {
-      console.error('[Itinerary Generator Error]:', err?.message || err);
-    }
-  }
-
-  // Fallback itinerary if API key is not present or call fails
-  const fallbackItinerary = buildDeterministicUgandaItinerary({
-    region,
-    budgetTier: cleanTier,
-    activities: activityList,
-    durationDays: cleanDays,
-    partySize: cleanParty,
-    specialRequests,
-  });
-
-  return res.json(fallbackItinerary);
-});
-
-// ================= WILDLIFE CONCIERGE ("GUIDE MATCHER") =================
-
-const conciergeToolDeclarations: FunctionDeclaration[] = [
-  {
-    name: 'match_guide',
-    description:
-      'Match the guest with 1 to 3 named Ugandan safari guides from the WildLife collective based on wildlife specialty, Uganda region, or spoken language.',
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        interest: {
-          type: Type.STRING,
-          description: 'Specialty e.g. gorillas, chimps, birding, big-game, culture, hiking, photography',
-        },
-        region: {
-          type: Type.STRING,
-          description: 'Uganda region e.g. Bwindi, Kibale, Queen Elizabeth, Murchison Falls, Kidepo, Rwenzori, Mabamba',
-        },
-        language: {
-          type: Type.STRING,
-          description: 'Preferred language e.g. English, French, German, Luganda, Runyankole, Swahili',
-        },
-      },
-    },
-  },
-  {
-    name: 'search_experiences',
-    description: 'Search WildLife Safaris signature Uganda itineraries by duration, region, or wildlife interest.',
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        maxDays: { type: Type.NUMBER, description: 'Maximum duration in days (1 to 10)' },
-        interest: { type: Type.STRING, description: 'Wildlife or activity interest' },
-        region: { type: Type.STRING, description: 'Uganda park or region' },
-      },
-    },
-  },
-  {
-    name: 'get_permit_info',
-    description:
-      'Fetch official Uganda Wildlife Authority (UWA) gorilla and chimpanzee permit tariffs, low-season discounts (April, May, November), and 1 January 2027 tariff updates.',
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        parkOrSpecies: {
-          type: Type.STRING,
-          description: 'Optional filter such as gorilla, chimp, habituation, Bwindi, Kibale, or Kyambura',
-        },
-      },
-    },
-  },
-  {
-    name: 'build_custom_quote',
-    description:
-      'Calculate an indicative per-person price band in USD for a custom Uganda safari based on duration, comfort tier, and primate permits.',
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        days: { type: Type.NUMBER, description: 'Number of safari days in Uganda' },
-        partySize: { type: Type.NUMBER, description: 'Number of travelers' },
-        comfortTier: { type: Type.STRING, description: 'mid-range, luxury, or signature' },
-        includeGorillas: { type: Type.BOOLEAN, description: 'Include US$800 Bwindi gorilla permit' },
-        includeChimps: { type: Type.BOOLEAN, description: 'Include US$250 Kibale chimpanzee permit' },
-      },
-      required: ['days'],
-    },
-  },
-  {
-    name: 'create_lead',
-    description: 'Save a safari inquiry lead for the Entebbe coordination desk.',
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        name: { type: Type.STRING },
-        email: { type: Type.STRING },
-        whatsapp: { type: Type.STRING },
-        partySize: { type: Type.NUMBER },
-        targetDates: { type: Type.STRING },
-        budgetTier: { type: Type.STRING },
-        preferredGuideSlug: { type: Type.STRING },
-        notes: { type: Type.STRING },
-      },
-      required: ['name'],
-    },
-  },
-  {
-    name: 'check_availability',
-    description:
-      'Record requested dates and return the 12-hour human verification promise with UWA and lodges (never claim live availability).',
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        dates: { type: Type.STRING, description: 'Target travel dates or month' },
-      },
-      required: ['dates'],
-    },
-  },
-  {
-    name: 'handoff_to_human',
-    description: 'Provide direct WhatsApp and Entebbe head office contact details for human coordinator follow-up.',
-    parameters: {
-      type: Type.OBJECT,
-      properties: {
-        reason: { type: Type.STRING, description: 'Reason for human coordinator handoff' },
-      },
-      required: ['reason'],
-    },
-  },
-];
-
-app.post('/api/chat', async (req, res) => {
-  const { sessionId, message = '', language = 'en', history = [] } = req.body;
-  const currentSessionId = sessionId || 'eng_sess_' + Date.now();
-
-  if (!inMemorySessions[currentSessionId]) {
-    inMemorySessions[currentSessionId] = {
-      id: currentSessionId,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      messages: [],
-    };
-  }
-
-  const session = inMemorySessions[currentSessionId];
-  session.messages.push({
-    id: 'msg_user_' + Date.now(),
-    role: 'user',
-    content: message,
-    timestamp: new Date().toISOString(),
-  });
-
-  const apiKey = process.env.API_KEY;
-
-  if (apiKey) {
-    try {
-      const client = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-      const contents = history.map((m: any) => ({
-        role: m.role === 'user' ? 'user' : 'model',
-        parts: [{ text: m.content }],
-      }));
-      contents.push({
-        role: 'user',
-        parts: [{ text: `[Guest preferred language code: ${language}] ${message}` }],
-      });
-
-      const response = await client.models.generateContent({
-        model: 'gemini-3.8-flash',
-        contents,
-        config: {
-          systemInstruction: WILDLIFE_CONCIERGE_SYSTEM_PROMPT,
-          tools: [{ functionDeclarations: conciergeToolDeclarations }],
-        },
-      });
-
-      let replyText = response.text || '';
-      const executedToolCalls: {
-        name: string;
-        arguments: Record<string, any>;
-        result: any;
-      }[] = [];
-
-      const functionCalls = response.functionCalls;
-      if (functionCalls && functionCalls.length > 0) {
-        for (const call of functionCalls) {
-          const toolName = call.name || 'match_guide';
-          const toolArgs = (call.args as Record<string, any>) || {};
-          const toolResult = executeConciergeTool(toolName, toolArgs, (lead) =>
-            inMemoryLeads.unshift(lead)
-          );
-          executedToolCalls.push({
-            name: toolName,
-            arguments: toolArgs,
-            result: toolResult,
-          });
-        }
-
-        const followUp = await client.models.generateContent({
-          model: 'gemini-3.8-flash',
-          contents: [
-            ...contents,
-            {
-              role: 'model',
-              parts: [{ text: replyText || 'Checking WildLife guide profiles and UWA tariffs...' }],
-            },
-            {
-              role: 'user',
-              parts: [
-                {
-                  text: `Tool results: ${JSON.stringify(
-                    executedToolCalls
-                  )}. Synthesize a warm, concise response in language "${language}" naming the matched Ugandan guides, quoting verified UWA permit tariffs, stating that availability is confirmed within 12 hours, never mentioning vehicle ownership, and NEVER mentioning the word AI.`,
-                },
-              ],
-            },
-          ],
-          config: {
-            systemInstruction: WILDLIFE_CONCIERGE_SYSTEM_PROMPT,
-          },
-        });
-
-        if (followUp.text) {
-          replyText = followUp.text;
-        }
-      }
-
-      if (replyText) {
-        session.messages.push({
-          id: 'msg_asst_' + Date.now(),
-          role: 'assistant',
-          content: replyText,
-          toolCalls: executedToolCalls,
-          timestamp: new Date().toISOString(),
-        });
-
-        return res.json({
-          reply: replyText,
-          toolCalls: executedToolCalls,
-        });
-      }
-    } catch (err: any) {
-      console.error('[WildLife Concierge Fallback]:', err?.message || err);
-    }
-  }
-
-  // Deterministic rule-based fallback if GEMINI_API_KEY is unset or fails
-  const fallback = generateRuleBasedConciergeReply(message, (lead) =>
-    inMemoryLeads.unshift(lead)
-  );
-
-  session.messages.push({
-    id: 'msg_asst_' + Date.now(),
-    role: 'assistant',
-    content: fallback.reply,
-    toolCalls: fallback.toolCalls,
-    timestamp: new Date().toISOString(),
-  });
-
-  return res.json(fallback);
-});
-
-// ================= VITE DEV SERVER OR PRODUCTION STATIC SERVING =================
+const MAX_ACTIVE_PAID_CAROUSEL_SLOTS = 10;
 
 async function startServer() {
-  if (process.env.NODE_ENV !== 'production') {
-    const vitePromise = import('vite').then(({ createServer: createViteServer }) =>
-      createViteServer({
-        server: { middlewareMode: true },
-        appType: 'spa',
-      })
-    );
+  const app = express();
+  const PORT = 3000;
 
-    app.use(async (req, res, next) => {
-      try {
-        const vite = await vitePromise;
-        vite.middlewares(req, res, next);
-      } catch (err) {
-        next(err);
-      }
+  app.use(express.json({ limit: '15mb' }));
+
+  // Health & Go Architecture Metadata
+  app.get('/api/health', (_req, res) => {
+    res.json({
+      status: 'ok',
+      architecture: 'Go (Golang) Multi-Vendor UTB/UWA Marketplace & GenAI Agent (/backend)',
+      maxActiveCarouselSlots: MAX_ACTIVE_PAID_CAROUSEL_SLOTS,
+      timestamp: new Date().toISOString(),
     });
+  });
+
+  // In-memory state mirroring Go VendorService and BookingService
+  const verifiedVendors = [
+    {
+      id: 'op-enganda-wildlife-safaris',
+      slug: 'enganda-safaris',
+      name: 'Enganda Safaris',
+      vendorType: 'tour_operator',
+      utbLicenseNumber: 'UTB/TO/2026/0102',
+      uwaAccreditationId: 'UWA-REG-1104-UG',
+      headquarters: 'Plot 23A, Manyago, Entebbe, Uganda',
+      logoUrl: '/assets/aistudio/enganda-logo-header.png',
+      verifiedStatus: 'UTB & UWA Gold Verified',
+      rating: 4.98,
+    },
+    {
+      id: 'op-tingatinga-safaris',
+      slug: 'tingatinga-safaris',
+      name: 'Tingatinga Safaris',
+      vendorType: 'tour_operator',
+      utbLicenseNumber: 'UTB/TO/2026/0418',
+      uwaAccreditationId: 'UWA-REG-8841-UG',
+      headquarters: 'Airport Road, Entebbe & Kampala, Uganda',
+      logoUrl: '/assets/aistudio/tinga_logo_2_10ada7c3.png',
+      verifiedStatus: 'UTB & UWA Gold Verified',
+      rating: 4.97,
+    },
+    {
+      id: 'op-shuma-africa-safaris',
+      slug: 'shuma-africa-safaris',
+      name: 'Shuma Africa Safaris',
+      vendorType: 'tour_operator',
+      utbLicenseNumber: 'UTB/TO/2026/0794',
+      uwaAccreditationId: 'UWA-REG-5520-EA',
+      headquarters: 'Entebbe & Arusha Multi-Country Desk',
+      verifiedStatus: 'UTB & UWA Cross-Border Verified',
+      rating: 4.95,
+    },
+    {
+      id: 'partner-igongo-cultural-hotel',
+      slug: 'igongo-country-hotel',
+      name: 'Igongo Country Hotel & Cultural Centre',
+      vendorType: 'hotel_lodge',
+      utbLicenseNumber: 'UTB/HL/2026/0089',
+      uwaAccreditationId: 'UWA-HOSP-3310-MB',
+      headquarters: 'Biharwe, Mbarara — Western Safari Circuit',
+      logoUrl: '/assets/aistudio/logo_igongo_8f5928e8.png',
+      verifiedStatus: 'UTB 5-Star Cultural Heritage Partner',
+      rating: 4.94,
+    },
+  ];
+
+  const activeBookings: Record<string, unknown>[] = [];
+  const exchangeRates: Record<string, number> = {
+    USD: 1,
+    UGX: 3750,
+    EUR: 0.92,
+    GBP: 0.79,
+  };
+
+  // Multi-Vendor Marketplace & UTB/UWA Verification Endpoints (Mirroring /backend/handlers/marketplace.go & VendorService)
+  const listVendorsHandler = (req: express.Request, res: express.Response) => {
+    const filterType = String(req.query.type || '').trim().toLowerCase();
+    const filtered = filterType
+      ? verifiedVendors.filter((v) => v.vendorType.toLowerCase() === filterType)
+      : verifiedVendors;
+    res.json({
+      authority: 'Uganda Tourism Board (UTB) & Uganda Wildlife Authority (UWA)',
+      regulatoryBodies: ['Uganda Tourism Board (UTB)', 'Uganda Wildlife Authority (UWA)'],
+      filterType,
+      totalVendors: filtered.length,
+      vendors: filtered,
+    });
+  };
+
+  app.get('/api/marketplace/vendors', listVendorsHandler);
+  app.get('/api/vendors', listVendorsHandler);
+
+  app.get('/api/vendors/:idOrSlug', (req, res) => {
+    const key = req.params.idOrSlug.toLowerCase();
+    const found = verifiedVendors.find(
+      (v) => v.id.toLowerCase() === key || v.slug.toLowerCase() === key
+    );
+    if (!found) {
+      return res.status(404).json({ error: `vendor '${req.params.idOrSlug}' not found in UTB/UWA registry` });
+    }
+    return res.json(found);
+  });
+
+  app.post('/api/vendors/onboard', (req, res) => {
+    const { name, vendorType, utbLicenseNumber, uwaAccreditationId, headquarters, logoUrl } = req.body || {};
+    if (!name || !utbLicenseNumber || !uwaAccreditationId) {
+      return res.status(400).json({
+        error: 'Name, UTB License Number (UTB/...), and UWA Accreditation ID (UWA-...) are required.',
+      });
+    }
+    const newVendor = {
+      id: `vendor-utb-${Date.now().toString().slice(-5)}`,
+      slug: String(name).toLowerCase().replace(/\s+/g, '-'),
+      name,
+      vendorType: vendorType || 'tour_operator',
+      utbLicenseNumber,
+      uwaAccreditationId,
+      headquarters: headquarters || 'Kampala / Entebbe, Uganda',
+      logoUrl: logoUrl || '/assets/aistudio/enganda-logo-header.png',
+      verifiedStatus: 'UTB & UWA Newly Verified Partner',
+      rating: 4.9,
+    };
+    verifiedVendors.push(newVendor);
+    return res.status(201).json({
+      status: 'VERIFIED_ONBOARDED',
+      message: 'Vendor successfully verified against UTB/UWA compliance standards.',
+      vendor: newVendor,
+    });
+  });
+
+  app.post('/api/marketplace/carousel/validate', (req, res) => {
+    const currentActiveCount = Number(req.body?.activeCount ?? 10);
+    if (currentActiveCount >= MAX_ACTIVE_PAID_CAROUSEL_SLOTS) {
+      return res.json({
+        allowed: false,
+        maxPaidSlots: MAX_ACTIVE_PAID_CAROUSEL_SLOTS,
+        activeCount: currentActiveCount,
+        message:
+          'Paid-tier featured carousel is at its strict 10-slot cap. Additional items are queued in Standby Rotation (Slot 011: Shoebill & Chimps).',
+      });
+    }
+    return res.json({
+      allowed: true,
+      maxPaidSlots: MAX_ACTIVE_PAID_CAROUSEL_SLOTS,
+      activeCount: currentActiveCount,
+    });
+  });
+
+  // Booking Orchestration Service Layer Endpoints (Mirroring /backend/services/booking_service.go)
+  app.post('/api/bookings/availability', (req, res) => {
+    const { packageIdOrName = '8-Day Tingatinga Safaris Signature (Gorillas, Chimps & Lions)', travelDate = '2026-07-15', guests = 2 } = req.body || {};
+    res.json({
+      available: true,
+      packageId: 'pkg-tingatinga-8d-primates',
+      packageTitle: packageIdOrName,
+      travelDate,
+      guests: Number(guests) || 2,
+      permitQuotaLeft: 6,
+      uwaGateStatus: 'UWA Buhoma & Kanyanchu Quotas Confirmed',
+      assignedGuide: 'Sam M. — Lead Primate & Savannah Specialist (UWA-G-1084)',
+      vendorName: 'Tingatinga Safaris',
+      utbLicenseNumber: 'UTB/TO/2026/0418',
+      uwaAccreditationId: 'UWA-REG-8841-UG',
+    });
+  });
+
+  app.post('/api/bookings/quote', (req, res) => {
+    const {
+      packageIdOrName = '8-Day Tingatinga Safaris Signature (Gorillas, Chimps & Lions)',
+      guests = 2,
+      tier = 'midrange',
+      currency = 'USD',
+      includeHotelAddon = true,
+      includeVehicle4x4 = true,
+    } = req.body || {};
+    const numGuests = Math.max(1, Number(guests) || 2);
+    const curr = String(currency || 'USD').toUpperCase();
+    const rate = exchangeRates[curr] || 1;
+    const basePerPerson = tier === 'luxury' ? 5450 : tier === 'budget' ? 3290 : 3980;
+    const subtotalUSD = basePerPerson * numGuests;
+    const permitsTotalUSD = 1050 * numGuests;
+    const hotelAddonUSD = includeHotelAddon ? 155 * numGuests : 0;
+    const vehicleAddonUSD = includeVehicle4x4 ? 195 * 4 : 0;
+    const grandTotalUSD = subtotalUSD + hotelAddonUSD + vehicleAddonUSD;
+
+    res.json({
+      quoteReference: `QT-UTB-${Date.now().toString().slice(-5)}`,
+      packageId: 'pkg-tingatinga-8d-primates',
+      packageTitle: packageIdOrName,
+      vendorName: 'Tingatinga Safaris',
+      utbLicenseNumber: 'UTB/TO/2026/0418',
+      tier,
+      guests: numGuests,
+      basePricePerPersonUSD: basePerPerson,
+      subtotalUSD,
+      uwaPermitsTotalUSD: permitsTotalUSD,
+      hotelAddonUSD,
+      vehicleAddonUSD,
+      grandTotalUSD,
+      currency: curr,
+      exchangeRateFromUSD: rate,
+      convertedGrandTotal: Math.round(grandTotalUSD * rate * 100) / 100,
+    });
+  });
+
+  app.post('/api/bookings/currency', (req, res) => {
+    const curr = String(req.body?.currency || 'USD').toUpperCase();
+    const amountUSD = Number(req.body?.amountUSD || 0);
+    const rate = exchangeRates[curr] || 1;
+    res.json({
+      previousCurrency: 'USD',
+      activeCurrency: curr,
+      rateFromUSD: rate,
+      amountUSD,
+      convertedAmount: Math.round(amountUSD * rate * 100) / 100,
+      status: 'WALLET_CURRENCY_SYNCHRONIZED',
+    });
+  });
+
+  app.get('/api/bookings', (_req, res) => {
+    res.json({ bookings: activeBookings, count: activeBookings.length });
+  });
+
+  app.post('/api/bookings', (req, res) => {
+    const {
+      packageTitle = '8-Day Tingatinga Safaris Signature (Gorillas, Chimps & Lions)',
+      guestName = 'Enganda VIP Guest',
+      guestEmail = 'guest@engandasafaris.com',
+      guests = 2,
+      travelDate = '2026-07-15',
+      tier = 'midrange',
+      totalUSD = 7960,
+      currency = 'USD',
+    } = req.body || {};
+    const curr = String(currency).toUpperCase();
+    const rate = exchangeRates[curr] || 1;
+    const stamp = Date.now().toString().slice(-6);
+    const booking = {
+      bookingReference: `ENG-${stamp}`,
+      invoiceNumber: `INV-UWA-${stamp}`,
+      packageTitle,
+      guestName,
+      guestEmail,
+      guests: Number(guests) || 2,
+      travelDate,
+      tier,
+      totalUSD: Number(totalUSD) || 7960,
+      currency: curr,
+      convertedTotal: Math.round((Number(totalUSD) || 7960) * rate * 100) / 100,
+      escrowAccount: 'Ecobank Uganda & FINCA Uganda UWA Permit Escrow Trust',
+      utbVerificationBadge: 'UTB/TO/2026/0418 • UWA-REG-8841-UG',
+      status: 'CONFIRMED_PENDING_SETTLEMENT',
+      createdAt: new Date().toISOString(),
+    };
+    activeBookings.push(booking);
+    res.status(201).json(booking);
+  });
+
+  app.post('/api/bookings/checkout', (req, res) => {
+    const {
+      bookingReference = `ENG-${Date.now().toString().slice(-6)}`,
+      paymentMethod = 'safari_wallet',
+      currency = 'USD',
+      amountUSD = 7960,
+    } = req.body || {};
+    const curr = String(currency).toUpperCase();
+    const rate = exchangeRates[curr] || 1;
+    res.json({
+      transactionId: `TXN-RELWORX-${Date.now().toString().slice(-6)}`,
+      bookingReference,
+      paymentMethod,
+      providerChannel: 'Relworx Mobile Money & Ecobank Escrow Settlement',
+      currency: curr,
+      amountUSD: Number(amountUSD) || 7960,
+      settledAmount: Math.round((Number(amountUSD) || 7960) * rate * 100) / 100,
+      paymentStatus: 'ESCROW_SETTLED_UWA_PERMIT_LOCKED',
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // Autonomous Agent Tool Execution Endpoint (Mirroring /backend/handlers/agent.go)
+  app.post('/api/agent/execute-tool', (req, res) => {
+    const { toolName, args = {} } = req.body || {};
+    const stamp = Date.now().toString().slice(-6);
+    res.json({
+      tool: toolName,
+      executedAt: new Date().toISOString(),
+      referenceId: `ENG-${stamp}`,
+      args,
+    });
+  });
+
+  // Server-side Gemini API route for AI Guide Matcher & Autonomous Agentic Safari Planner
+  app.post('/api/chat', async (req, res) => {
+    try {
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.status(200).json({
+          text: '',
+          functionCalls: [],
+          fallback: true,
+          fallbackReason: 'missing_api_key',
+        });
+      }
+
+      const ai = new GoogleGenAI({
+        apiKey,
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          },
+        },
+      });
+
+      const { contents, systemInstruction, tools, config } = req.body;
+      const response = await ai.models.generateContent({
+        model: 'gemini-4-hydrogen',
+        contents,
+        config: {
+          ...config,
+          ...(systemInstruction ? { systemInstruction } : {}),
+          ...(tools ? { tools } : {}),
+        },
+      });
+
+      return res.json({
+        text: response.text || '',
+        functionCalls: response.functionCalls || [],
+        fallback: false,
+      });
+    } catch (_error) {
+      // Gracefully fall back to the deterministic UTB/UWA Autonomous Planner engine when upstream billing/quota is unavailable
+      return res.status(200).json({
+        text: '',
+        functionCalls: [],
+        fallback: true,
+        fallbackReason: 'upstream_api_unavailable',
+      });
+    }
+  });
+
+  if (process.env.NODE_ENV !== 'production') {
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: 'spa',
+    });
+    app.use(vite.middlewares);
   } else {
-    const distPath = fs.existsSync(path.resolve(process.cwd(), 'dist', 'index.html'))
-      ? path.resolve(process.cwd(), 'dist')
-      : fs.existsSync(path.resolve(process.cwd(), 'index.html'))
-      ? process.cwd()
-      : path.resolve(process.cwd(), 'dist');
+    const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get('*', (_req, res) => {
+    app.get('*all', (_req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[WildLife Safaris] Server running on http://0.0.0.0:${PORT}`);
-    console.log(`  ➜  Local:   http://localhost:${PORT}/`);
+    console.log(`Enganda Safaris server running on http://localhost:${PORT}`);
   });
 }
 

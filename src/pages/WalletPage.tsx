@@ -50,27 +50,27 @@ const PAYMENT_RAILS: {
   icon: React.FC<{ className?: string }>;
 }[] = [
   {
-    id: 'Visa / Mastercard',
-    label: 'Visa / Mastercard',
-    detail: 'Instant USD / Multi-currency card settlement',
-    icon: CreditCard,
-  },
-  {
     id: 'MTN Mobile Money Uganda',
-    label: 'MTN Mobile Money Uganda',
-    detail: '+256 MTN MoMo instant East African settlement',
+    label: 'Relworx • MTN Mobile Money',
+    detail: 'Relworx API v2 instant +256 MTN MoMo collection',
     icon: Smartphone,
   },
   {
     id: 'Airtel Money Uganda',
-    label: 'Airtel Money Uganda',
-    detail: '+256 Airtel Money instant mobile wallet',
+    label: 'Relworx • Airtel Money',
+    detail: 'Relworx API v2 instant +256 Airtel Money collection',
     icon: Smartphone,
   },
   {
+    id: 'Visa / Mastercard',
+    label: 'Relworx • Visa / Mastercard',
+    detail: 'Instant USD / Multi-currency card settlement',
+    icon: CreditCard,
+  },
+  {
     id: 'International Bank Wire',
-    label: 'International Bank Wire',
-    detail: 'Stanbic Bank Uganda Entebbe Trust Account (SWIFT)',
+    label: 'Ecobank / International Bank Wire',
+    detail: 'Ecobank & Stanbic Entebbe Trust Account (SWIFT)',
     icon: Landmark,
   },
 ];
@@ -92,8 +92,6 @@ export const WalletPage: React.FC = () => {
     savedItineraries,
     paySavedItineraryDeposit,
     removeSavedItinerary,
-    savedChecklists,
-    removeSavedChecklist,
     resetWalletToDefault,
   } = useWallet();
 
@@ -115,8 +113,10 @@ export const WalletPage: React.FC = () => {
 
   // Top-up state
   const [topUpAmount, setTopUpAmount] = useState<number>(800);
-  const [topUpRail, setTopUpRail] = useState<WalletPaymentRail>('Visa / Mastercard');
+  const [topUpRail, setTopUpRail] = useState<WalletPaymentRail>('MTN Mobile Money Uganda');
+  const [topUpMsisdn, setTopUpMsisdn] = useState<string>('+256 772 841 920');
   const [topUpNote, setTopUpNote] = useState('');
+  const [isProcessingGateway, setIsProcessingGateway] = useState<boolean>(false);
 
   // Escrow state
   const [selectedPermitId, setSelectedPermitId] = useState<string>(
@@ -224,15 +224,49 @@ export const WalletPage: React.FC = () => {
     });
   }, [transactions, ledgerFilter, ledgerSearch]);
 
-  const handleTopUpSubmit = (e: React.FormEvent) => {
+  const handleTopUpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = topUpWallet(topUpAmount, topUpRail, topUpNote);
-    setBanner({
-      type: res.ok ? 'success' : 'error',
-      message: res.message,
-    });
-    if (res.ok) {
-      setTopUpNote('');
+    setIsProcessingGateway(true);
+    try {
+      let relworxRefNote = topUpNote;
+      if (
+        topUpRail === 'MTN Mobile Money Uganda' ||
+        topUpRail === 'Airtel Money Uganda' ||
+        topUpRail === 'Visa / Mastercard'
+      ) {
+        const resp = await fetch('/api/relworx/request-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            msisdn: topUpMsisdn,
+            currency: 'UGX',
+            amountUSD: topUpAmount,
+            description: topUpNote || `Enganda Safari Wallet Top-Up (${topUpRail})`,
+          }),
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || data.success === false) {
+          setBanner({
+            type: 'error',
+            message: data.message || 'Relworx Payment Gateway request failed.',
+          });
+          return;
+        }
+        relworxRefNote = `${topUpNote ? topUpNote + ' • ' : ''}Relworx v2 Ref: ${
+          data.internal_reference || 'RELX-VERIFIED'
+        }`;
+      }
+
+      const res = topUpWallet(topUpAmount, topUpRail, relworxRefNote);
+      setBanner({
+        type: res.ok ? 'success' : 'error',
+        message: res.message,
+      });
+      if (res.ok) {
+        setTopUpNote('');
+      }
+    } finally {
+      setIsProcessingGateway(false);
     }
   };
 
@@ -288,7 +322,7 @@ export const WalletPage: React.FC = () => {
     [selectedAgentId]
   );
 
-  const handleWithdrawSubmit = (e: React.FormEvent) => {
+  const handleWithdrawSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (withdrawChannel === 'bank_account') {
       const res = withdrawFunds(
@@ -308,21 +342,49 @@ export const WalletPage: React.FC = () => {
         message: res.message,
       });
     } else if (withdrawChannel === 'momo') {
-      const res = withdrawFunds(
-        withdrawAmount,
-        momoProvider,
-        `${momoProvider} ${momoNumber} (${momoRecipientName})`,
-        {
-          channel: 'momo',
-          momoProvider,
-          momoNumber,
-          recipientName: momoRecipientName,
+      setIsProcessingGateway(true);
+      try {
+        const resp = await fetch('/api/relworx/send-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            msisdn: momoNumber,
+            currency: 'UGX',
+            amountUSD: withdrawAmount,
+            description: `Enganda Safari Wallet MoMo Payout to ${momoRecipientName}`,
+          }),
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || data.success === false) {
+          setBanner({
+            type: 'error',
+            message: data.message || 'Relworx MoMo payout request failed.',
+          });
+          return;
         }
-      );
-      setBanner({
-        type: res.ok ? 'success' : 'error',
-        message: res.message,
-      });
+
+        const res = withdrawFunds(
+          withdrawAmount,
+          momoProvider,
+          `${momoProvider} ${momoNumber} (${momoRecipientName}) • Relworx Ref: ${
+            data.internal_reference || 'RELX-OUT'
+          }`,
+          {
+            channel: 'momo',
+            momoProvider,
+            momoNumber,
+            recipientName: momoRecipientName,
+          }
+        );
+        setBanner({
+          type: res.ok ? 'success' : 'error',
+          message: res.ok
+            ? `${res.message} Settled via Relworx Payments API v2 (${data.internal_reference}).`
+            : res.message,
+        });
+      } finally {
+        setIsProcessingGateway(false);
+      }
     } else {
       const res = withdrawFunds(
         withdrawAmount,
@@ -594,7 +656,7 @@ export const WalletPage: React.FC = () => {
                 <p className="text-xs text-[#5A5248] mt-0.5">
                   {user
                     ? `Private per-user records scoped to UID ${user.uid.slice(0, 10)}…`
-                    : 'Sign in with Google at any time to sync your saved itineraries and Safari Essentials checklists across devices.'}
+                    : 'Sign in with Google at any time to sync your saved itineraries and direct package payments across devices.'}
                 </p>
               </div>
             </div>
@@ -821,6 +883,38 @@ export const WalletPage: React.FC = () => {
                     </div>
                   </div>
 
+                  {(topUpRail === 'MTN Mobile Money Uganda' ||
+                    topUpRail === 'Airtel Money Uganda') && (
+                    <div className="bg-[#FAF7F2] border border-[#226B3E]/40 rounded-lg p-3.5 space-y-2">
+                      <div className="flex items-center justify-between text-[11px] font-mono text-[#226B3E] font-bold">
+                        <span>RELWORX PAYMENTS API V2 • MOBILE MONEY PROMPT</span>
+                        <a
+                          href="https://payments.relworx.com/docs/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline hover:text-[#C85A28]"
+                        >
+                          payments.relworx.com/docs
+                        </a>
+                      </div>
+                      <label
+                        htmlFor="wallet-topup-msisdn"
+                        className="block text-xs font-semibold text-[#1A1612]"
+                      >
+                        Mobile Money Number (International Format e.g. +256 772 841 920)
+                      </label>
+                      <input
+                        id="wallet-topup-msisdn"
+                        type="tel"
+                        required
+                        value={topUpMsisdn}
+                        onChange={(e) => setTopUpMsisdn(e.target.value)}
+                        placeholder="+256 772 841 920"
+                        className="w-full px-3.5 py-2 rounded-md bg-white border border-[#D6CEC2] font-mono text-xs text-[#1A1612] focus:outline-none focus:border-[#226B3E]"
+                      />
+                    </div>
+                  )}
+
                   <div>
                     <label
                       htmlFor="wallet-topup-note"
@@ -840,11 +934,14 @@ export const WalletPage: React.FC = () => {
 
                   <button
                     type="submit"
-                    className="w-full inline-flex items-center justify-center gap-2 bg-[#226B3E] hover:bg-[#194E2D] text-white font-semibold text-sm px-6 py-3.5 rounded-md transition-colors cursor-pointer"
+                    disabled={isProcessingGateway}
+                    className="w-full inline-flex items-center justify-center gap-2 bg-[#226B3E] hover:bg-[#194E2D] disabled:opacity-60 text-white font-semibold text-sm px-6 py-3.5 rounded-md transition-colors cursor-pointer"
                   >
                     <PlusCircle className="w-4 h-4 text-[#D99B26]" />
                     <span>
-                      Add {formatPrice(topUpAmount || 0, currency)} to Safari Wallet
+                      {isProcessingGateway
+                        ? 'Processing via Relworx Payment Gateway...'
+                        : `Add ${formatPrice(topUpAmount || 0, currency)} via Relworx to Safari Wallet`}
                     </span>
                   </button>
                 </form>
@@ -1829,100 +1926,6 @@ export const WalletPage: React.FC = () => {
                       </div>
                     </div>
                   ))}
-                </div>
-              )}
-            </div>
-
-            {/* Saved Safari Essentials Checklists */}
-            <div className="bg-white border border-[#E4DCCF] rounded-xl p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="font-mono text-[11px] uppercase tracking-wider text-[#C85A28] font-semibold">
-                    Expedition Gear & Readiness
-                  </span>
-                  <h3 className="font-serif text-xl font-bold text-[#1A1612]">
-                    Saved Safari Essentials ({savedChecklists.length})
-                  </h3>
-                </div>
-                <ClipboardList className="w-5 h-5 text-[#226B3E]" />
-              </div>
-
-              {savedChecklists.length === 0 ? (
-                <div className="p-4 rounded-lg bg-[#FAF7F2] border border-[#E4DCCF] space-y-2">
-                  <p className="text-xs text-[#5A5248] leading-relaxed">
-                    No packing checklists saved to your wallet yet. Customize your gear list by activity (Gorilla Trekking, Savannah Game Drives, Cultural Visits) and save it here.
-                  </p>
-                  <Link
-                    to="/safari-essentials"
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-[#226B3E] hover:text-[#C85A28]"
-                  >
-                    <span>Open Safari Essentials Checklist</span>
-                    <ArrowUpRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {savedChecklists.map((chk) => {
-                    const pct =
-                      chk.totalItems > 0
-                        ? Math.round((chk.checkedCount / chk.totalItems) * 100)
-                        : 0;
-                    return (
-                      <div
-                        key={chk.id}
-                        className="p-4 rounded-lg bg-[#FAF7F2] border border-[#E4DCCF] space-y-2.5"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-mono text-[10px] uppercase px-2 py-0.5 rounded bg-[#144225] text-white">
-                                {chk.referenceCode}
-                              </span>
-                              <span className="font-mono text-[10px] uppercase px-2 py-0.5 rounded bg-[#F3ECE1] text-[#226B3E] font-semibold border border-[#E4DCCF]">
-                                {chk.checkedCount}/{chk.totalItems} Packed ({pct}%)
-                              </span>
-                            </div>
-                            <h4 className="font-serif text-base font-bold text-[#1A1612] mt-1">
-                              {chk.title}
-                            </h4>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeSavedChecklist(chk.id)}
-                            aria-label={`Remove ${chk.title} from wallet`}
-                            className="text-[#5A5248] hover:text-[#C85A28] p-1 cursor-pointer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-
-                        <div className="w-full h-1.5 bg-[#E4DCCF] rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-[#226B3E] transition-all"
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-
-                        <div className="pt-1 flex items-center justify-between text-xs">
-                          <span className="font-mono text-[11px] text-[#5A5248]">
-                            Updated{' '}
-                            {new Date(chk.updatedAt).toLocaleDateString('en-GB', {
-                              day: '2-digit',
-                              month: 'short',
-                              year: 'numeric',
-                            })}
-                          </span>
-                          <Link
-                            to="/safari-essentials"
-                            className="inline-flex items-center gap-1 font-semibold text-[#226B3E] hover:text-[#C85A28]"
-                          >
-                            <span>Open Checklist</span>
-                            <ArrowUpRight className="w-3.5 h-3.5" />
-                          </Link>
-                        </div>
-                      </div>
-                    );
-                  })}
                 </div>
               )}
             </div>

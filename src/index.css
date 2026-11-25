@@ -9,20 +9,54 @@
 }
 
 @layer base {
+  html {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
   body {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: #1A1612;
     background-color: #FAF7F2;
+    line-height: 1.6;
+    font-weight: 400;
     scroll-behavior: smooth;
   }
 
-  h1, h2, h3, .font-serif, .font-display {
+  h1, h2, h3, h4, .font-serif, .font-display {
     font-family: 'Cormorant Garamond', Georgia, serif;
     letter-spacing: -0.015em;
+    font-weight: 700;
+  }
+
+  h1 {
+    line-height: 1.15;
+  }
+
+  h2 {
+    line-height: 1.2;
+  }
+
+  h3 {
+    line-height: 1.25;
+  }
+
+  h4 {
+    line-height: 1.3;
+  }
+
+  p {
+    line-height: 1.65;
+  }
+
+  .font-sans {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
   .font-mono {
     font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.02em;
   }
 }
 
