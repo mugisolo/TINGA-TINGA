@@ -4,7 +4,6 @@ import {
   ShieldCheck,
   Users,
   FileCheck,
-  Award,
   HeartHandshake,
   ArrowRight,
   CheckCircle2,
@@ -138,20 +137,12 @@ export const HowWeWorkPage: React.FC = () => {
               Guides are the heroes of every journey we run. Because our collective connects travelers directly with senior Ugandan guides without layers of overseas middlemen, our guides earn dignified professional retainers, full field allowances, and comprehensive medical cover.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
               <div className="bg-[#FAF7F2] border border-[#E4DCCF] rounded-md p-3.5">
                 <ShieldCheck className="w-5 h-5 text-[#226B3E] mb-1.5" />
                 <div className="text-xs font-bold text-[#1A1612]">UTB Registered</div>
                 <div className="text-[11px] text-[#5A5248] mt-0.5">
                   Uganda Tourism Board regulated operator
-                </div>
-              </div>
-
-              <div className="bg-[#FAF7F2] border border-[#E4DCCF] rounded-md p-3.5">
-                <Award className="w-5 h-5 text-[#C85A28] mb-1.5" />
-                <div className="text-xs font-bold text-[#1A1612]">AUTO Member</div>
-                <div className="text-[11px] text-[#5A5248] mt-0.5">
-                  Association of Uganda Tour Operators
                 </div>
               </div>
 

@@ -13,7 +13,7 @@ import { LanguageProvider } from './context/LanguageContext';
 
 // All Required WildLife Safaris Pages (+ Safari Wallet)
 import { HomePage } from './pages/HomePage';
-import { GuidesPage } from './pages/GuidesPage';
+import { ServiceProvidersPage } from './pages/ServiceProvidersPage';
 import { GuideProfilePage } from './pages/GuideProfilePage';
 import { ExperiencesPage } from './pages/ExperiencesPage';
 import { ExperienceDetailPage } from './pages/ExperienceDetailPage';
@@ -50,8 +50,9 @@ export default function App() {
                     <Route path="/portals/:role" element={<PortalsPage />} />
                     <Route path="/portal" element={<PortalsPage />} />
                     <Route path="/portal/:role" element={<PortalsPage />} />
-                    <Route path="/guides" element={<GuidesPage />} />
-                    <Route path="/partners" element={<GuidesPage />} />
+                    <Route path="/service-providers" element={<ServiceProvidersPage />} />
+                    <Route path="/guides" element={<ServiceProvidersPage />} />
+                    <Route path="/partners" element={<ServiceProvidersPage />} />
                     <Route path="/guides/:slug" element={<GuideProfilePage />} />
                     <Route path="/wallet" element={<WalletPage />} />
                     <Route path="/experiences" element={<ExperiencesPage />} />

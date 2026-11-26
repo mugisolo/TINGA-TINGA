@@ -1007,7 +1007,7 @@ export const HomePage: React.FC = () => {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
               <span className="font-mono text-xs uppercase tracking-wider text-[#C85A28] font-semibold">
-                Official Tour Operator Collective • UTB &amp; AUTO Accredited
+                Official Tour Operator Collective • UTB &amp; UWA Accredited
               </span>
               <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#1A1612] mt-1">
                 Operated by Tingatinga Safaris, Enganda / WildLife Safaris &amp; Shuma Africa Safaris

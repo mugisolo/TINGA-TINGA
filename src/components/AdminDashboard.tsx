@@ -67,13 +67,6 @@ const ATTACHED_LOGO_PRESETS: {
     category: 'Government & Conservation',
   },
   {
-    label: 'GCIC • State House Uganda',
-    name: 'GCIC State House',
-    subtitle: 'Government Citizen Interaction Centre',
-    url: '/assets/aistudio/gcic_2d3a48ab.jfif',
-    category: 'Government & Conservation',
-  },
-  {
     label: 'ECO Bank (Ecobank Pan-African Bank)',
     name: 'ECO Bank',
     subtitle: 'Ecobank Pan-African Banking & Escrow Partner',
@@ -1026,7 +1019,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   setDraftPoweredBy(DEFAULT_POWERED_BY_TEXT);
                   notify(
                     'success',
-                    'Restored all 6 official partner logos (UWA, UTB, GCIC State House, PLU, FINCA, RELWORX) and default Powered By text.'
+                    'Restored all official partner logos (UWA, UTB, ECO Bank, FINCA, RELWORX, Igongo Country Hotel, Tingatinga Safaris) and default Powered By text.'
                   );
                 }}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#F3ECE1] hover:bg-[#E4DCCF] text-[#1A1612] border border-[#D6CEC2] font-mono text-xs font-semibold cursor-pointer"

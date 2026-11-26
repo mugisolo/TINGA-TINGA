@@ -4287,7 +4287,7 @@ export const TOUR_OPERATORS: TourOperatorPartner[] = [
       '5-day-tingatinga-t2-primates-crater-lakes-escape',
       '3-day-tingatinga-t1-murchison-falls-ziwa-big5-express',
     ],
-    accreditations: ['UTB License #UTB/TO/2026/0418', 'UWA Permit Partner #UWA-REG-8841-UG', 'AUTO Accredited Member'],
+    accreditations: ['UTB License #UTB/TO/2026/0418', 'UWA Permit Partner #UWA-REG-8841-UG', 'Enganda Verified Operator'],
   },
   {
     id: 'operator-enganda-wildlife-safaris',
@@ -4314,7 +4314,7 @@ export const TOUR_OPERATORS: TourOperatorPartner[] = [
       '8-day-enganda-e4-batwa-heritage-lake-mutanda-ishasha-lions',
       '4-day-enganda-e1-mabamba-shoebill-budongo-birding',
     ],
-    accreditations: ['UTB License #UTB/TO/2026/0102', 'UWA Escrow Partner #UWA-REG-1104-UG', 'AUTO & USAGA Certified'],
+    accreditations: ['UTB License #UTB/TO/2026/0102', 'UWA Escrow Partner #UWA-REG-1104-UG', 'USAGA Certified'],
   },
   {
     id: 'operator-shuma-africa-safaris',
@@ -5174,7 +5174,7 @@ export const SOCIAL_LINKS: SocialLink[] = [
     label: 'LinkedIn',
     handle: 'Enganda Safaris Uganda',
     url: 'https://www.linkedin.com/company/enganda-safaris',
-    description: 'Conservation partnerships, AUTO & UTB industry leadership, and our guide-owned collective model in Entebbe.',
+    description: 'Conservation partnerships, UTB & UWA industry leadership, and our guide-owned collective model in Entebbe.',
   },
 ];
 
@@ -6246,16 +6246,6 @@ export const INITIAL_FOOTER_LOGOS: FooterPartnerLogo[] = [
     displayOrder: 2,
   },
   {
-    id: 'logo_gcic',
-    name: 'GCIC State House',
-    subtitle: 'Government Citizen Interaction Centre',
-    logoUrl: '/assets/aistudio/gcic_2d3a48ab.jfif',
-    category: 'Government & Conservation',
-    websiteUrl: 'https://gcic.go.ug',
-    active: true,
-    displayOrder: 3,
-  },
-  {
     id: 'logo_ecobank',
     name: 'ECO Bank',
     subtitle: 'Ecobank Pan-African Banking & Escrow Partner',
@@ -6263,7 +6253,7 @@ export const INITIAL_FOOTER_LOGOS: FooterPartnerLogo[] = [
     category: 'Banking & Fintech',
     websiteUrl: 'https://ecobank.com',
     active: true,
-    displayOrder: 4,
+    displayOrder: 3,
   },
   {
     id: 'logo_finca',
@@ -6273,7 +6263,7 @@ export const INITIAL_FOOTER_LOGOS: FooterPartnerLogo[] = [
     category: 'Banking & Fintech',
     websiteUrl: 'https://finca.ug',
     active: true,
-    displayOrder: 5,
+    displayOrder: 4,
   },
   {
     id: 'logo_relworx',
@@ -6283,7 +6273,7 @@ export const INITIAL_FOOTER_LOGOS: FooterPartnerLogo[] = [
     category: 'Banking & Fintech',
     websiteUrl: 'https://relworx.com',
     active: true,
-    displayOrder: 6,
+    displayOrder: 5,
   },
   {
     id: 'logo_igongo',
@@ -6293,7 +6283,7 @@ export const INITIAL_FOOTER_LOGOS: FooterPartnerLogo[] = [
     category: 'Strategic Partner',
     websiteUrl: 'https://igongo.co.ug/',
     active: true,
-    displayOrder: 7,
+    displayOrder: 6,
   },
   {
     id: 'logo_tingatinga',
@@ -6303,7 +6293,7 @@ export const INITIAL_FOOTER_LOGOS: FooterPartnerLogo[] = [
     category: 'Strategic Partner',
     websiteUrl: '/tingatinga-safaris',
     active: true,
-    displayOrder: 8,
+    displayOrder: 7,
   },
 ];
 

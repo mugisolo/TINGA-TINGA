@@ -24,6 +24,8 @@ import {
   Landmark,
   History,
   ArrowRight,
+  Car,
+  Compass,
 } from 'lucide-react';
 import { Currency, PortalRole } from '../types';
 import { useInquiry } from '../context/InquiryContext';
@@ -127,11 +129,13 @@ export const Navbar: React.FC = () => {
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [providersMenuOpen, setProvidersMenuOpen] = useState(false);
   const [exploreMenuOpen, setExploreMenuOpen] = useState(false);
   const [walletDrawerOpen, setWalletDrawerOpen] = useState(false);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const [portalMenuOpen, setPortalMenuOpen] = useState(false);
 
+  const providersMenuRef = useRef<HTMLDivElement>(null);
   const exploreMenuRef = useRef<HTMLDivElement>(null);
   const walletDrawerRef = useRef<HTMLDivElement>(null);
   const langMenuRef = useRef<HTMLDivElement>(null);
@@ -139,9 +143,36 @@ export const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Sub-Menu under "Service Providers"
+  const serviceProviderItems = [
+    {
+      label: 'Guides',
+      path: '/service-providers?type=guides',
+      typeKey: 'guides',
+      icon: Users,
+    },
+    {
+      label: 'Safari Operators',
+      path: '/service-providers?type=operators',
+      typeKey: 'operators',
+      icon: Compass,
+    },
+    {
+      label: 'Drivers',
+      path: '/service-providers?type=drivers',
+      typeKey: 'drivers',
+      icon: Car,
+    },
+    {
+      label: 'Hotels',
+      path: '/service-providers?type=hotels',
+      typeKey: 'hotels',
+      icon: Building2,
+    },
+  ];
+
   // Primary Single-Row Top Navigation Links (Concise so all items fit on 1 row without wrapping)
   const primaryNavLinks = [
-    { label: t.nav.ourGuides, shortLabel: 'Guides & Vendors', path: '/guides' },
     { label: t.nav.experiences, shortLabel: 'Safaris', path: '/experiences' },
     { label: t.nav.destinations, shortLabel: 'Destinations', path: '/destinations' },
     { label: t.nav.tripPlanner, shortLabel: 'Planner', path: '/trip-planner' },
@@ -180,7 +211,7 @@ export const Navbar: React.FC = () => {
     {
       label: 'Vendor Onboarding (Hotels & Fleet)',
       desc: 'Upload Partner Hotel Rooms, Rates & 4x4 Safari Driver Fleet',
-      path: '/guides?section=partners',
+      path: '/service-providers?type=hotels',
       badge: 'Join Marketplace',
       icon: Building2,
     },
@@ -195,6 +226,7 @@ export const Navbar: React.FC = () => {
 
   useEffect(() => {
     setMobileOpen(false);
+    setProvidersMenuOpen(false);
     setExploreMenuOpen(false);
     setWalletDrawerOpen(false);
     setLangMenuOpen(false);
@@ -208,6 +240,7 @@ export const Navbar: React.FC = () => {
         setSearchModalOpen((prev) => !prev);
       } else if (e.key === 'Escape') {
         setMobileOpen(false);
+        setProvidersMenuOpen(false);
         setExploreMenuOpen(false);
         setWalletDrawerOpen(false);
         setLangMenuOpen(false);
@@ -215,6 +248,12 @@ export const Navbar: React.FC = () => {
       }
     };
     const handleClickOutside = (e: MouseEvent) => {
+      if (
+        providersMenuRef.current &&
+        !providersMenuRef.current.contains(e.target as Node)
+      ) {
+        setProvidersMenuOpen(false);
+      }
       if (
         exploreMenuRef.current &&
         !exploreMenuRef.current.contains(e.target as Node)
@@ -284,11 +323,78 @@ export const Navbar: React.FC = () => {
           </div>
         </Link>
 
-        {/* Single-Row Primary Desktop Navigation + "Explore & Impact" Dropdown */}
+        {/* Single-Row Primary Desktop Navigation + "Service Providers" Submenu & "Explore & Impact" Dropdown */}
         <nav
           className="hidden lg:flex items-center gap-2.5 xl:gap-5 min-w-0 flex-nowrap shrink-0"
           aria-label="Primary Navigation"
         >
+          {/* "Service Providers" Dropdown Sub-Menu */}
+          <div className="relative shrink-0" ref={providersMenuRef}>
+            <button
+              type="button"
+              onClick={() => setProvidersMenuOpen((prev) => !prev)}
+              aria-expanded={providersMenuOpen}
+              className={`inline-flex items-center gap-1 text-xs xl:text-sm font-medium transition-colors py-1 border-b-2 whitespace-nowrap cursor-pointer ${
+                isActive('/service-providers') || isActive('/guides') || providersMenuOpen
+                  ? 'text-[#226B3E] border-[#C85A28] font-semibold'
+                  : 'text-[#5A5248] border-transparent hover:text-[#1A1612]'
+              }`}
+            >
+              <span>Service Providers</span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform ${
+                  providersMenuOpen ? 'rotate-180 text-[#C85A28]' : ''
+                }`}
+              />
+            </button>
+
+            {providersMenuOpen && (
+              <div className="absolute left-0 mt-2.5 w-60 bg-white border border-[#E4DCCF] rounded-xl shadow-2xl p-2 space-y-1 z-50">
+                <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-[#E4DCCF] mb-1">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#226B3E] font-bold">
+                    Service Providers
+                  </span>
+                  <Link
+                    to="/service-providers?type=all"
+                    onClick={() => setProvidersMenuOpen(false)}
+                    className="font-mono text-[10px] font-bold text-[#C85A28] hover:underline"
+                  >
+                    Search All →
+                  </Link>
+                </div>
+                {serviceProviderItems.map((item) => {
+                  const IconComp = item.icon;
+                  const activeItem =
+                    (location.pathname === '/service-providers' ||
+                      location.pathname === '/guides') &&
+                    (location.search.includes(`type=${item.typeKey}`) ||
+                      location.search.includes(`section=${item.typeKey}`));
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setProvidersMenuOpen(false)}
+                      className={`group flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        activeItem
+                          ? 'bg-[#226B3E] text-white'
+                          : 'text-[#1A1612] hover:bg-[#FAF7F2] hover:text-[#226B3E]'
+                      }`}
+                    >
+                      <IconComp
+                        className={`w-4 h-4 shrink-0 ${
+                          activeItem
+                            ? 'text-[#D99B26]'
+                            : 'text-[#226B3E] group-hover:text-[#C85A28]'
+                        }`}
+                      />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {primaryNavLinks.map((link) => (
             <Link
               key={link.path}
@@ -978,6 +1084,28 @@ export const Navbar: React.FC = () => {
                   </button>
                 ))}
               </div>
+            </div>
+          </div>
+
+          {/* Service Providers Sub-Menu in Mobile Drawer */}
+          <div className="space-y-2">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-[#226B3E] font-bold">
+              Service Providers
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {serviceProviderItems.map((item) => {
+                const IconComp = item.icon;
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-md text-xs font-semibold border bg-white text-[#1A1612] border-[#E4DCCF] hover:border-[#226B3E]"
+                  >
+                    <IconComp className="w-3.5 h-3.5 text-[#226B3E] shrink-0" />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
             </div>
           </div>
 

@@ -86,7 +86,7 @@ interface InquiryContextValue {
 const STORAGE_KEY = 'enganda_safaris_leads_v1';
 const CURRENCY_STORAGE_KEY = 'enganda_safaris_currency_v1';
 const EVENTS_STORAGE_KEY = 'enganda_safaris_events_v7';
-const FOOTER_LOGOS_STORAGE_KEY = 'enganda_safaris_footer_logos_v5';
+const FOOTER_LOGOS_STORAGE_KEY = 'enganda_safaris_footer_logos_v6';
 const POWERED_BY_STORAGE_KEY = 'enganda_safaris_powered_by_v4';
 const PARTNER_ROOMS_STORAGE_KEY = 'enganda_safaris_partner_rooms_v1';
 const DRIVER_FLEET_STORAGE_KEY = 'enganda_safaris_driver_fleet_v1';
@@ -246,13 +246,23 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.filter((lg: FooterPartnerLogo) => !deleted.has(lg.id));
+          return parsed.filter(
+            (lg: FooterPartnerLogo) =>
+              !deleted.has(lg.id) &&
+              lg.id !== 'logo_gcic' &&
+              !String(lg.name || '').toUpperCase().includes('GCIC')
+          );
         }
       }
     } catch {
       // ignore
     }
-    return INITIAL_FOOTER_LOGOS.filter((lg) => !deleted.has(lg.id));
+    return INITIAL_FOOTER_LOGOS.filter(
+      (lg) =>
+        !deleted.has(lg.id) &&
+        lg.id !== 'logo_gcic' &&
+        !String(lg.name || '').toUpperCase().includes('GCIC')
+    );
   });
 
   const [poweredByText, setPoweredByTextState] = useState<string>(() => {
@@ -711,13 +721,19 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const remoteLogos: FooterPartnerLogo[] = [];
         const existingLogoIds = new Set<string>();
         let hasDeprecatedPluInFirestore = false;
+        let hasDeprecatedGcicInFirestore = false;
 
         logoSnap.forEach((docSnap) => {
           const d = docSnap.data();
           if (d && d.id && d.name && d.logoUrl) {
             const docId = String(d.id);
-            if (docId === 'logo_plu' || String(d.name).trim().toUpperCase() === 'PLU') {
+            const upperName = String(d.name).trim().toUpperCase();
+            if (docId === 'logo_plu' || upperName === 'PLU') {
               hasDeprecatedPluInFirestore = true;
+              return;
+            }
+            if (docId === 'logo_gcic' || upperName.includes('GCIC')) {
+              hasDeprecatedGcicInFirestore = true;
               return;
             }
             existingLogoIds.add(docId);
@@ -745,7 +761,9 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 (item) =>
                   !deletedLogos.has(item.id) &&
                   item.id !== 'logo_plu' &&
-                  item.name.trim().toUpperCase() !== 'PLU'
+                  item.id !== 'logo_gcic' &&
+                  item.name.trim().toUpperCase() !== 'PLU' &&
+                  !item.name.trim().toUpperCase().includes('GCIC')
               )
               .forEach((item) => map.set(item.id, item));
             remoteLogos.forEach((item) => map.set(item.id, item));
@@ -755,11 +773,18 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
           });
         }
 
-        // Auto-remove deprecated logo_plu and seed any non-deleted footer logos (including ECO Bank) into Firestore when signed in
+        // Auto-remove deprecated logo_plu & logo_gcic and seed any non-deleted footer logos into Firestore when signed in
         if (uid) {
           if (hasDeprecatedPluInFirestore) {
             try {
               await deleteDoc(doc(db, 'footer_logos', 'logo_plu'));
+            } catch {
+              // ignore if already removed
+            }
+          }
+          if (hasDeprecatedGcicInFirestore) {
+            try {
+              await deleteDoc(doc(db, 'footer_logos', 'logo_gcic'));
             } catch {
               // ignore if already removed
             }
@@ -1117,7 +1142,12 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const activeFooterLogos = useMemo(() => {
     return [...footerLogos]
-      .filter((logo) => logo.active)
+      .filter(
+        (logo) =>
+          logo.active &&
+          logo.id !== 'logo_gcic' &&
+          !logo.name.toUpperCase().includes('GCIC')
+      )
       .sort((a, b) => a.displayOrder - b.displayOrder);
   }, [footerLogos]);
 

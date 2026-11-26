@@ -408,8 +408,6 @@ export interface TranslationDictionary {
   footer: {
     utbTitle: string;
     utbDesc: string;
-    autoTitle: string;
-    autoDesc: string;
     uwaTitle: string;
     uwaDesc: string;
     brandBio: string;
@@ -446,7 +444,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       testGeoLabel: 'Preview region:',
     },
     nav: {
-      ourGuides: 'Guides & Partners',
+      ourGuides: 'Service Providers',
       experiences: 'Experiences',
       destinations: 'Destinations',
       howWeWork: 'How We Work',
@@ -573,9 +571,6 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       utbTitle: 'Uganda Tourism Board (UTB) & East Africa Licensed',
       utbDesc:
         'Licensed East African safari collective coordinated from our Entebbe head office and operated by accredited Enganda Members across Uganda, Tanzania, Kenya & Rwanda.',
-      autoTitle: 'Association of Uganda Tour Operators (AUTO)',
-      autoDesc:
-        'Committed to fair living wages for East African safari guides and mountain porters, direct wallet escrow protection, and ethical park operations.',
       uwaTitle: 'Official Permit Escrow Receipts Provided',
       uwaDesc:
         'Official UWA, RDB, TANAPA & KWS permit receipts are locked in escrow via your Safari Wallet when you pay directly.',
@@ -638,7 +633,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       ctaMeetGuides: 'Découvrir Nos Guides et Partenaires',
       ctaPlanSafari: 'Créer Mon Safari',
       ctaWhatsappDesk: 'WhatsApp Bureau d’Entebbe',
-      trustUtb: 'Agréé UTB & Membre AUTO',
+      trustUtb: 'Agréé UTB & Collectif Enganda',
       trustUwa: 'Reçus Officiels de Permis UWA Fournis',
       trustHq: 'Siège Entebbe — à 5 min de l’aéroport',
       followDispatches: 'Suivre nos carnets de terrain :',
@@ -738,9 +733,6 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       utbTitle: 'Agréé par l’Uganda Tourism Board (UTB)',
       utbDesc:
         'Opérateur de safari ougandais agréé, coordonné depuis notre siège d’Entebbe avec des guides certifiés USAGA et UWA.',
-      autoTitle: 'Membre de l’Association des Tour-Opérateurs d’Ouganda (AUTO)',
-      autoDesc:
-        'Engagé pour une rémunération équitable des guides et porteurs de montagne ougandais et la protection intégrale des acomptes.',
       uwaTitle: 'Reçus Officiels de Permis UWA Garantis',
       uwaDesc:
         'Les reçus officiels UWA vous sont transmis avant le règlement du solde. Chaque permis gorille et chimpanzé est réservé directement auprès de l’UWA.',
@@ -804,7 +796,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       ctaMeetGuides: 'تعرف على مرشدينا وشركائنا',
       ctaPlanSafari: 'صمّم رحلة السفاري',
       ctaWhatsappDesk: 'تواصل عبر واتساب عنتيبي',
-      trustUtb: 'مرخص من هيئة السياحة الأوغندية UTB وعضو AUTO',
+      trustUtb: 'مرخص من هيئة السياحة الأوغندية UTB ومعتمد لدى UWA',
       trustUwa: 'إيصالات رسمية لتصاريح هيئة الحياة البرية UWA',
       trustHq: 'مقر عنتيبي — 5 دقائق من المطار',
       followDispatches: 'تابع تقاريرنا الميدانية:',
@@ -903,9 +895,6 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       utbTitle: 'مسجل لدى هيئة السياحة الأوغندية (UTB)',
       utbDesc:
         'مشغل سفاري أوغندي مرخص يتم تنسيقه من مكتبنا الرئيسي في عنتيبي مع مرشدين معتمدين من USAGA وUWA.',
-      autoTitle: 'عضو رابطة منظمي الرحلات في أوغندا (AUTO)',
-      autoDesc:
-        'ملتزمون بأجور عادلة للمرشدين والحمالين الأوغنديين، وحماية الودائع، والعمل البيئي المسؤول.',
       uwaTitle: 'تقديم إيصالات تصاريح UWA الرسمية',
       uwaDesc:
         'نشاركك إيصالات UWA الرسمية قبل تحصيل الرصيد المتبقي. يتم حجز كل تصريح غوريلا وشمبانزي مباشرة من هيئة الحياة البرية الأوغندية.',
@@ -968,7 +957,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       ctaMeetGuides: '认识我们的向导与合作伙伴',
       ctaPlanSafari: '定制我的猎游',
       ctaWhatsappDesk: 'WhatsApp 联系恩德培总部',
-      trustUtb: 'UTB 官方注册 & AUTO 协会成员',
+      trustUtb: 'UTB & UWA 官方注册认证',
       trustUwa: '提供 UWA 官方许可证收据',
       trustHq: '恩德培总部 — 距机场 5 分钟',
       followDispatches: '关注前线向导动态：',
@@ -1066,8 +1055,6 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
     footer: {
       utbTitle: '乌干达旅游局 (UTB) 官方注册',
       utbDesc: '由恩德培总部统筹的持证乌干达猎游运营商，所有向导均具备 USAGA 与 UWA 官方资质。',
-      autoTitle: '乌干达旅行社协会 (AUTO) 正式成员',
-      autoDesc: '致力于保障乌干达向导及山地背夫的优厚薪资、定金托管安全与生态保护运营。',
       uwaTitle: '提供 UWA 官方许可证收据',
       uwaDesc: '在收取尾款前向您提供 UWA 官方收据。所有大猩猩与黑猩猩许可证均直接向乌干达野生动物管理局预订。',
       brandBio: '由遍布乌干达各大区域的持证本土猎游向导组成的精品联盟，由恩德培总部统一协调。',
@@ -1128,7 +1115,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       ctaMeetGuides: 'Ontmoet Onze Gidsen en Partners',
       ctaPlanSafari: 'Plan Mijn Safari',
       ctaWhatsappDesk: 'WhatsApp Entebbe Desk',
-      trustUtb: 'UTB Gelicentieerd & AUTO Lid',
+      trustUtb: 'UTB & UWA Gelicentieerd',
       trustUwa: 'Officiële UWA Vergunningsbewijzen',
       trustHq: 'Entebbe HQ — 5 min. van de luchthaven',
       followDispatches: 'Volg onze veldverslagen:',
@@ -1228,9 +1215,6 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       utbTitle: 'Geregistreerd bij Uganda Tourism Board (UTB)',
       utbDesc:
         'Erkende Oegandese safari-operator gecoördineerd vanuit ons hoofdkantoor in Entebbe met geverifieerde USAGA- en UWA-gidsen.',
-      autoTitle: 'Lid van Association of Uganda Tour Operators (AUTO)',
-      autoDesc:
-        'Toegewijd aan eerlijke beloning voor Oegandese gidsen en bergdragers, aanbetalingsgarantie en duurzaam parkbeheer.',
       uwaTitle: 'Officiële UWA Vergunningsbewijzen Geleverd',
       uwaDesc:
         'U ontvangt de officiële UWA-bewijzen voordat wij het restbedrag innen. Elke gorilla- en chimpanseevergunning wordt rechtstreeks bij UWA geboekt.',
@@ -1294,7 +1278,7 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       ctaMeetGuides: 'Unsere Guides und Partner entdecken',
       ctaPlanSafari: 'Meine Safari planen',
       ctaWhatsappDesk: 'WhatsApp Büro Entebbe',
-      trustUtb: 'UTB-Lizenziert & AUTO-Mitglied',
+      trustUtb: 'UTB & UWA Lizenziert',
       trustUwa: 'Offizielle UWA-Permit-Quittungen inklusive',
       trustHq: 'Büro Entebbe — 5 Min. vom Flughafen',
       followDispatches: 'Aktuelle Berichte aus dem Busch:',
@@ -1394,9 +1378,6 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       utbTitle: 'Registriert beim Uganda Tourism Board (UTB)',
       utbDesc:
         'Lizenzierter ugandischer Safari-Veranstalter mit Hauptsitz in Entebbe und geprüften USAGA- & UWA-Guides.',
-      autoTitle: 'Mitglied der Association of Uganda Tour Operators (AUTO)',
-      autoDesc:
-        'Verpflichtet zu fairen Löhnen für ugandische Safari-Guides und Bergträger, Anzahlungsschutz und nachhaltigem Naturschutz.',
       uwaTitle: 'Offizielle UWA-Permit-Quittungen garantiert',
       uwaDesc:
         'Sie erhalten die offiziellen UWA-Quittungen vor Zahlung des Restbetrags. Jedes Gorilla- und Schimpansen-Permit wird direkt bei der Uganda Wildlife Authority gebucht.',
@@ -1559,9 +1540,6 @@ export const TRANSLATIONS: Record<SupportedLanguage, TranslationDictionary> = {
       utbTitle: 'Registrado en Uganda Tourism Board (UTB) y África Oriental',
       utbDesc:
         'Colectivo de operadores de safari en África Oriental coordinado desde nuestra sede en Entebbe.',
-      autoTitle: 'Miembro de Association of Uganda Tour Operators (AUTO)',
-      autoDesc:
-        'Comprometidos con salarios justos para guías y porteadores, protección de pagos directos y conservación.',
       uwaTitle: 'Recibos Oficiales de Permisos Garantizados',
       uwaDesc:
         'Todos los permisos de gorilas, chimpancés y parques de África Oriental se aseguran directamente con su pago.',

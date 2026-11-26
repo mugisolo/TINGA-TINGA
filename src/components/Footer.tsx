@@ -5,7 +5,6 @@ import {
   Mail,
   ShieldCheck,
   FileCheck,
-  Award,
   Plane,
   Globe,
   Settings,
@@ -28,7 +27,7 @@ export const Footer: React.FC = () => {
     <footer className="bg-[#226B3E] text-[#FAF7F2] border-t border-[#2E8550] print:hidden">
       {/* Accreditation & Trust Strip */}
       <div className="border-b border-[#2E8550] bg-[#1B5632]">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-5 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-md bg-[#226B3E] border border-[#34945A] text-[#D99B26] flex-shrink-0">
               <ShieldCheck className="w-4 h-4" />
@@ -39,20 +38,6 @@ export const Footer: React.FC = () => {
               </h3>
               <p className="text-xs text-[#D6CEC2] mt-0.5 leading-relaxed">
                 {t.footer.utbDesc}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-md bg-[#226B3E] border border-[#34945A] text-[#D99B26] flex-shrink-0">
-              <Award className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="font-serif text-base font-semibold text-[#FAF7F2]">
-                {t.footer.autoTitle}
-              </h3>
-              <p className="text-xs text-[#D6CEC2] mt-0.5 leading-relaxed">
-                {t.footer.autoDesc}
               </p>
             </div>
           </div>
@@ -246,8 +231,6 @@ export const Footer: React.FC = () => {
             </div>
             <span>•</span>
             <span className="font-mono text-[#D6CEC2]">UTB Licensed</span>
-            <span>•</span>
-            <span className="font-mono text-[#D6CEC2]">AUTO Member</span>
             <span>•</span>
             <span className="font-mono text-[#D99B26]">
               Official UWA Permit Receipts

@@ -29,6 +29,7 @@ import {
   SPECIALTY_LABELS,
   EXPERIENCES,
   PARTNER_ACCOMMODATIONS,
+  TOUR_OPERATORS,
 } from '../data/seedData';
 import {
   Specialty,
@@ -101,8 +102,9 @@ export const GuidesPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedSpecialty, setSelectedSpecialty] = useState<Specialty | 'all'>('all');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
-  const [activeSection, setActiveSection] = useState<'guides' | 'partners' | 'drivers-cars'>(() => {
+  const [activeSection, setActiveSection] = useState<'guides' | 'operators' | 'partners' | 'drivers-cars'>(() => {
     const sec = searchParams.get('section');
+    if (sec === 'operators' || sec === 'safari-operators') return 'operators';
     if (sec === 'partners' || sec === 'hotels') return 'partners';
     if (sec === 'drivers-cars' || sec === 'drivers' || sec === 'fleet') return 'drivers-cars';
     return 'guides';
@@ -124,9 +126,13 @@ export const GuidesPage: React.FC = () => {
 
   useEffect(() => {
     const sec = searchParams.get('section');
-    if (sec === 'partners' || sec === 'hotels') {
+    if (sec === 'guides') {
+      setActiveSection('guides');
+    } else if (sec === 'operators' || sec === 'safari-operators') {
+      setActiveSection('operators');
+    } else if (sec === 'partners' || sec === 'hotels') {
       setActiveSection('partners');
-      if (sec === 'hotels') setSelectedPartnerCategory('hotel');
+      setSelectedPartnerCategory('all');
     } else if (sec === 'drivers-cars' || sec === 'drivers' || sec === 'fleet') {
       setActiveSection('drivers-cars');
     }
@@ -420,9 +426,15 @@ export const GuidesPage: React.FC = () => {
     });
   };
 
-  const switchSection = (sec: 'guides' | 'partners' | 'drivers-cars') => {
+  const switchSection = (sec: 'guides' | 'operators' | 'partners' | 'drivers-cars') => {
     setActiveSection(sec);
-    setSearchParams({ section: sec });
+    const paramMap: Record<'guides' | 'operators' | 'partners' | 'drivers-cars', string> = {
+      guides: 'guides',
+      operators: 'operators',
+      'drivers-cars': 'drivers',
+      partners: 'hotels',
+    };
+    setSearchParams({ section: paramMap[sec] });
   };
 
   return (
@@ -433,43 +445,41 @@ export const GuidesPage: React.FC = () => {
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
             <div className="max-w-3xl">
               <div className="text-amber-400 text-xs font-bold uppercase tracking-widest mb-3">
-                {t.home.guidesSectionTag} • Official Partner Hotels, Rooms & Known 4x4 Drivers
+                Service Providers • UTB &amp; UWA Verified Directory
               </div>
               <h1 className="font-serif text-4xl sm:text-5xl font-bold tracking-tight mb-4">
-                Meet Our Specialist Guides, Partner Hotels & Drivers Fleet
+                Service Providers
               </h1>
               <p className="text-stone-300 text-lg leading-relaxed">
-                At Enganda Safaris, every journey is led by a named, UTB-licensed specialist,
-                supported by official partner hotels & cultural centres — led by{' '}
-                <strong className="text-amber-300">
-                  Igongo Country Hotel & Cultural Centre (igongo.co.ug)
-                </strong>{' '}
-                — where hotel & motel owners publish live room rates and known drivers upload
-                their 4x4 fleet.
+                Explore our UTB-licensed and UWA-accredited service providers across East Africa —
+                connecting you directly with named specialist guides, safari operators, verified
+                drivers, and partner hotels.
               </p>
             </div>
 
-            {/* Section Switcher: Guides vs Hotels & Motels vs Drivers & Cars */}
-            <div className="flex flex-wrap bg-stone-800/90 p-1.5 rounded-2xl border border-stone-700 self-start">
+            {/* Section Switcher: Guides, Safari Operators, Drivers, Hotels */}
+            <div className="flex flex-wrap bg-stone-800/90 p-1.5 rounded-2xl border border-stone-700 self-start gap-1">
               <button
                 onClick={() => switchSection('guides')}
-                className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                   activeSection === 'guides'
                     ? 'bg-amber-600 text-white shadow'
                     : 'text-stone-300 hover:text-white'
                 }`}
               >
-                Lead Safari Guides ({GUIDES.length})
+                <Users className="w-4 h-4" />
+                <span>Guides</span>
               </button>
               <button
-                onClick={() => switchSection('partners')}
-                className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer whitespace-nowrap ${
-                  activeSection === 'partners'
+                onClick={() => switchSection('operators')}
+                className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                  activeSection === 'operators'
                     ? 'bg-amber-600 text-white shadow'
                     : 'text-stone-300 hover:text-white'
                 }`}
               >
-                Hotels, Motels & Rooms ({PARTNER_ACCOMMODATIONS.length})
+                <Compass className="w-4 h-4" />
+                <span>Safari Operators</span>
               </button>
               <button
                 onClick={() => switchSection('drivers-cars')}
@@ -480,7 +490,18 @@ export const GuidesPage: React.FC = () => {
                 }`}
               >
                 <Car className="w-4 h-4" />
-                Drivers & Cars ({driverFleetVehicles.length})
+                <span>Drivers</span>
+              </button>
+              <button
+                onClick={() => switchSection('partners')}
+                className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                  activeSection === 'partners'
+                    ? 'bg-amber-600 text-white shadow'
+                    : 'text-stone-300 hover:text-white'
+                }`}
+              >
+                <Building2 className="w-4 h-4" />
+                <span>Hotels</span>
               </button>
             </div>
           </div>
@@ -683,6 +704,157 @@ export const GuidesPage: React.FC = () => {
             )}
           </div>
         </>
+      )}
+
+      {activeSection === 'operators' && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-stone-200 pb-6">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-widest text-amber-700">
+                UTB &amp; UWA Verified Safari Operators
+              </span>
+              <h2 className="font-serif text-3xl sm:text-4xl font-bold text-stone-900 mt-1">
+                Safari Operators
+              </h2>
+              <p className="text-sm text-stone-600 mt-1 max-w-3xl">
+                Official East African safari operators verified by the Uganda Tourism Board and
+                Uganda Wildlife Authority, with direct UWA permit escrow and Safari Wallet checkout.
+              </p>
+            </div>
+            <Link
+              to="/tingatinga-safaris"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-700 hover:bg-amber-600 text-white text-xs font-bold transition-colors shrink-0"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Tingatinga Safaris Showcase</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {TOUR_OPERATORS.map((operator) => {
+              const operatorPackages = EXPERIENCES.filter((exp) =>
+                operator.featuredExperienceSlugs.includes(exp.slug)
+              );
+              return (
+                <div
+                  key={operator.id}
+                  className="bg-white rounded-3xl overflow-hidden border border-stone-200/90 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="relative h-52 bg-stone-900 overflow-hidden">
+                      <img
+                        src={operator.heroImage}
+                        alt={operator.name}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-stone-950/90 via-stone-950/35 to-transparent" />
+                      {operator.logoUrl && (
+                        <div className="absolute top-3 left-3 bg-stone-950/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-amber-500/40">
+                          <img
+                            src={operator.logoUrl}
+                            alt={operator.name}
+                            className="h-9 w-auto object-contain"
+                          />
+                        </div>
+                      )}
+                      <div className="absolute top-3 right-3 bg-emerald-950/90 text-emerald-300 text-[11px] font-mono font-bold px-2.5 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1">
+                        <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                        <span>{operator.utbLicenseNumber || 'UTB Verified'}</span>
+                      </div>
+                      <div className="absolute bottom-3 left-4 right-4 text-white">
+                        <div className="text-[11px] font-mono text-amber-300 uppercase tracking-wider">
+                          {operator.roleLabel}
+                        </div>
+                        <h3 className="font-serif text-2xl font-bold leading-snug">
+                          {operator.name}
+                        </h3>
+                      </div>
+                    </div>
+
+                    <div className="p-6 space-y-4">
+                      <div className="flex flex-wrap gap-1.5">
+                        {operator.accreditations.map((acc) => (
+                          <span
+                            key={acc}
+                            className="text-[11px] font-mono font-semibold bg-amber-50 text-amber-900 border border-amber-200/80 px-2.5 py-1 rounded-md"
+                          >
+                            {acc}
+                          </span>
+                        ))}
+                      </div>
+
+                      <p className="text-sm text-stone-600 leading-relaxed">
+                        {operator.description}
+                      </p>
+
+                      <div className="text-xs text-stone-600 space-y-1 border-t border-stone-100 pt-3">
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                          <span>
+                            <strong className="text-stone-900">Headquarters:</strong>{' '}
+                            {operator.headquarters}
+                          </span>
+                        </div>
+                        <div>
+                          <strong className="text-stone-900">Destinations:</strong>{' '}
+                          {operator.countriesCovered.join(' · ')}
+                        </div>
+                      </div>
+
+                      {operatorPackages.length > 0 && (
+                        <div className="bg-stone-50 rounded-2xl p-3.5 border border-stone-200/80 space-y-2">
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-stone-500">
+                            Featured Safari Packages ({operatorPackages.length})
+                          </div>
+                          <div className="space-y-1.5">
+                            {operatorPackages.slice(0, 3).map((pkg) => (
+                              <Link
+                                key={pkg.id}
+                                to={`/experiences/${pkg.slug}`}
+                                className="flex items-center justify-between gap-2 text-xs font-semibold text-stone-800 hover:text-amber-700"
+                              >
+                                <span className="truncate">{pkg.title}</span>
+                                <span className="font-mono text-amber-800 shrink-0">
+                                  {formatPrice(pkg.priceBands[0]?.perPersonUSD || 2500)}
+                                </span>
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="px-6 pb-6 pt-2 flex items-center gap-3">
+                    {operator.slug === 'tingatinga-safaris' ? (
+                      <Link
+                        to="/tingatinga-safaris"
+                        className="flex-1 py-2.5 px-4 rounded-xl bg-amber-700 hover:bg-amber-600 text-white text-xs font-bold text-center transition-colors"
+                      >
+                        Open Tingatinga Showcase
+                      </Link>
+                    ) : (
+                      <Link
+                        to="/experiences"
+                        className="flex-1 py-2.5 px-4 rounded-xl bg-stone-900 hover:bg-amber-700 text-white text-xs font-bold text-center transition-colors"
+                      >
+                        View Operator Packages
+                      </Link>
+                    )}
+                    <Link
+                      to="/trip-planner"
+                      className="py-2.5 px-4 rounded-xl border border-stone-300 hover:border-stone-900 text-stone-900 text-xs font-bold transition-colors"
+                    >
+                      Plan Safari
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
 
       {activeSection === 'partners' && (

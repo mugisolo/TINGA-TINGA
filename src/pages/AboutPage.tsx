@@ -86,7 +86,7 @@ export const AboutPage: React.FC = () => {
               </div>
               <div className="flex justify-between">
                 <span>Accreditations:</span>
-                <strong className="text-white">UTB & AUTO</strong>
+                <strong className="text-white">UTB &amp; UWA</strong>
               </div>
             </div>
             <div className="pt-3 border-t border-white/10 space-y-2">

@@ -33,6 +33,15 @@ export const STATIC_ROUTE_SEO_MAP: Record<string, RouteSeoMetadata> = {
     ogType: 'website',
     schemaType: 'CollectionPage',
   },
+  '/service-providers': {
+    title: 'Verified Service Providers — Guides, Safari Operators, Drivers & Hotels | Enganda Safaris',
+    description:
+      'Search and filter UTB-licensed and UWA-accredited East African service providers: named safari guides, safari operators, 4x4 fleet drivers, and partner hotels.',
+    keywords:
+      'Uganda service providers, UTB licensed guides, Tingatinga Safaris, Enganda Safaris, 4x4 safari drivers Uganda, Igongo Country Hotel, partner lodges Uganda',
+    ogType: 'website',
+    schemaType: 'CollectionPage',
+  },
   '/guides': {
     title: 'Meet Our Licensed Ugandan Safari Guides & Specialists | WildLife Safaris',
     description:
@@ -83,7 +92,7 @@ export const STATIC_ROUTE_SEO_MAP: Record<string, RouteSeoMetadata> = {
     description:
       'Learn how our Entebbe operations desk procures official Uganda Wildlife Authority permits, assigns named 4x4 Land Cruiser guides, and guarantees 12-hour confirmation.',
     keywords:
-      'how to book Uganda gorilla permits, UWA tariff 2026 2027, Entebbe safari coordination, private 4x4 Land Cruiser Uganda, AUTO member tour operator',
+      'how to book Uganda gorilla permits, UWA tariff 2026 2027, Entebbe safari coordination, private 4x4 Land Cruiser Uganda, UTB licensed tour operator',
     ogType: 'website',
     schemaType: 'FAQPage',
   },
@@ -117,7 +126,7 @@ export const STATIC_ROUTE_SEO_MAP: Record<string, RouteSeoMetadata> = {
   '/about': {
     title: 'About Our Ugandan Guide Collective in Entebbe | WildLife Safaris',
     description:
-      'Founded by veteran Ugandan field guides on Mugwanya Road, Bugonga, Entebbe — 5 minutes from Entebbe International Airport. UTB licensed and AUTO accredited.',
+      'Founded by veteran Ugandan field guides on Mugwanya Road, Bugonga, Entebbe — 5 minutes from Entebbe International Airport. UTB licensed and UWA accredited.',
     keywords:
       'about WildLife Safaris Uganda, Entebbe safari company, local Ugandan owned tour operator, UTB licensed safari operator, Bugonga Entebbe head office',
     ogType: 'website',
