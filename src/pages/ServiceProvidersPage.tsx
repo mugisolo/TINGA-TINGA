@@ -27,6 +27,8 @@ import {
   Filter,
   X,
   RotateCcw,
+  Heart,
+  BookmarkCheck,
 } from 'lucide-react';
 import {
   GUIDES,
@@ -44,6 +46,7 @@ import {
 } from '../types';
 import { useInquiry } from '../context/InquiryContext';
 import { useWallet } from '../context/WalletContext';
+import { ServiceProviderVerifiedBadge } from '../components/ServiceProviderVerifiedBadge';
 
 export type ServiceProviderTier = 'all' | 'guides' | 'operators' | 'drivers' | 'hotels';
 
@@ -186,6 +189,8 @@ export const ServiceProvidersPage: React.FC = () => {
   const [selectedFleetCategory, setSelectedFleetCategory] = useState<
     DriverFleetVehicle['vehicleCategory'] | 'all'
   >('all');
+  const [showShortlistOnly, setShowShortlistOnly] = useState<boolean>(false);
+  const [showShortlistPanel, setShowShortlistPanel] = useState<boolean>(false);
 
   const {
     openInquiryModal,
@@ -196,6 +201,11 @@ export const ServiceProvidersPage: React.FC = () => {
     driverFleetVehicles,
     addDriverFleetVehicle,
     deleteDriverFleetVehicle,
+    shortlistedProviders,
+    isProviderShortlisted,
+    toggleShortlistProvider,
+    removeShortlistProvider,
+    clearShortlist,
   } = useInquiry();
   const { availableBalanceUSD, payPackageDirect } = useWallet();
 
@@ -314,10 +324,25 @@ export const ServiceProvidersPage: React.FC = () => {
       const matchesRegion = matchesRegionKeywords(textPool, selectedRegion);
       const matchesSearch =
         !normalizedQuery || textPool.toLowerCase().includes(normalizedQuery);
+      const matchesShortlist =
+        !showShortlistOnly || isProviderShortlisted('guide', guide.slug);
 
-      return matchesSpecialty && matchesLanguage && matchesRegion && matchesSearch;
+      return (
+        matchesSpecialty &&
+        matchesLanguage &&
+        matchesRegion &&
+        matchesSearch &&
+        matchesShortlist
+      );
     });
-  }, [selectedSpecialty, selectedLanguage, selectedRegion, normalizedQuery]);
+  }, [
+    selectedSpecialty,
+    selectedLanguage,
+    selectedRegion,
+    normalizedQuery,
+    showShortlistOnly,
+    isProviderShortlisted,
+  ]);
 
   // 2. Filtered Safari Operators
   const filteredOperators = useMemo(() => {
@@ -339,10 +364,12 @@ export const ServiceProvidersPage: React.FC = () => {
       const matchesRegion = matchesRegionKeywords(textPool, selectedRegion);
       const matchesSearch =
         !normalizedQuery || textPool.toLowerCase().includes(normalizedQuery);
+      const matchesShortlist =
+        !showShortlistOnly || isProviderShortlisted('operator', operator.slug);
 
-      return matchesRegion && matchesSearch;
+      return matchesRegion && matchesSearch && matchesShortlist;
     });
-  }, [selectedRegion, normalizedQuery]);
+  }, [selectedRegion, normalizedQuery, showShortlistOnly, isProviderShortlisted]);
 
   // 3. Filtered Drivers & Fleet Vehicles
   const filteredFleet = useMemo(() => {
@@ -365,10 +392,19 @@ export const ServiceProvidersPage: React.FC = () => {
       const matchesRegion = matchesRegionKeywords(textPool, selectedRegion);
       const matchesSearch =
         !normalizedQuery || textPool.toLowerCase().includes(normalizedQuery);
+      const matchesShortlist =
+        !showShortlistOnly || isProviderShortlisted('driver', vehicle.id);
 
-      return matchesCategory && matchesRegion && matchesSearch;
+      return matchesCategory && matchesRegion && matchesSearch && matchesShortlist;
     });
-  }, [driverFleetVehicles, selectedFleetCategory, selectedRegion, normalizedQuery]);
+  }, [
+    driverFleetVehicles,
+    selectedFleetCategory,
+    selectedRegion,
+    normalizedQuery,
+    showShortlistOnly,
+    isProviderShortlisted,
+  ]);
 
   // 4. Filtered Hotels (Inclusive of Motels, Safari Lodges, and Camp Sites)
   const filteredPartners = useMemo(() => {
@@ -393,10 +429,18 @@ export const ServiceProvidersPage: React.FC = () => {
       const matchesRegion = matchesRegionKeywords(textPool, selectedRegion);
       const matchesSearch =
         !normalizedQuery || textPool.toLowerCase().includes(normalizedQuery);
+      const matchesShortlist =
+        !showShortlistOnly || isProviderShortlisted('hotel', partner.slug);
 
-      return matchesCategory && matchesRegion && matchesSearch;
+      return matchesCategory && matchesRegion && matchesSearch && matchesShortlist;
     });
-  }, [selectedPartnerCategory, selectedRegion, normalizedQuery]);
+  }, [
+    selectedPartnerCategory,
+    selectedRegion,
+    normalizedQuery,
+    showShortlistOnly,
+    isProviderShortlisted,
+  ]);
 
   // Filtered Uploaded Partner Rooms
   const filteredPartnerRooms = useMemo(() => {
@@ -444,6 +488,7 @@ export const ServiceProvidersPage: React.FC = () => {
     setSelectedLanguage('all');
     setSelectedPartnerCategory('all');
     setSelectedFleetCategory('all');
+    setShowShortlistOnly(false);
     setSearchParams({ type: activeTier, section: activeTier });
   };
 
@@ -453,7 +498,8 @@ export const ServiceProvidersPage: React.FC = () => {
     selectedSpecialty !== 'all' ||
     selectedLanguage !== 'all' ||
     selectedPartnerCategory !== 'all' ||
-    selectedFleetCategory !== 'all';
+    selectedFleetCategory !== 'all' ||
+    showShortlistOnly;
 
   const handleRoomPhotoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -808,7 +854,35 @@ export const ServiceProvidersPage: React.FC = () => {
                 ))}
               </div>
 
-              <div className="flex items-center gap-3 shrink-0 self-end sm:self-auto">
+              <div className="flex flex-wrap items-center gap-2.5 shrink-0 self-end sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => setShowShortlistOnly((prev) => !prev)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                    showShortlistOnly
+                      ? 'bg-rose-600 text-white border-rose-400 shadow'
+                      : 'bg-stone-900/90 text-stone-200 border-stone-600 hover:border-rose-400'
+                  }`}
+                >
+                  <Heart
+                    className={`w-3.5 h-3.5 ${
+                      showShortlistOnly ? 'fill-white text-white' : 'text-rose-400'
+                    }`}
+                  />
+                  <span>Shortlisted Only ({shortlistedProviders.length})</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowShortlistPanel((prev) => !prev)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  <BookmarkCheck className="w-3.5 h-3.5" />
+                  <span>
+                    {showShortlistPanel ? 'Hide My Shortlist' : `My Shortlist (${shortlistedProviders.length})`}
+                  </span>
+                </button>
+
                 <span className="text-xs font-mono text-stone-300">
                   Showing <strong className="text-amber-400">{totalMatchingCount}</strong> verified
                   providers
@@ -825,6 +899,115 @@ export const ServiceProvidersPage: React.FC = () => {
                 )}
               </div>
             </div>
+
+            {/* Expandable 'My Shortlist' Saved Collection Drawer */}
+            {showShortlistPanel && (
+              <div className="mt-4 pt-4 border-t border-stone-700/90 bg-stone-900/95 rounded-2xl p-4 sm:p-5 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase tracking-widest">
+                      <Heart className="w-3.5 h-3.5 fill-rose-500 text-rose-500" />
+                      <span>My Shortlist Collection (Synced to LocalStorage &amp; Firestore)</span>
+                    </div>
+                    <p className="text-xs text-stone-300 mt-0.5">
+                      Save your preferred UTB/UWA licensed guides, partner hotels, safari operators,
+                      and 4x4 fleet drivers for custom trip planning.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 self-start sm:self-auto">
+                    {shortlistedProviders.length > 0 && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const firstGuide = shortlistedProviders.find(
+                              (s) => s.providerType === 'guide'
+                            );
+                            const summaryNotes = shortlistedProviders
+                              .map(
+                                (s) =>
+                                  `[${s.providerType.toUpperCase()}] ${s.providerName} (${s.region} — ${s.licenseBadge})`
+                              )
+                              .join('\n');
+                            openInquiryModal({
+                              guideSlug: firstGuide?.providerSlug,
+                              defaultNotes: `My Shortlisted Service Providers:\n${summaryNotes}`,
+                            });
+                          }}
+                          className="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition-colors cursor-pointer"
+                        >
+                          Inquire with My Shortlist ({shortlistedProviders.length})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => clearShortlist()}
+                          className="px-3 py-2 rounded-xl bg-stone-800 hover:bg-rose-950 text-stone-300 hover:text-rose-300 border border-stone-700 text-xs font-semibold transition-colors cursor-pointer"
+                        >
+                          Clear All
+                        </button>
+                      </>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowShortlistPanel(false)}
+                      className="p-1.5 rounded-lg text-stone-400 hover:text-white cursor-pointer"
+                      aria-label="Close My Shortlist panel"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {shortlistedProviders.length === 0 ? (
+                  <div className="bg-stone-800/60 border border-stone-700/80 rounded-xl p-6 text-center text-stone-300 text-xs">
+                    Your shortlist is currently empty. Click the{' '}
+                    <strong className="text-rose-400">Save to Shortlist</strong> heart button on any
+                    Guide, Safari Operator, Driver, or Hotel below to build your personal safari
+                    roster.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {shortlistedProviders.map((item) => (
+                      <div
+                        key={item.id}
+                        className="bg-stone-800/90 border border-stone-700 rounded-xl p-3 flex items-start gap-3 justify-between"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <img
+                            src={item.imageUrl}
+                            alt={item.providerName}
+                            referrerPolicy="no-referrer"
+                            className="w-12 h-12 rounded-lg object-cover shrink-0 bg-stone-900"
+                          />
+                          <div className="min-w-0">
+                            <span className="inline-block text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">
+                              {item.providerType}
+                            </span>
+                            <h4 className="text-xs font-bold text-white truncate mt-0.5">
+                              {item.providerName}
+                            </h4>
+                            <div className="text-[11px] text-stone-400 truncate">{item.region}</div>
+                            {item.rateLabel && (
+                              <div className="text-[11px] text-emerald-400 font-mono font-semibold">
+                                {item.rateLabel}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeShortlistProvider(item.id)}
+                          title="Remove from My Shortlist"
+                          className="text-stone-400 hover:text-rose-400 p-1 cursor-pointer shrink-0"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -898,6 +1081,7 @@ export const ServiceProvidersPage: React.FC = () => {
                   const signatureExp = EXPERIENCES.find((e) =>
                     e.recommendedGuides.includes(guide.slug)
                   );
+                  const isGuideShortlisted = isProviderShortlisted('guide', guide.slug);
                   return (
                     <div
                       key={guide.id}
@@ -916,6 +1100,37 @@ export const ServiceProvidersPage: React.FC = () => {
                             <Award className="w-3.5 h-3.5" />
                             {guide.yearsExperience} Years Field Exp.
                           </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              toggleShortlistProvider({
+                                providerId: guide.id,
+                                providerSlug: guide.slug,
+                                providerType: 'guide',
+                                providerName: guide.name,
+                                region: guide.homeRegion,
+                                subtitle: guide.tagline,
+                                imageUrl: guide.photo,
+                                licenseBadge:
+                                  guide.certifications[0] || 'UTB & USAGA Licensed Specialist',
+                                rateLabel: `${guide.yearsExperience} yrs exp • ★ ${guide.rating.toFixed(1)}`,
+                              })
+                            }
+                            aria-label={
+                              isGuideShortlisted
+                                ? `Remove ${guide.name} from My Shortlist`
+                                : `Save ${guide.name} to My Shortlist`
+                            }
+                            className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md border transition-all cursor-pointer ${
+                              isGuideShortlisted
+                                ? 'bg-rose-600 text-white border-rose-400 shadow-lg'
+                                : 'bg-stone-900/80 text-white hover:bg-rose-600/90 border-white/20'
+                            }`}
+                          >
+                            <Heart
+                              className={`w-4 h-4 ${isGuideShortlisted ? 'fill-white' : ''}`}
+                            />
+                          </button>
                           <div className="absolute bottom-3 left-3 right-3 bg-white/95 backdrop-blur-md text-stone-900 text-[11px] font-semibold px-3 py-1.5 rounded-xl shadow-sm">
                             Home Region: <span className="text-amber-800">{guide.homeRegion}</span>
                           </div>
@@ -923,10 +1138,48 @@ export const ServiceProvidersPage: React.FC = () => {
 
                         <div className="sm:col-span-7 p-6 sm:p-7 flex flex-col justify-between">
                           <div>
-                            <div className="flex items-center justify-between gap-2 mb-1">
-                              <span className="text-xs font-bold uppercase tracking-wider text-amber-700">
-                                {guide.tagline}
-                              </span>
+                            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                              <ServiceProviderVerifiedBadge
+                                providerType="guide"
+                                badgeLabel="UTB & USAGA Verified"
+                                utbLicenseNumber={`UTB-GD-${guide.id.toUpperCase()}`}
+                                uwaAccreditationId="UWA-PRIMATE-CERT"
+                                authorityNotes={guide.certifications}
+                                variant="light"
+                                showLicenseInline={false}
+                              />
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  toggleShortlistProvider({
+                                    providerId: guide.id,
+                                    providerSlug: guide.slug,
+                                    providerType: 'guide',
+                                    providerName: guide.name,
+                                    region: guide.homeRegion,
+                                    subtitle: guide.tagline,
+                                    imageUrl: guide.photo,
+                                    licenseBadge:
+                                      guide.certifications[0] || 'UTB & USAGA Licensed Specialist',
+                                    rateLabel: `${guide.yearsExperience} yrs exp • ★ ${guide.rating.toFixed(1)}`,
+                                  })
+                                }
+                                className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full border transition-colors cursor-pointer ${
+                                  isGuideShortlisted
+                                    ? 'bg-rose-50 text-rose-700 border-rose-300'
+                                    : 'bg-stone-100 text-stone-700 hover:bg-rose-50 hover:text-rose-700 border-stone-200'
+                                }`}
+                              >
+                                <Heart
+                                  className={`w-3 h-3 ${
+                                    isGuideShortlisted ? 'fill-rose-600 text-rose-600' : ''
+                                  }`}
+                                />
+                                <span>{isGuideShortlisted ? 'Shortlisted' : 'Save Guide'}</span>
+                              </button>
+                            </div>
+                            <div className="text-xs font-bold uppercase tracking-wider text-amber-700 mb-1">
+                              {guide.tagline}
                             </div>
                             <Link
                               to={`/guides/${guide.slug}`}
@@ -1057,6 +1310,7 @@ export const ServiceProvidersPage: React.FC = () => {
                 const operatorPackages = EXPERIENCES.filter((exp) =>
                   operator.featuredExperienceSlugs.includes(exp.slug)
                 );
+                const isOperatorShortlisted = isProviderShortlisted('operator', operator.slug);
                 return (
                   <div
                     key={operator.id}
@@ -1080,9 +1334,45 @@ export const ServiceProvidersPage: React.FC = () => {
                             />
                           </div>
                         )}
-                        <div className="absolute top-3 right-3 bg-emerald-950/90 text-emerald-300 text-[11px] font-mono font-bold px-2.5 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1">
-                          <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                          <span>{operator.utbLicenseNumber || 'UTB Verified'}</span>
+                        <div className="absolute top-3 right-3 flex items-center gap-2">
+                          <ServiceProviderVerifiedBadge
+                            providerType="operator"
+                            badgeLabel="Licensed Operator"
+                            utbLicenseNumber={operator.utbLicenseNumber || 'UTB-TO-VERIFIED'}
+                            uwaAccreditationId={operator.uwaAccreditationId || 'UWA-ESCROW-PARTNER'}
+                            authorityNotes={operator.accreditations}
+                            variant="emerald"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              toggleShortlistProvider({
+                                providerId: operator.id,
+                                providerSlug: operator.slug,
+                                providerType: 'operator',
+                                providerName: operator.name,
+                                region: operator.headquarters,
+                                subtitle: operator.roleLabel,
+                                imageUrl: operator.heroImage,
+                                licenseBadge: operator.utbLicenseNumber || 'UTB Licensed Operator',
+                                rateLabel: `${operator.countriesCovered.length} East African Countries`,
+                              })
+                            }
+                            aria-label={
+                              isOperatorShortlisted
+                                ? `Remove ${operator.name} from My Shortlist`
+                                : `Save ${operator.name} to My Shortlist`
+                            }
+                            className={`p-2 rounded-full backdrop-blur-md border transition-all cursor-pointer ${
+                              isOperatorShortlisted
+                                ? 'bg-rose-600 text-white border-rose-400 shadow-lg'
+                                : 'bg-stone-900/80 text-white hover:bg-rose-600/90 border-white/20'
+                            }`}
+                          >
+                            <Heart
+                              className={`w-3.5 h-3.5 ${isOperatorShortlisted ? 'fill-white' : ''}`}
+                            />
+                          </button>
                         </div>
                         <div className="absolute bottom-3 left-4 right-4 text-white">
                           <div className="text-[11px] font-mono text-amber-300 uppercase tracking-wider">
@@ -1497,7 +1787,9 @@ export const ServiceProvidersPage: React.FC = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {filteredFleet.map((vehicle) => (
+                {filteredFleet.map((vehicle) => {
+                  const isDriverShortlisted = isProviderShortlisted('driver', vehicle.id);
+                  return (
                   <div
                     key={vehicle.id}
                     className="bg-white rounded-3xl overflow-hidden border border-stone-200/90 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
@@ -1516,13 +1808,51 @@ export const ServiceProvidersPage: React.FC = () => {
                           <span className="bg-stone-900/90 backdrop-blur-md text-amber-300 text-xs font-bold px-3 py-1 rounded-full border border-amber-500/30">
                             {vehicle.vehicleCategory}
                           </span>
-                          <span className="bg-emerald-950/90 text-emerald-300 text-xs font-bold px-2.5 py-1 rounded-full">
-                            {vehicle.availableStatus}
-                          </span>
+                          <ServiceProviderVerifiedBadge
+                            providerType="driver"
+                            badgeLabel="UTB Licensed Fleet"
+                            utbLicenseNumber={vehicle.utbLicenseNumber || vehicle.registrationPlate}
+                            uwaAccreditationId={vehicle.uwaAccreditationId || 'UWA-PARK-4X4'}
+                            authorityNotes={[vehicle.driverLicenseAndBadge, ...vehicle.features.slice(0, 2)]}
+                            variant="emerald"
+                            showLicenseInline={false}
+                          />
                         </div>
 
-                        <div className="absolute top-3 right-3 bg-white/95 text-stone-900 text-xs font-mono font-bold px-3 py-1 rounded-lg shadow">
-                          {vehicle.registrationPlate}
+                        <div className="absolute top-3 right-3 flex items-center gap-2">
+                          <span className="bg-white/95 text-stone-900 text-xs font-mono font-bold px-3 py-1 rounded-lg shadow">
+                            {vehicle.registrationPlate}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              toggleShortlistProvider({
+                                providerId: vehicle.id,
+                                providerSlug: vehicle.id,
+                                providerType: 'driver',
+                                providerName: `${vehicle.driverName} — ${vehicle.vehicleName}`,
+                                region: vehicle.homeBaseRegion,
+                                subtitle: vehicle.vehicleCategory,
+                                imageUrl: vehicle.vehicleImageUrl,
+                                licenseBadge: vehicle.driverLicenseAndBadge,
+                                rateLabel: `${formatPrice(vehicle.ratePerDayUSD)}/day`,
+                              })
+                            }
+                            aria-label={
+                              isDriverShortlisted
+                                ? `Remove ${vehicle.driverName} from My Shortlist`
+                                : `Save ${vehicle.driverName} to My Shortlist`
+                            }
+                            className={`p-2 rounded-full backdrop-blur-md border transition-all cursor-pointer ${
+                              isDriverShortlisted
+                                ? 'bg-rose-600 text-white border-rose-400 shadow-lg'
+                                : 'bg-stone-900/80 text-white hover:bg-rose-600/90 border-white/20'
+                            }`}
+                          >
+                            <Heart
+                              className={`w-3.5 h-3.5 ${isDriverShortlisted ? 'fill-white' : ''}`}
+                            />
+                          </button>
                         </div>
 
                         <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between text-white">
@@ -1634,7 +1964,8 @@ export const ServiceProvidersPage: React.FC = () => {
                       )}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -2017,7 +2348,49 @@ export const ServiceProvidersPage: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <ServiceProviderVerifiedBadge
+                        providerType="hotel"
+                        badgeLabel="Official Enganda Partner"
+                        utbLicenseNumber={igongoPartner.utbLicenseNumber || 'UTB-HTL-MBARARA-01'}
+                        uwaAccreditationId="ANKOLE-HERITAGE-HUB"
+                        authorityNotes={igongoPartner.amenities}
+                        variant="gold"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          toggleShortlistProvider({
+                            providerId: igongoPartner.id,
+                            providerSlug: igongoPartner.slug,
+                            providerType: 'hotel',
+                            providerName: igongoPartner.name,
+                            region: igongoPartner.region,
+                            subtitle: igongoPartner.categoryLabel,
+                            imageUrl: igongoPartner.heroImage,
+                            licenseBadge: igongoPartner.verifiedPartnerBadge,
+                            rateLabel: `From ${formatPrice(igongoPartner.pricePerNightUSD)}/night`,
+                          })
+                        }
+                        className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                          isProviderShortlisted('hotel', igongoPartner.slug)
+                            ? 'bg-rose-600 text-white border-rose-400'
+                            : 'bg-white/10 hover:bg-white/20 text-white border-white/20'
+                        }`}
+                      >
+                        <Heart
+                          className={`w-3.5 h-3.5 ${
+                            isProviderShortlisted('hotel', igongoPartner.slug)
+                              ? 'fill-white'
+                              : 'text-rose-400'
+                          }`}
+                        />
+                        <span>
+                          {isProviderShortlisted('hotel', igongoPartner.slug)
+                            ? 'Saved in My Shortlist'
+                            : 'Save to Shortlist'}
+                        </span>
+                      </button>
                       <a
                         href="https://igongo.co.ug/"
                         target="_blank"
@@ -2093,7 +2466,7 @@ export const ServiceProvidersPage: React.FC = () => {
                       </div>
 
                       <p className="text-sm text-stone-600 leading-relaxed">
-                        {igongoPartner.description}
+                        {igongoPartner.summary}
                       </p>
 
                       <div className="space-y-3">
@@ -2299,6 +2672,7 @@ export const ServiceProvidersPage: React.FC = () => {
                   const partnerUploadedRooms = partnerHotelRooms.filter(
                     (r) => r.partnerSlug === partner.slug
                   );
+                  const isHotelShortlisted = isProviderShortlisted('hotel', partner.slug);
                   return (
                     <div
                       key={partner.id}
@@ -2327,19 +2701,60 @@ export const ServiceProvidersPage: React.FC = () => {
                           <div
                             className={`absolute ${
                               partner.logoUrl ? 'top-16 left-3' : 'top-3 left-3'
-                            } flex items-center gap-2`}
+                            } flex flex-wrap items-center gap-2`}
                           >
                             <span className="bg-stone-900/90 backdrop-blur-md text-amber-300 text-xs font-bold px-3 py-1 rounded-full border border-amber-500/30">
                               {partner.categoryLabel}
                             </span>
-                            <span className="bg-emerald-950/90 backdrop-blur-md text-emerald-300 text-xs font-semibold px-3 py-1 rounded-full">
-                              {partner.verifiedPartnerBadge}
-                            </span>
+                            <ServiceProviderVerifiedBadge
+                              providerType="hotel"
+                              badgeLabel={partner.verifiedPartnerBadge}
+                              utbLicenseNumber={
+                                partner.utbLicenseNumber ||
+                                `UTB-${partner.category.toUpperCase()}-2026`
+                              }
+                              uwaAccreditationId={partner.uwaAccreditationId}
+                              authorityNotes={partner.amenities}
+                              variant="emerald"
+                              showLicenseInline={false}
+                            />
                           </div>
 
-                          <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-md text-stone-900 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow">
-                            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                            <span>{partner.rating.toFixed(1)}</span>
+                          <div className="absolute top-3 right-3 flex items-center gap-2">
+                            <div className="bg-white/95 backdrop-blur-md text-stone-900 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow">
+                              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                              <span>{partner.rating.toFixed(1)}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                toggleShortlistProvider({
+                                  providerId: partner.id,
+                                  providerSlug: partner.slug,
+                                  providerType: 'hotel',
+                                  providerName: partner.name,
+                                  region: partner.region,
+                                  subtitle: `${partner.categoryLabel} • ${partner.locationDetails}`,
+                                  imageUrl: partner.heroImage,
+                                  licenseBadge: partner.verifiedPartnerBadge,
+                                  rateLabel: `From ${formatPrice(partner.pricePerNightUSD)}/night`,
+                                })
+                              }
+                              aria-label={
+                                isHotelShortlisted
+                                  ? `Remove ${partner.name} from My Shortlist`
+                                  : `Save ${partner.name} to My Shortlist`
+                              }
+                              className={`p-2 rounded-full backdrop-blur-md border transition-all cursor-pointer ${
+                                isHotelShortlisted
+                                  ? 'bg-rose-600 text-white border-rose-400 shadow-lg'
+                                  : 'bg-stone-900/80 text-white hover:bg-rose-600/90 border-white/20'
+                              }`}
+                            >
+                              <Heart
+                                className={`w-3.5 h-3.5 ${isHotelShortlisted ? 'fill-white' : ''}`}
+                              />
+                            </button>
                           </div>
 
                           <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between text-white">

@@ -39,6 +39,7 @@ import {
 } from '../data/seedData';
 import { formatPrice } from '../lib/currency';
 import { ServiceProviderPackageAIBuilder } from './ServiceProviderPackageAIBuilder';
+import { CmsErpBackendConsole } from './CmsErpBackendConsole';
 
 interface AdminDashboardProps {
   initialTab?: 'events' | 'logos' | 'both';
@@ -514,6 +515,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* ===================================================================== */}
+      {/* UNIFIED BACKEND CMS & ERP CONTROL CENTER (/api/cms/* & /api/erp/*)    */}
+      {/* ===================================================================== */}
+      <CmsErpBackendConsole onNotify={notify} />
 
       {/* ===================================================================== */}
       {/* PART 1: UPLOAD EVENT & TRIP DATA TO FIRESTORE + CAROUSEL/UPCOMING     */}

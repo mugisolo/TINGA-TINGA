@@ -264,8 +264,25 @@ service cloud.firestore {
              data.homeBaseRegion is string && data.homeBaseRegion.size() > 0 && data.homeBaseRegion.size() <= 200 &&
              (!('regionsCovered' in data) || (data.regionsCovered is list && data.regionsCovered.size() <= 20 && (data.regionsCovered.size() == 0 || (data.regionsCovered[0] is string && data.regionsCovered[0].size() <= 200)))) &&
              data.vehicleImageUrl is string && data.vehicleImageUrl.size() > 0 && data.vehicleImageUrl.size() <= 350000 &&
-             (!('features' in data) || (data.features is list && data.features.size() <= 20 && (data.features.size() == 0 || (data.features[0] is string && data.features[0].size() <= 300)))) &&
-             data.availableStatus in ['Available Now', 'On Charter', 'Advance Booking'] &&
+              (!('features' in data) || (data.features is list && data.features.size() <= 20 && (data.features.size() == 0 || (data.features[0] is string && data.features[0].size() <= 300)))) &&
+              data.availableStatus in ['Available Now', 'On Charter', 'Advance Booking'] &&
+              data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    function isValidShortlistedProvider(data) {
+      return data.keys().hasAll(['id', 'userId', 'providerId', 'providerSlug', 'providerType', 'providerName', 'region', 'subtitle', 'imageUrl', 'licenseBadge', 'createdAt']) &&
+             data.keys().hasOnly(['id', 'userId', 'providerId', 'providerSlug', 'providerType', 'providerName', 'region', 'subtitle', 'imageUrl', 'licenseBadge', 'rateLabel', 'createdAt']) &&
+             data.id is string && data.id.size() > 0 && data.id.size() <= 128 &&
+             data.userId is string && data.userId.size() > 0 && data.userId.size() <= 128 && data.userId == request.auth.uid &&
+             data.providerId is string && data.providerId.size() > 0 && data.providerId.size() <= 128 &&
+             data.providerSlug is string && data.providerSlug.size() > 0 && data.providerSlug.size() <= 128 &&
+             data.providerType in ['guide', 'operator', 'driver', 'hotel'] &&
+             data.providerName is string && data.providerName.size() > 0 && data.providerName.size() <= 200 &&
+             data.region is string && data.region.size() > 0 && data.region.size() <= 200 &&
+             data.subtitle is string && data.subtitle.size() > 0 && data.subtitle.size() <= 300 &&
+             data.imageUrl is string && data.imageUrl.size() > 0 && data.imageUrl.size() <= 350000 &&
+             data.licenseBadge is string && data.licenseBadge.size() > 0 && data.licenseBadge.size() <= 160 &&
+             (!('rateLabel' in data) || (data.rateLabel is string && data.rateLabel.size() <= 128)) &&
              data.createdAt is string && data.createdAt.size() <= 64;
     }
 
@@ -443,6 +460,18 @@ service cloud.firestore {
       allow create: if isSignedIn() && isValidId(vehicleId) && isValidDriverFleetVehicle(incoming());
       allow update: if isSignedIn() && isValidId(vehicleId) && isValidDriverFleetVehicle(incoming()) && (existing().userId == request.auth.uid || isStaffOrAdmin());
       allow delete: if isSignedIn() && isValidId(vehicleId) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+    }
+
+    // User Shortlisted Service Providers ('My Shortlist' collection — Owner CRUD; Staff/Admin read for itinerary matching)
+    match /shortlisted_providers/{shortlistId} {
+      allow get: if isSignedIn() && isValidId(shortlistId) && (existing().userId == request.auth.uid || isStaffOrAdmin());
+      allow list: if isSignedIn() && (existing().userId == request.auth.uid || isStaffOrAdmin());
+      allow create: if isSignedIn() && isValidId(shortlistId) && isValidShortlistedProvider(incoming());
+      allow update: if isSignedIn() && isValidId(shortlistId) && isValidShortlistedProvider(incoming()) && (
+                      (existing().userId == request.auth.uid && incoming().userId == existing().userId && incoming().createdAt == existing().createdAt) ||
+                      isStaffOrAdmin()
+                    );
+      allow delete: if isSignedIn() && isValidId(shortlistId) && (existing().userId == request.auth.uid || isStaffOrAdmin());
     }
   }
 }

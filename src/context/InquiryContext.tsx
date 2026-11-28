@@ -10,6 +10,8 @@ import {
   FooterPartnerLogo,
   PartnerHotelRoom,
   DriverFleetVehicle,
+  ShortlistedProviderItem,
+  ShortlistProviderType,
 } from '../types';
 import { CURRENCY_RATES, fetchLiveCurrencyRates, formatPrice as formatCurrencyPrice } from '../lib/currency';
 import {
@@ -75,6 +77,13 @@ interface InquiryContextValue {
   driverFleetVehicles: DriverFleetVehicle[];
   addDriverFleetVehicle: (vehicleInput: Omit<DriverFleetVehicle, 'id' | 'createdAt'>) => Promise<DriverFleetVehicle>;
   deleteDriverFleetVehicle: (id: string) => Promise<void>;
+  shortlistedProviders: ShortlistedProviderItem[];
+  isProviderShortlisted: (providerType: ShortlistProviderType, providerIdOrSlug: string) => boolean;
+  toggleShortlistProvider: (
+    item: Omit<ShortlistedProviderItem, 'id' | 'createdAt'>
+  ) => Promise<boolean>;
+  removeShortlistProvider: (id: string) => Promise<void>;
+  clearShortlist: () => Promise<void>;
   firestoreSyncStatus: FirestoreSyncSummary;
   syncAllSystemDataToFirestore: () => Promise<{ ok: boolean; message: string }>;
   isInquiryModalOpen: boolean;
@@ -95,6 +104,8 @@ const DELETED_LOGOS_KEY = 'enganda_deleted_logo_ids_v1';
 const DELETED_LEADS_KEY = 'enganda_deleted_lead_ids_v1';
 const DELETED_ROOMS_KEY = 'enganda_deleted_room_ids_v1';
 const DELETED_FLEET_KEY = 'enganda_deleted_fleet_ids_v1';
+const SHORTLIST_STORAGE_KEY = 'enganda_shortlisted_providers_v1';
+const DELETED_SHORTLIST_KEY = 'enganda_deleted_shortlist_ids_v1';
 
 function readStringSet(key: string): Set<string> {
   try {
@@ -323,6 +334,23 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return INITIAL_DRIVER_FLEET_VEHICLES.filter((v) => !deleted.has(v.id));
   });
 
+  const [shortlistedProviders, setShortlistedProviders] = useState<ShortlistedProviderItem[]>(
+    () => {
+      try {
+        const saved = localStorage.getItem(SHORTLIST_STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            return parsed;
+          }
+        }
+      } catch {
+        // ignore
+      }
+      return [];
+    }
+  );
+
   const [firestoreSyncStatus, setFirestoreSyncStatus] = useState<FirestoreSyncSummary>({
     lastSyncedAt: null,
     eventsSynced: CONFIRMED_PACKAGES_AND_EVENTS.length,
@@ -408,6 +436,14 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // ignore
     }
   }, [driverFleetVehicles]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SHORTLIST_STORAGE_KEY, JSON.stringify(shortlistedProviders));
+    } catch {
+      // ignore
+    }
+  }, [shortlistedProviders]);
 
   const syncSafariEventToFirestore = useCallback(
     async (eventObj: ConfirmedPackageEvent, op: OperationType) => {
@@ -586,6 +622,40 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
           payload.driverSlug = vehicleObj.driverSlug.slice(0, 128);
         }
         await setDoc(doc(db, 'driver_fleet_vehicles', cleanId), payload);
+      } catch (err) {
+        try {
+          handleFirestoreError(err, op, docPath);
+        } catch {
+          // Handled
+        }
+      }
+    },
+    []
+  );
+
+  const syncShortlistedProviderToFirestore = useCallback(
+    async (item: ShortlistedProviderItem, op: OperationType) => {
+      if (!auth.currentUser?.uid) return;
+      const cleanId = item.id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 128);
+      const docPath = `shortlisted_providers/${cleanId}`;
+      try {
+        const payload: Record<string, unknown> = {
+          id: cleanId,
+          userId: auth.currentUser.uid.slice(0, 128),
+          providerId: (item.providerId || item.providerSlug).slice(0, 128),
+          providerSlug: (item.providerSlug || item.providerId).slice(0, 128),
+          providerType: item.providerType,
+          providerName: item.providerName.slice(0, 200),
+          region: (item.region || 'East Africa').slice(0, 200),
+          subtitle: (item.subtitle || 'Verified Service Provider').slice(0, 300),
+          imageUrl: (item.imageUrl || '/assets/aistudio/cow_b5a75acc.jpg').slice(0, 350000),
+          licenseBadge: (item.licenseBadge || 'UTB & UWA Verified').slice(0, 160),
+          createdAt: (item.createdAt || new Date().toISOString()).slice(0, 64),
+        };
+        if (item.rateLabel) {
+          payload.rateLabel = item.rateLabel.slice(0, 128);
+        }
+        await setDoc(doc(db, 'shortlisted_providers', cleanId), payload);
       } catch (err) {
         try {
           handleFirestoreError(err, op, docPath);
@@ -1022,6 +1092,79 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       }
 
+      // 6. Load & sync shortlisted_providers ('My Shortlist') for signed-in user
+      if (uid) {
+        const deletedShortlist = readStringSet(DELETED_SHORTLIST_KEY);
+        try {
+          const shortlistQuery = query(
+            collection(db, 'shortlisted_providers'),
+            where('userId', '==', uid)
+          );
+          const shortlistSnap = await getDocs(shortlistQuery);
+          const remoteShortlist: ShortlistedProviderItem[] = [];
+          const existingShortlistIds = new Set<string>();
+
+          shortlistSnap.forEach((docSnap) => {
+            const d = docSnap.data();
+            if (d && d.id && d.providerName && d.providerType) {
+              const docId = String(d.id);
+              existingShortlistIds.add(docId);
+              if (!deletedShortlist.has(docId)) {
+                remoteShortlist.push({
+                  id: docId,
+                  userId: String(d.userId || uid),
+                  providerId: String(d.providerId || d.providerSlug || docId),
+                  providerSlug: String(d.providerSlug || d.providerId || docId),
+                  providerType: d.providerType as ShortlistProviderType,
+                  providerName: String(d.providerName),
+                  region: String(d.region || 'East Africa'),
+                  subtitle: String(d.subtitle || 'Verified Service Provider'),
+                  imageUrl: String(d.imageUrl || '/assets/aistudio/cow_b5a75acc.jpg'),
+                  licenseBadge: String(d.licenseBadge || 'UTB & UWA Verified'),
+                  rateLabel: d.rateLabel ? String(d.rateLabel) : undefined,
+                  createdAt: String(d.createdAt || new Date().toISOString()),
+                });
+              }
+            }
+          });
+
+          if (remoteShortlist.length > 0 && isMounted) {
+            setShortlistedProviders((prev) => {
+              const map = new Map<string, ShortlistedProviderItem>();
+              prev.filter((s) => !deletedShortlist.has(s.id)).forEach((s) => map.set(s.id, s));
+              remoteShortlist.forEach((s) => map.set(s.id, s));
+              return Array.from(map.values());
+            });
+          }
+
+          // Push any locally saved shortlist items to Firestore when user signs in
+          const currentLocal = (() => {
+            try {
+              const raw = localStorage.getItem(SHORTLIST_STORAGE_KEY);
+              return raw ? (JSON.parse(raw) as ShortlistedProviderItem[]) : [];
+            } catch {
+              return [];
+            }
+          })();
+
+          for (const localItem of currentLocal) {
+            const cleanLocalId = localItem.id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 128);
+            if (!existingShortlistIds.has(cleanLocalId) && !deletedShortlist.has(cleanLocalId)) {
+              await syncShortlistedProviderToFirestore(
+                { ...localItem, id: cleanLocalId, userId: uid },
+                OperationType.CREATE
+              );
+            }
+          }
+        } catch (err) {
+          try {
+            handleFirestoreError(err, OperationType.LIST, 'shortlisted_providers');
+          } catch {
+            // Handled
+          }
+        }
+      }
+
       if (isMounted) {
         setFirestoreSyncStatus((prev) => ({
           ...prev,
@@ -1051,6 +1194,7 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     syncLeadToFirestore,
     syncPartnerRoomToFirestore,
     syncDriverFleetToFirestore,
+    syncShortlistedProviderToFirestore,
   ]);
 
   const syncAllSystemDataToFirestore = useCallback(async (): Promise<{
@@ -1446,6 +1590,107 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const isProviderShortlisted = useCallback(
+    (providerType: ShortlistProviderType, providerIdOrSlug: string): boolean => {
+      return shortlistedProviders.some(
+        (item) =>
+          item.providerType === providerType &&
+          (item.providerId === providerIdOrSlug || item.providerSlug === providerIdOrSlug)
+      );
+    },
+    [shortlistedProviders]
+  );
+
+  const removeShortlistProvider = useCallback(async (id: string): Promise<void> => {
+    const cleanId = id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 128);
+    const deleted = readStringSet(DELETED_SHORTLIST_KEY);
+    deleted.add(id);
+    deleted.add(cleanId);
+    saveStringSet(DELETED_SHORTLIST_KEY, deleted);
+
+    setShortlistedProviders((prev) =>
+      prev.filter((item) => item.id !== id && item.id !== cleanId)
+    );
+
+    if (auth.currentUser?.uid) {
+      const docPath = `shortlisted_providers/${cleanId}`;
+      try {
+        await deleteDoc(doc(db, 'shortlisted_providers', cleanId));
+      } catch (err) {
+        try {
+          handleFirestoreError(err, OperationType.DELETE, docPath);
+        } catch {
+          // Handled
+        }
+      }
+    }
+  }, []);
+
+  const toggleShortlistProvider = useCallback(
+    async (
+      itemInput: Omit<ShortlistedProviderItem, 'id' | 'createdAt'>
+    ): Promise<boolean> => {
+      const existingMatch = shortlistedProviders.find(
+        (s) =>
+          s.providerType === itemInput.providerType &&
+          (s.providerId === itemInput.providerId || s.providerSlug === itemInput.providerSlug)
+      );
+
+      if (existingMatch) {
+        await removeShortlistProvider(existingMatch.id);
+        return false;
+      }
+
+      const rawId = `shortlist_${itemInput.providerType}_${itemInput.providerSlug || itemInput.providerId}`
+        .replace(/[^a-zA-Z0-9_-]/g, '_')
+        .slice(0, 128);
+
+      const deleted = readStringSet(DELETED_SHORTLIST_KEY);
+      deleted.delete(rawId);
+      saveStringSet(DELETED_SHORTLIST_KEY, deleted);
+
+      const created: ShortlistedProviderItem = {
+        ...itemInput,
+        id: rawId,
+        userId: auth.currentUser?.uid,
+        createdAt: new Date().toISOString(),
+      };
+
+      setShortlistedProviders((prev) => [created, ...prev.filter((p) => p.id !== rawId)]);
+      await syncShortlistedProviderToFirestore(created, OperationType.CREATE);
+      return true;
+    },
+    [shortlistedProviders, removeShortlistProvider, syncShortlistedProviderToFirestore]
+  );
+
+  const clearShortlist = useCallback(async (): Promise<void> => {
+    const currentItems = [...shortlistedProviders];
+    setShortlistedProviders([]);
+    try {
+      localStorage.removeItem(SHORTLIST_STORAGE_KEY);
+    } catch {
+      // ignore
+    }
+    if (auth.currentUser?.uid) {
+      for (const item of currentItems) {
+        const cleanId = item.id.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 128);
+        try {
+          await deleteDoc(doc(db, 'shortlisted_providers', cleanId));
+        } catch (err) {
+          try {
+            handleFirestoreError(
+              err,
+              OperationType.DELETE,
+              `shortlisted_providers/${cleanId}`
+            );
+          } catch {
+            // Handled
+          }
+        }
+      }
+    }
+  }, [shortlistedProviders]);
+
   return (
     <InquiryContext.Provider
       value={{
@@ -1485,6 +1730,11 @@ export const InquiryProvider: React.FC<{ children: React.ReactNode }> = ({ child
         driverFleetVehicles,
         addDriverFleetVehicle,
         deleteDriverFleetVehicle,
+        shortlistedProviders,
+        isProviderShortlisted,
+        toggleShortlistProvider,
+        removeShortlistProvider,
+        clearShortlist,
         firestoreSyncStatus,
         syncAllSystemDataToFirestore,
         isInquiryModalOpen,

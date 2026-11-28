@@ -655,3 +655,21 @@ export interface PortalDispatch {
   createdAt: string;
 }
 
+export type ShortlistProviderType = 'guide' | 'operator' | 'driver' | 'hotel';
+
+export interface ShortlistedProviderItem {
+  id: string;
+  userId?: string;
+  providerId: string;
+  providerSlug: string;
+  providerType: ShortlistProviderType;
+  providerName: string;
+  region: string;
+  subtitle: string;
+  imageUrl: string;
+  licenseBadge: string;
+  rateLabel?: string;
+  createdAt: string;
+}
+
+

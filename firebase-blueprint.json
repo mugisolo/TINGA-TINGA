@@ -263,6 +263,26 @@
         "createdAt": { "type": "string", "maxLength": 64 }
       },
       "required": ["id", "userId", "driverName", "driverLicenseAndBadge", "driverPhone", "driverPhotoUrl", "vehicleName", "vehicleCategory", "registrationPlate", "passengerCapacity", "ratePerDayUSD", "rateIncludes", "homeBaseRegion", "vehicleImageUrl", "availableStatus", "createdAt"]
+    },
+    "ShortlistedProvider": {
+      "title": "ShortlistedProvider",
+      "description": "User-favorited Service Provider (Guide, Safari Operator, Driver, or Hotel) saved to My Shortlist collection",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "userId": { "type": "string", "maxLength": 128 },
+        "providerId": { "type": "string", "maxLength": 128 },
+        "providerSlug": { "type": "string", "maxLength": 128 },
+        "providerType": { "type": "string", "enum": ["guide", "operator", "driver", "hotel"] },
+        "providerName": { "type": "string", "maxLength": 200 },
+        "region": { "type": "string", "maxLength": 200 },
+        "subtitle": { "type": "string", "maxLength": 300 },
+        "imageUrl": { "type": "string", "maxLength": 350000 },
+        "licenseBadge": { "type": "string", "maxLength": 160 },
+        "rateLabel": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "maxLength": 64 }
+      },
+      "required": ["id", "userId", "providerId", "providerSlug", "providerType", "providerName", "region", "subtitle", "imageUrl", "licenseBadge", "createdAt"]
     }
   },
   "firestore": {
@@ -317,6 +337,10 @@
     "/driver_fleet_vehicles/{vehicleId}": {
       "schema": "DriverFleetVehicle",
       "description": "4x4 safari fleet vehicles and daily hire rates uploaded by verified Enganda drivers"
+    },
+    "/shortlisted_providers/{shortlistId}": {
+      "schema": "ShortlistedProvider",
+      "description": "User's saved Service Providers (Guides, Safari Operators, Drivers, and Hotels) in My Shortlist"
     }
   }
 }

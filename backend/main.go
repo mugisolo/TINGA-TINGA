@@ -19,10 +19,12 @@ func main() {
 	vendorSvc := services.NewVendorService()
 	bookingSvc := services.NewBookingService(vendorSvc)
 	genaiSvc := services.NewGenAIService(vendorSvc, bookingSvc)
+	cmsErpSvc := services.NewCMSERPService(vendorSvc, bookingSvc)
 
 	// 2. Initialize HTTP Handlers
 	marketplaceHandler := handlers.NewMarketplaceHandler(vendorSvc, bookingSvc)
 	agentHandler := handlers.NewAgentHandler(genaiSvc)
+	cmsErpHandler := handlers.NewCMSERPHandler(cmsErpSvc)
 
 	// 3. Configure Idiomatic Chi Router & Middleware Stack
 	r := chi.NewRouter()
@@ -33,8 +35,8 @@ func main() {
 	r.Use(middleware.Timeout(60 * time.Second))
 
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"https://*", "http://*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedOrigins:   []string{"http://localhost:3000", "https://*.run.app"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
@@ -72,6 +74,22 @@ func main() {
 			b.Post("/checkout", marketplaceHandler.HandleProcessPaymentCheckout)
 		})
 
+		// CMS (Content Management System) Service Layer Routes
+		api.Route("/cms", func(cms chi.Router) {
+			cms.Get("/overview", cmsErpHandler.HandleGetCMSOverview)
+			cms.Post("/site-blocks", cmsErpHandler.HandleUpsertCMSSiteBlock)
+			cms.Post("/footer-logos", cmsErpHandler.HandleUpsertCMSFooterLogo)
+		})
+
+		// ERP (Enterprise Resource Planning) Service Layer Routes
+		api.Route("/erp", func(erp chi.Router) {
+			erp.Get("/overview", cmsErpHandler.HandleGetERPOverview)
+			erp.Post("/hotel-rooms", cmsErpHandler.HandleUpsertERPHotelRoom)
+			erp.Post("/driver-fleet", cmsErpHandler.HandleUpsertERPDriverVehicle)
+			erp.Post("/finance/transactions", cmsErpHandler.HandleRecordERPFinanceTransaction)
+			erp.Post("/dispatches", cmsErpHandler.HandleCreateERPDispatch)
+		})
+
 		// Google GenAI Autonomous Safari Planning Service Layer Routes
 		api.Post("/chat", agentHandler.HandleAgentChat)
 		api.Route("/agent", func(a chi.Router) {
@@ -85,7 +103,7 @@ func main() {
 		port = "8080"
 	}
 
-	log.Printf("[Enganda & Tingatinga Safaris Go Chi Server] Listening on :%s (UTB/UWA Vendor Management, Booking Orchestration & Google GenAI SDK active)", port)
+	log.Printf("[Enganda & Tingatinga Safaris Go Chi Server] Listening on :%s (UTB/UWA Vendor Management, CMS, ERP, Booking Orchestration & Google GenAI SDK active)", port)
 	if err := http.ListenAndServe(":"+port, r); err != nil {
 		log.Fatalf("server failed: %v", err)
 	}
